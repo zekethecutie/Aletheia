@@ -2,7 +2,7 @@
 import { GoogleGenAI, Chat, Type } from "@google/genai";
 import { UserStats, FeatResponse, SearchResult, MirrorScenario, MirrorResult, Artifact, DailyTask } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY });
 
 const TEXT_MODEL = 'gemini-3-flash-preview';
 const IMAGE_MODEL = 'gemini-2.5-flash-image';

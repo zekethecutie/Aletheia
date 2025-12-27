@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Post, DailyQuote } from '../types';
-import { getDailyWisdom } from '../services/geminiService';
+import { generateMysteriousName, generateMirrorScenario, generateArtifactImage, getDailyWisdom, submitApplication, evaluateMirrorChoice, createAdvisorSession, askAdvisor, generateQuest, generateSystemPost } from '../services/geminiService';
 import { Header } from '../components/Header';
 import { ProfileView } from './ProfileView';
 import { CreatePostModal } from '../components/modals/CreatePostModal';

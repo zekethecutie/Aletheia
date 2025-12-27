@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Post, Comment } from '../types';
 import { Header } from '../components/Header';
-import { IconSend, IconResonance } from '../components/Icons';
+import { IconSend, IconResonance, IconEdit, IconTrash } from '../components/Icons';
 import { formatTime, loadUser } from '../utils/helpers';
 import { supabase } from '../services/supabaseClient';
 

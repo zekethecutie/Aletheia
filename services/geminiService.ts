@@ -54,9 +54,13 @@ export const generateArtifactImage = async (name: string, description: string): 
         parts: [{ text: `Mystical pixel art RPG item, 32-bit style, sharp edges, vivid colors, solid black background, no transparency. Subject: ${name}. Context: ${description}. High contrast fantasy item.` }]
       }
     });
-    for (const candidate of response.candidates || []) {
-      for (const part of candidate.content.parts) {
-        if (part.inlineData) return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+    if (response.candidates) {
+      for (const candidate of response.candidates) {
+        if (candidate.content && candidate.content.parts) {
+          for (const part of candidate.content.parts) {
+            if (part.inlineData) return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+          }
+        }
       }
     }
   } catch (e) { console.error(e); }

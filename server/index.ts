@@ -1,7 +1,7 @@
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createUser, getUserByUsername, getUserById, verifyPassword } from './auth';
 import { query, initializeDatabase } from './db';
 
@@ -16,9 +16,13 @@ app.use(express.json());
 // Initialize database on startup
 initializeDatabase().catch(console.error);
 
-const apiKey = process.env.VITE_API_KEY || process.env.API_KEY || '';
-console.log('API Key configured:', apiKey ? `${apiKey.substring(0, 10)}...` : 'NOT SET');
-const genAI = apiKey ? new GoogleGenAI({ apiKey }) : null;
+// Replit Gemini AI Integration
+const geminiApiKey = process.env.GEMINI_API_KEY || process.env.API_KEY || '';
+console.log('AI Configured:', geminiApiKey ? 'YES' : 'NO');
+
+// Use the Replit integration if GEMINI_API_KEY is not set but AI_INTEGRATIONS_GEMINI_API_KEY might be
+const effectiveApiKey = geminiApiKey || process.env.AI_INTEGRATIONS_GEMINI_API_KEY || '';
+const genAI = effectiveApiKey ? new GoogleGenerativeAI(effectiveApiKey) : null;
 
 // Health check
 app.get('/api/health', (req: Request, res: Response) => {
@@ -168,11 +172,9 @@ app.post('/api/ai/mysterious-name', async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'AI not configured' });
   }
   try {
-    const response = await genAI.models.generateContent({
-      model: 'gemini-1.5-flash',
-      contents: "Generate a single mysterious RPG-style name.",
-    });
-    const name = response.text?.trim() || "Initiate";
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const result = await model.generateContent("Generate a single mysterious RPG-style name. Just the name, nothing else.");
+    const name = result.response.text()?.trim() || "Initiate";
     res.json({ name });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -184,11 +186,9 @@ app.post('/api/ai/quest', async (req: Request, res: Response) => {
   if (!genAI) return res.status(500).json({ error: 'AI not configured' });
   try {
     const { prompt } = req.body;
-    const response = await genAI.models.generateContent({
-      model: 'gemini-1.5-flash',
-      contents: prompt,
-    });
-    const text = response.text || "";
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const result = await model.generateContent(prompt);
+    const text = result.response.text() || "";
     const jsonMatch = text.match(/\{.*\}/s);
     if (jsonMatch) {
       res.json(JSON.parse(jsonMatch[0]));

@@ -101,7 +101,7 @@ export const MirrorView: React.FC<MirrorViewProps> = ({ user, onUpdateUser }) =>
                         <div className="absolute inset-0 bg-gold/20 blur-[100px] rounded-full animate-pulse"></div>
                         <div className="w-48 h-48 mx-auto rounded-2xl glass-card p-1 shadow-[0_0_80px_rgba(212,175,55,0.2)] rotate-45 group hover:rotate-[225deg] transition-all duration-1000 relative z-10 overflow-visible">
                             <div className="w-full h-full bg-black rounded-xl flex items-center justify-center -rotate-45 group-hover:rotate-[-225deg] transition-all duration-1000">
-                                <IconMirror className="w-20 h-20 text-gold/80 drop-shadow-[0_0_20px_rgba(212,175,55,0.5)]" />
+                                <IconEye className="w-20 h-20 text-gold/80 drop-shadow-[0_0_20px_rgba(212,175,55,0.5)]" />
                             </div>
                         </div>
                     </div>

@@ -73,7 +73,7 @@ export const ExploreView: React.FC = () => {
           </div>
           <div className="p-6 space-y-4">
              {results.map((res, idx) => (
-                 <div key={idx} className="bg-slate-950 border border-slate-900 p-6 hover:border-gold/30 transition-all cursor-pointer rounded-sm group">
+                 <div key={idx} onClick={() => res.type === 'USER' && (window as any).setViewProfileId?.(res.id)} className="bg-slate-950 border border-slate-900 p-6 hover:border-gold/30 transition-all cursor-pointer rounded-sm group animate-fade-in-up">
                      <div className="flex items-start gap-4">
                          <div className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 overflow-hidden">
                              {res.avatar ? <img src={res.avatar} className="w-full h-full object-cover" /> : res.type === 'USER' ? <IconUser className="w-5 h-5" /> : <IconScroll className="w-5 h-5" />}
@@ -91,7 +91,7 @@ export const ExploreView: React.FC = () => {
       ) : (
         <div className="p-6 space-y-3 animate-fade-in">
           {leaderboard.map((user: any, idx) => (
-            <div key={user.id} className="flex items-center gap-4 bg-slate-950 border border-slate-900 p-4 relative overflow-hidden group">
+            <div key={user.id} onClick={() => (window as any).setViewProfileId?.(user.id)} className="flex items-center gap-4 bg-slate-950 border border-slate-900 p-4 relative overflow-hidden group cursor-pointer animate-fade-in-up">
                <div className={`text-xl font-black w-10 text-center ${idx < 3 ? 'text-gold' : 'text-slate-700'}`}>{idx + 1}</div>
                <img src={user.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user.username}&backgroundColor=000000`} className="w-12 h-12 rounded-full border border-slate-800 bg-black" />
                <div className="flex-1">

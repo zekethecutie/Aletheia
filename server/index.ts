@@ -181,43 +181,30 @@ app.post('/api/ai/mysterious-name', async (req: Request, res: Response) => {
 // AI Quest Generation
 app.post('/api/ai/quest/generate', async (req: Request, res: Response) => {
   try {
-    const { userId, stats, recentAchievements } = req.body;
-    const system = `You are the Eye of Aletheia, an architect of destiny observing from the celestial void. Your voice is ancient, wise, and slightly ominous.
-    The subject is a ${stats.class} (Level ${stats.level}).
-    Their essence profile: ${JSON.stringify(stats)}.
-    Context of their journey: ${recentAchievements || 'A soul newly awakened to the architecture.'}
-
-    PROTOCOL: Construct 3 sacred trials (quests) that will force their evolution.
-    Each trial must be:
-    1. Practical: A real-world action they can perform.
-    2. Mystical: Cloaked in the language of the Great Work.
-    3. Aligned: Specifically targeting the improvement of their weakest attributes or reinforcing their path.
-
-    Return JSON ONLY: 
-    {
-      "quests": [
-        {
-          "text": "Trial description in the voice of a cosmic architect",
-          "difficulty": "E|D|C|B|A|S",
-          "xp_reward": number,
-          "stat_reward": {"physical": number, "intelligence": number, "spiritual": number, "social": number, "wealth": number}
-        }
-      ]
-    }`;
+    const { userId, stats, goals } = req.body;
+    const system = `You are the Eye of Aletheia. Construct 3 real-world sacred trials for a ${stats.class}.
+    GOALS: ${JSON.stringify(goals || [])}
+    PROTOCOL: 
+    1. Real-world actions only (no roleplay).
+    2. Difficulty must scale with user level (${stats.level}).
+    3. Rewards must include a specific stat boost based on the action.
+    Return JSON ONLY: { "quests": [{ "text": "string", "difficulty": "E-S", "xp_reward": number, "stat_reward": { "physical": number, ... }, "duration_hours": number }] }`;
     const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(system) + '?json=true');
     const text = await response.text();
     const jsonMatch = text.match(/\{.*\}/s);
     if (jsonMatch) {
       const { quests } = JSON.parse(jsonMatch[0]);
       for (const q of quests) {
+        const expiresAt = new Date();
+        expiresAt.setHours(expiresAt.getHours() + (q.duration_hours || 24));
         await query(
-          'INSERT INTO quests (user_id, text, difficulty, xp_reward, stat_reward) VALUES ($1, $2, $3, $4, $5)',
-          [userId, q.text, q.difficulty, q.xp_reward, JSON.stringify(q.stat_reward)]
+          'INSERT INTO quests (user_id, text, difficulty, xp_reward, stat_reward, expires_at) VALUES ($1, $2, $3, $4, $5, $6)',
+          [userId, q.text, q.difficulty, q.xp_reward, JSON.stringify(q.stat_reward), expiresAt]
         );
       }
       res.json({ success: true });
     } else {
-      res.status(500).json({ error: 'The void is silent. Trial generation failed.' });
+      res.status(500).json({ error: 'Generation failed' });
     }
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -405,6 +392,27 @@ app.get('/api/posts', async (req: Request, res: Response) => {
   }
 });
 
+app.get('/api/achievements/:userId', async (req: Request, res: Response) => {
+  try {
+    const result = await query('SELECT * FROM achievements WHERE user_id = $1 ORDER BY unlocked_at DESC', [req.params.userId]);
+    res.json(result.rows);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/achievements', async (req: Request, res: Response) => {
+  try {
+    const { userId, title, description, icon } = req.body;
+    const result = await query(
+      'INSERT INTO achievements (user_id, title, description, icon) VALUES ($1, $2, $3, $4) RETURNING *',
+      [userId, title, description, icon]
+    );
+    res.json(result.rows[0]);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
 app.get('/api/leaderboard', async (req: Request, res: Response) => {
   try {
     const result = await query(`

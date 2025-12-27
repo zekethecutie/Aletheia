@@ -1,180 +1,76 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Post, Comment } from '../types';
 import { Header } from '../components/Header';
-import { IconSend, IconResonance, IconEdit, IconTrash } from '../components/Icons';
-import { formatTime, loadUser } from '../utils/helpers';
-import { supabase } from '../services/supabaseClient';
+import { IconResonance, IconMessage, IconSend, IconTrash, IconStar } from '../components/Icons';
+import { apiClient } from '../services/apiClient';
+import { loadUser, formatTime } from '../utils/helpers';
 
-const RecursiveComment: React.FC<{ comment: Comment; depth?: number; onReply: (id: string, author: string) => void }> = ({ comment, depth = 0, onReply }) => {
-  const bgShade = depth % 2 === 0 ? 'bg-slate-900/40' : 'bg-slate-950/40';
-  
-  return (
-    <div className={`flex flex-col gap-4 animate-slide-up ${depth > 0 ? 'ml-6 mt-4 border-l border-slate-800/50 pl-4' : ''}`}>
-       <div className="flex gap-4">
-         <div className="w-8 h-8 rounded-full bg-slate-900 border border-slate-800 overflow-hidden flex-shrink-0">
-            <img 
-              src={comment.authorAvatar || `https://api.dicebear.com/7.x/initials/svg?seed=${comment.authorName}&backgroundColor=000000`} 
-              alt="avatar" 
-              className="w-full h-full object-cover" 
-            />
-         </div>
-         <div className="flex-1 space-y-2">
-            <div className={`${bgShade} p-4 rounded-lg border border-slate-900/50`}>
-              <div className="flex justify-between items-center mb-1">
-                 <span className="text-gold text-[10px] font-black uppercase tracking-widest">{comment.authorName}</span>
-                 <span className="text-slate-600 text-[9px]">{formatTime(comment.timestamp)}</span>
-              </div>
-              <p className="text-slate-300 text-sm leading-relaxed">{comment.content}</p>
-            </div>
-            <button 
-              onClick={() => onReply(comment.id, comment.authorName)} 
-              className="text-[10px] text-slate-500 uppercase font-black hover:text-white transition-colors px-2 py-1"
-            >
-              Reply
-            </button>
-         </div>
-       </div>
-       
-       {comment.replies && comment.replies.length > 0 && (
-          <div className="space-y-4">
-            {comment.replies.map(reply => (
-              <RecursiveComment key={reply.id} comment={reply} depth={depth + 1} onReply={onReply} />
-            ))}
-          </div>
-       )}
-    </div>
-  );
-};
-
-export const PostDetailView: React.FC<{ post: Post; onBack: () => void; onUpdate?: () => void }> = ({ post, onBack, onUpdate }) => {
-  const [comments, setComments] = useState<Comment[]>(post.comments || []);
+export const PostDetailView: React.FC<{ post: Post; onBack: () => void; onUpdate: () => void }> = ({ post, onBack, onUpdate }) => {
+  const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
-  const [replyingTo, setReplyingTo] = useState<{ id: string, author: string } | null>(null);
-  const [resonance, setResonance] = useState(post.resonance);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editContent, setEditContent] = useState(post.content);
+  const [loading, setLoading] = useState(false);
   const currentUser = loadUser();
+
   const isLiked = currentUser && post.likedBy?.includes(currentUser.id);
 
-  const handleUpdate = async () => {
-    if (!editContent.trim()) return;
-    await supabase.from('posts').update({ content: editContent }).eq('id', post.id);
-    setIsEditing(false);
-    if (onUpdate) onUpdate();
-    onBack();
-  };
-
-  const handleDelete = async () => {
-    if (!confirm("Extinguish this signal?")) return;
-    await supabase.from('posts').delete().eq('id', post.id);
-    if (onUpdate) onUpdate();
-    onBack();
-  };
-
-  const addCommentToTree = (list: Comment[], parentId: string, newComm: Comment): Comment[] => {
-    return list.map(c => {
-      if (c.id === parentId) return { ...c, replies: [...c.replies, newComm] };
-      if (c.replies.length > 0) return { ...c, replies: addCommentToTree(c.replies, parentId, newComm) };
-      return c;
-    });
-  };
-
-  const handleAddComment = () => {
-    if (!newComment.trim() || !currentUser) return;
-    const comm: Comment = {
-      id: Date.now().toString(),
-      authorId: currentUser.id,
-      authorName: currentUser.username,
-      authorAvatar: currentUser.avatarUrl,
-      content: newComment,
-      timestamp: Date.now(),
-      replies: []
-    };
-    if (replyingTo) {
-      setComments(addCommentToTree(comments, replyingTo.id, comm));
-      setReplyingTo(null);
-    } else {
-      setComments([comm, ...comments]);
-    }
-    setNewComment('');
-  };
-
-  const handleToggleLike = async () => {
-     if (!currentUser) return;
-     const newRes = isLiked ? resonance - 1 : resonance + 1;
-     setResonance(newRes);
-     await supabase.from('posts').update({ resonance: newRes }).eq('id', post.id);
-  };
-
   return (
-    <div className="min-h-screen bg-void pb-24 animate-fade-in">
-       <Header title="Sanctum" subtitle="The Thread" onBack={onBack} />
-       
-       <div className="p-6 border-b border-slate-900 bg-slate-950/30">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-full bg-slate-900 border border-slate-700 overflow-hidden">
-               <img src={post.authorAvatar || `https://api.dicebear.com/7.x/initials/svg?seed=${post.authorName}&backgroundColor=000000`} className="w-full h-full object-cover" />
-            </div>
-            <div className="flex-1">
-               <h3 className="text-white font-black uppercase text-sm tracking-wide">{post.authorName}</h3>
-               <p className="text-gold text-[9px] uppercase font-bold tracking-widest">{post.authorClass}</p>
-            </div>
-            {currentUser?.id === post.authorId && (
-              <div className="flex gap-2">
-                <button onClick={() => setIsEditing(!isEditing)} className="text-slate-500 hover:text-white p-2">
-                  <IconEdit className="w-4 h-4" />
-                </button>
-                <button onClick={handleDelete} className="text-slate-500 hover:text-red-500 p-2">
-                  <IconTrash className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-          </div>
+    <div className="min-h-screen bg-void pb-24 animate-fade-in relative overflow-hidden font-sans">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-indigo-950/20 via-transparent to-transparent opacity-40"></div>
+      <Header title="Transmission" subtitle="Detail Analysis" onBack={onBack} />
+      
+      <div className="max-w-2xl mx-auto px-6 mt-8 space-y-8 relative z-10">
+        <div className="glass-card p-10 rounded-3xl border-white/5 shadow-[0_30px_60px_rgba(0,0,0,0.5)] relative overflow-hidden group">
+          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent"></div>
           
-          {isEditing ? (
-            <div className="space-y-4 mb-6">
-              <textarea 
-                value={editContent} 
-                onChange={e => setEditContent(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 p-4 text-white font-serif outline-none focus:border-gold rounded-sm h-32"
-              />
-              <div className="flex gap-2">
-                <button onClick={handleUpdate} className="flex-1 bg-white text-black font-black uppercase text-[10px] py-2">Update</button>
-                <button onClick={() => setIsEditing(false)} className="flex-1 bg-slate-800 text-white font-black uppercase text-[10px] py-2">Cancel</button>
-              </div>
+          <div className="flex items-center gap-5 mb-10">
+            <div className="w-16 h-16 rounded-2xl border border-white/10 overflow-hidden bg-black shadow-2xl transition-transform group-hover:scale-105">
+              <img src={post.authorAvatar || `https://api.dicebear.com/7.x/initials/svg?seed=${post.authorName}&backgroundColor=000000`} className="w-full h-full object-cover" />
             </div>
-          ) : (
-            <p className="text-white text-xl font-serif leading-relaxed opacity-90 mb-6">{post.content}</p>
-          )}
+            <div>
+              <h3 className="text-white font-display font-black uppercase text-xs tracking-[0.3em]">{post.authorName}</h3>
+              <p className="text-indigo-400 text-[9px] uppercase font-display font-black tracking-[0.4em] mt-1.5">{post.authorClass}</p>
+            </div>
+            <div className="ml-auto text-right">
+              <p className="text-slate-600 text-[8px] uppercase font-mono tracking-widest">{formatTime(post.timestamp)}</p>
+            </div>
+          </div>
 
-          <div className="flex items-center gap-6">
-             <button onClick={handleToggleLike} className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest transition-colors ${isLiked ? 'text-gold' : 'text-slate-600'}`}>
-                <IconResonance className="w-5 h-5" />
-                <span>{resonance} Resonance</span>
+          <p className="text-white text-2xl md:text-3xl font-serif italic leading-relaxed tracking-wide mb-12 opacity-95">
+            "{post.content}"
+          </p>
+
+          <div className="flex items-center gap-8 border-t border-white/5 pt-8">
+            <div className={`flex items-center gap-3 transition-all ${isLiked ? 'text-indigo-400' : 'text-slate-600'}`}>
+              <IconResonance className={`w-6 h-6 ${isLiked ? 'drop-shadow-[0_0_12px_rgba(99,102,241,0.6)]' : ''}`} />
+              <span className="text-xs font-black font-mono">{post.resonance} Resonance</span>
+            </div>
+            <div className="flex items-center gap-3 text-slate-600">
+              <IconMessage className="w-6 h-6" />
+              <span className="text-xs font-black font-mono">{post.commentCount} Fragments</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+           <h4 className="text-[10px] text-slate-500 uppercase font-black tracking-[0.5em] mb-4">Frequency Response</h4>
+           <div className="relative">
+             <textarea 
+               value={newComment} 
+               onChange={(e) => setNewComment(e.target.value)}
+               className="w-full bg-slate-950/50 border border-white/5 rounded-2xl p-6 text-white text-sm outline-none focus:border-indigo-500/50 transition-all placeholder-slate-700 resize-none h-32 font-serif italic"
+               placeholder="Transmit your resonance fragment..."
+             />
+             <button 
+               disabled={!newComment.trim() || loading}
+               className="absolute bottom-4 right-4 bg-white text-black px-6 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-indigo-500 hover:text-white transition-all disabled:opacity-30 flex items-center gap-2"
+             >
+               <IconSend className="w-3.5 h-3.5" />
+               Transmit
              </button>
-             <span className="text-slate-600 text-xs font-black uppercase tracking-widest">{comments.length} Echoes</span>
-          </div>
-       </div>
-
-       <div className="p-6 space-y-6">
-          <div className="sticky top-24 z-30 bg-slate-950 border border-slate-800 p-3 rounded-lg flex flex-col gap-2">
-             {replyingTo && (
-               <div className="flex justify-between items-center text-[10px] text-gold px-2">
-                 <span>Replying to {replyingTo.author}</span>
-                 <button onClick={() => setReplyingTo(null)} className="text-slate-500 font-black">X</button>
-               </div>
-             )}
-             <div className="flex gap-2">
-               <input value={newComment} onChange={e => setNewComment(e.target.value)} className="flex-1 bg-transparent p-2 text-white text-sm outline-none placeholder-slate-700" placeholder="Add an echo..." />
-               <button onClick={handleAddComment} className="px-4 bg-white text-black rounded"><IconSend className="w-4 h-4" /></button>
-             </div>
-          </div>
-
-          <div className="space-y-6 pb-20">
-            {comments.map(c => <RecursiveComment key={c.id} comment={c} onReply={(id, auth) => setReplyingTo({id, author: auth})} />)}
-          </div>
-       </div>
+           </div>
+        </div>
+      </div>
     </div>
   );
 };

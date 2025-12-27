@@ -67,12 +67,13 @@ export const SanctumView: React.FC = () => {
     }
   };
 
-  const handleToggleLike = async (post: Post, e: React.MouseEvent) => {
+    const handleToggleLike = async (post: Post, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!currentUser) return;
     
-    // Optimistic Update
     const isLiked = post.likedBy.includes(currentUser.id);
+    
+    // Toggle logic: prevent infinite addition, properly remove ID
     const newLikedBy = isLiked 
       ? post.likedBy.filter(id => id !== currentUser.id)
       : [...post.likedBy, currentUser.id];
@@ -87,7 +88,7 @@ export const SanctumView: React.FC = () => {
       await apiClient.toggleLikePost(parseInt(post.id), currentUser.id);
     } catch (error) {
       console.error("Error liking post:", error);
-      fetchPosts(); // Rollback
+      fetchPosts(); // Rollback on error
     }
   };
 

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ViewState } from '../types';
-import { IconScroll, IconEye, IconUser, IconSearch, IconMirror, IconHierarchy, IconIdentity } from './Icons';
+import { IconScroll, IconStar, IconUser, IconSearch, IconMirror, IconHierarchy, IconIdentity, IconEye } from './Icons';
 
 interface NavBarProps {
   current: ViewState;
@@ -34,7 +34,7 @@ export const NavBar: React.FC<NavBarProps> = ({ current, setView }) => {
 
       <button onClick={() => setView(ViewState.MIRROR)} className={navItemClass(ViewState.MIRROR)}>
         <div className={`absolute -top-6 bg-slate-900 border-2 border-slate-800 rounded-full p-3 transition-all ${current === ViewState.MIRROR ? 'border-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.5)] -translate-y-2' : ''}`}>
-             <IconMirror className={`w-6 h-6 ${current === ViewState.MIRROR ? 'text-indigo-400' : 'text-slate-400'}`} />
+             <IconStar className={`w-6 h-6 ${current === ViewState.MIRROR ? 'text-indigo-400' : 'text-slate-400'}`} />
         </div>
         <div className="h-6"></div>
         <span className={`text-[7px] uppercase font-black tracking-widest mt-1 ${current === ViewState.MIRROR ? 'text-indigo-400' : ''}`}>Mirror</span>

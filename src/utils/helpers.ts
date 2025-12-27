@@ -12,6 +12,10 @@ export const loadUser = (): User | null => {
   return data ? JSON.parse(data) : null;
 };
 
+export const clearUser = () => {
+  localStorage.removeItem(STORAGE_KEY);
+};
+
 export const formatTime = (ms: number) => {
   const seconds = Math.floor((Date.now() - ms) / 1000);
   if (seconds < 60) return `${seconds}s`;

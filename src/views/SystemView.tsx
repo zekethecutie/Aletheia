@@ -69,7 +69,7 @@ const ArtifactCard: React.FC<{ artifact: Artifact }> = ({ artifact }) => {
     );
 };
 
-export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void }> = ({ user, onUpdateUser }) => {
+export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void; onLogout: () => void }> = ({ user, onUpdateUser, onLogout }) => {
   const [tab, setTab] = useState<'STATUS' | 'QUESTS' | 'INVENTORY'>('STATUS');
   const [taskInput, setTaskInput] = useState('');
   const [featInput, setFeatInput] = useState('');
@@ -432,6 +432,15 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void 
       </div>
 
       {showSettings && <SettingsModal user={user} onClose={() => setShowSettings(false)} onUpdate={onUpdateUser} />}
+      
+      <div className="fixed bottom-32 right-6 z-40">
+        <button 
+          onClick={onLogout}
+          className="px-6 py-3 bg-red-900/20 border border-red-500/30 text-red-400 text-xs font-bold uppercase tracking-widest hover:bg-red-900/40 hover:border-red-500 transition-all rounded-lg"
+        >
+          Disconnect
+        </button>
+      </div>
     </div>
   );
 };

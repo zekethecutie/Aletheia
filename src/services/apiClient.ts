@@ -1,49 +1,81 @@
-const API_URL = import.meta.env.DEV ? 'http://localhost:3001' : '/api';
+const API_URL = 'http://localhost:3001';
+
+const handleResponse = async (response: Response) => {
+  if (!response.ok) {
+    try {
+      const error = await response.json();
+      throw new Error(error.error || `HTTP ${response.status}`);
+    } catch (e) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+  }
+  return response.json();
+};
 
 export const apiClient = {
   async register(username: string, password: string, manifesto: string, stats: any, originStory: string) {
-    const response = await fetch(`${API_URL}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password, manifesto, stats, originStory })
-    });
-    if (!response.ok) throw new Error(await response.text());
-    return response.json();
+    try {
+      const response = await fetch(`${API_URL}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password, manifesto, stats, originStory })
+      });
+      return handleResponse(response);
+    } catch (error: any) {
+      console.error('Register error:', error);
+      throw error;
+    }
   },
 
   async login(username: string, password: string) {
-    const response = await fetch(`${API_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
-    if (!response.ok) throw new Error('Invalid credentials');
-    return response.json();
+    try {
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      return handleResponse(response);
+    } catch (error: any) {
+      console.error('Login error:', error);
+      throw new Error('Invalid credentials');
+    }
   },
 
   async getProfile(id: string) {
-    const response = await fetch(`${API_URL}/profile/${id}`);
-    if (!response.ok) throw new Error('Profile not found');
-    return response.json();
+    try {
+      const response = await fetch(`${API_URL}/profile/${id}`);
+      return handleResponse(response);
+    } catch (error: any) {
+      console.error('Get profile error:', error);
+      throw error;
+    }
   },
 
   async updateProfile(id: string, data: any) {
-    const response = await fetch(`${API_URL}/profile/${id}/update`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    if (!response.ok) throw new Error('Update failed');
-    return response.json();
+    try {
+      const response = await fetch(`${API_URL}/profile/${id}/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      return handleResponse(response);
+    } catch (error: any) {
+      console.error('Update profile error:', error);
+      throw error;
+    }
   },
 
   async generateMysteriousName() {
-    const response = await fetch(`${API_URL}/ai/mysterious-name`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
-    });
-    if (!response.ok) throw new Error('Failed to generate name');
-    const data = await response.json();
-    return data.name;
+    try {
+      const response = await fetch(`${API_URL}/ai/mysterious-name`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await handleResponse(response);
+      return data.name;
+    } catch (error: any) {
+      console.error('Generate name error:', error);
+      throw error;
+    }
   }
 };

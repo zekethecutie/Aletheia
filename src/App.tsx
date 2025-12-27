@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ViewState, User } from './types';
 import { NavBar } from './components/NavBar';
-import { loadUser, saveUser } from './utils/helpers';
+import { loadUser, saveUser, clearUser } from './utils/helpers';
 import { apiClient } from './services/apiClient';
 
 import { IntroView } from './views/IntroView';
@@ -75,6 +75,12 @@ export default function App() {
     setView(ViewState.SANCTUM);
   };
 
+  const handleLogout = () => {
+    clearUser();
+    setCurrentUser(null);
+    setView(ViewState.AUTH_CHOICE);
+  };
+
   switch (view) {
     case ViewState.INTRO: return <IntroView onFinish={() => setView(ViewState.AUTH_CHOICE)} />;
     case ViewState.AUTH_CHOICE: return <AuthChoiceView onChoice={c => setView(c === 'CREATE' ? ViewState.CREATE_IDENTITY : ViewState.EMBARK)} />;
@@ -90,7 +96,7 @@ export default function App() {
           {view === ViewState.HIERARCHY && <HierarchyView />}
           {view === ViewState.ORACLE && <ConsultantView />}
           {view === ViewState.MIRROR && <MirrorView user={currentUser} onUpdateUser={handleUpdateUser} />}
-          {view === ViewState.SYSTEM && <SystemView user={currentUser} onUpdateUser={handleUpdateUser} />}
+          {view === ViewState.SYSTEM && <SystemView user={currentUser} onUpdateUser={handleUpdateUser} onLogout={handleLogout} />}
           {view === ViewState.PROFILE && <ProfileView currentUser={currentUser} onUpdateUser={handleUpdateUser} onBack={() => setView(ViewState.SANCTUM)} />}
           <NavBar current={view} setView={setView} />
         </div>

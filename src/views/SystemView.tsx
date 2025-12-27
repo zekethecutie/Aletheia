@@ -35,7 +35,6 @@ const StatHex: React.FC<{ label: string; value: number; color: string; descripti
 );
 
 const ArtifactCard: React.FC<{ artifact: Artifact }> = ({ artifact }) => {
-    // Safety map to prevent crashes if AI generates a slightly different string
     const rarityColors: Record<string, string> = {
         'COMMON': 'border-slate-800 text-slate-500',
         'RARE': 'border-blue-500/50 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.1)]',
@@ -43,14 +42,12 @@ const ArtifactCard: React.FC<{ artifact: Artifact }> = ({ artifact }) => {
         'MYTHIC': 'border-purple-500/50 text-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.3)]'
     };
 
-    // Safe lookup with fallback
     const rarityKey = (artifact.rarity || 'COMMON').toUpperCase();
     const colorClass = rarityColors[rarityKey] || rarityColors['COMMON'];
     const textColor = colorClass.split(' ')[1] || 'text-slate-500';
 
     return (
         <div className={`aspect-square bg-slate-950 border ${colorClass} p-2 flex flex-col items-center justify-center text-center relative group overflow-hidden cursor-pointer hover:bg-slate-900 transition-colors`}>
-            {/* Display Image if available, else Icon */}
             {artifact.imageUrl ? (
                 <div className="w-full h-full absolute inset-0 opacity-80 group-hover:scale-110 transition-transform duration-500">
                     <img src={artifact.imageUrl} className="w-full h-full object-cover" alt={artifact.name} />
@@ -62,7 +59,6 @@ const ArtifactCard: React.FC<{ artifact: Artifact }> = ({ artifact }) => {
             
             <div className="text-[8px] font-black uppercase tracking-wide truncate w-full px-1 z-10 relative mt-auto mb-1 drop-shadow-md">{artifact.name}</div>
             
-            {/* Tooltip */}
             <div className="absolute inset-0 bg-black/95 flex flex-col items-center justify-center p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 backdrop-blur-sm pointer-events-none">
                 <p className={`text-[8px] font-bold uppercase mb-2 ${textColor}`}>{artifact.rarity}</p>
                 <p className="text-[9px] text-white leading-tight mb-2 font-serif italic line-clamp-3">"{artifact.description}"</p>
@@ -79,14 +75,11 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void 
   const [featInput, setFeatInput] = useState('');
   const [calculating, setCalculating] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [activeQuestType, setActiveQuestType] = useState<'DAILY' | 'HABIT'>('DAILY');
   const [analyzeMode, setAnalyzeMode] = useState(false);
   const [generatingQuest, setGeneratingQuest] = useState(false);
 
   const rank = getRank(user.stats.level);
   const xpPercent = (user.stats.xp / user.stats.xpToNextLevel) * 100;
-
-  // --- Actions ---
 
   const addTask = (type: 'DAILY' | 'HABIT') => {
     if (!taskInput) return;
@@ -100,13 +93,6 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void 
     };
     onUpdateUser({ ...user, tasks: [...user.tasks, newTask] });
     setTaskInput('');
-  };
-
-  const handleGenerateQuest = async () => {
-     setGeneratingQuest(true);
-     const newQuest = await generateQuest(user.stats);
-     onUpdateUser({ ...user, tasks: [newQuest, ...user.tasks] });
-     setGeneratingQuest(false);
   };
 
   const toggleTask = (id: string) => {
@@ -132,14 +118,12 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void 
     setCalculating(true);
     const res = await calculateFeat(featInput, user.stats);
     
-    // Simple level up logic
     let newXp = user.stats.xp + res.xpGained;
     let newLevel = user.stats.level;
     let nextXp = user.stats.xpToNextLevel;
     if (newXp >= nextXp) { newLevel += 1; newXp -= nextXp; nextXp = Math.floor(nextXp * 1.2); }
 
     const newStats = { ...user.stats, xp: newXp, level: newLevel, xpToNextLevel: nextXp };
-    // Apply stat bumps
     if (res.statsIncreased.wealth) newStats.wealth = (newStats.wealth || 0) + res.statsIncreased.wealth;
     if (res.statsIncreased.strength) newStats.strength = (newStats.strength || 0) + res.statsIncreased.strength;
     if (res.statsIncreased.spirit) newStats.spirit = (newStats.spirit || 0) + res.statsIncreased.spirit;
@@ -156,7 +140,6 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void 
     <div className="min-h-screen bg-void pb-24 font-sans text-slate-200">
       <div className="fixed inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 pointer-events-none"></div>
 
-      {/* HEADER */}
       <div className="relative w-full h-56 bg-slate-950 group">
           <div className="absolute inset-0 z-0 overflow-hidden">
              {user.coverUrl ? (
@@ -247,8 +230,8 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void 
          {['SYSTEM', 'VERIFY', 'STATS'].map(t => (
              <button 
                 key={t}
-                onClick={() => setTab(t === 'STATS' ? 'STATUS' : t as any)} 
-                className={`flex-1 py-2 rounded-full text-[10px] font-display font-black uppercase tracking-[0.2em] transition-all border ${tab === (t === 'STATS' ? 'STATUS' : t) ? 'bg-slate-800 text-white border-white/20' : 'bg-transparent text-slate-600 border-transparent hover:text-slate-400'}`}
+                onClick={() => setTab(t === 'STATS' ? 'STATUS' : (t === 'SYSTEM' ? 'QUESTS' : 'INVENTORY'))} 
+                className={`flex-1 py-2 rounded-full text-[10px] font-display font-black uppercase tracking-[0.2em] transition-all border ${tab === (t === 'STATS' ? 'STATUS' : (t === 'SYSTEM' ? 'QUESTS' : 'INVENTORY')) ? 'bg-slate-800 text-white border-white/20' : 'bg-transparent text-slate-600 border-transparent hover:text-slate-400'}`}
              >
                 {t}
              </button>

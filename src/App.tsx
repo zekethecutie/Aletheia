@@ -8,6 +8,7 @@ import { IntroView } from './views/IntroView';
 import { AuthChoiceView, CreateIdentityView, EmbarkView } from './views/AuthView';
 import { SanctumView } from './views/SanctumView';
 import { SystemView } from './views/SystemView';
+import { HierarchyView } from './views/HierarchyView';
 import { ConsultantView } from './views/ConsultantView';
 import { ExploreView } from './views/ExploreView';
 import { MirrorView } from './views/MirrorView';
@@ -81,6 +82,7 @@ export default function App() {
         <div className="font-sans text-slate-200 bg-void min-h-screen selection:bg-gold selection:text-black safe-pb">
           {view === ViewState.SANCTUM && <SanctumView />}
           {view === ViewState.EXPLORE && <ExploreView />}
+          {view === ViewState.HIERARCHY && <HierarchyView />}
           {view === ViewState.ORACLE && <ConsultantView />}
           {view === ViewState.MIRROR && <MirrorView user={currentUser} onUpdateUser={handleUpdateUser} />}
           {view === ViewState.SYSTEM && <SystemView user={currentUser} onUpdateUser={handleUpdateUser} />}

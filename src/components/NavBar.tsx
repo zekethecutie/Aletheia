@@ -27,6 +27,11 @@ export const NavBar: React.FC<NavBarProps> = ({ current, setView }) => {
         <span className="text-[7px] uppercase font-black tracking-widest">Explore</span>
       </button>
 
+      <button onClick={() => setView(ViewState.HIERARCHY)} className={navItemClass(ViewState.HIERARCHY)}>
+        <IconHierarchy className={iconClass(ViewState.HIERARCHY)} />
+        <span className="text-[7px] uppercase font-black tracking-widest">Hierarchy</span>
+      </button>
+
       <button onClick={() => setView(ViewState.MIRROR)} className={navItemClass(ViewState.MIRROR)}>
         <div className={`absolute -top-6 bg-slate-900 border-2 border-slate-800 rounded-full p-3 transition-all ${current === ViewState.MIRROR ? 'border-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.5)] -translate-y-2' : ''}`}>
              <IconMirror className={`w-6 h-6 ${current === ViewState.MIRROR ? 'text-indigo-400' : 'text-slate-400'}`} />
@@ -38,11 +43,6 @@ export const NavBar: React.FC<NavBarProps> = ({ current, setView }) => {
       <button onClick={() => setView(ViewState.ORACLE)} className={navItemClass(ViewState.ORACLE)}>
         <IconEye className={iconClass(ViewState.ORACLE)} />
         <span className="text-[7px] uppercase font-black tracking-widest">Consult</span>
-      </button>
-      
-      <button onClick={() => setView(ViewState.SYSTEM)} className={navItemClass(ViewState.SYSTEM)}>
-        <IconHierarchy className={iconClass(ViewState.SYSTEM)} />
-        <span className="text-[7px] uppercase font-black tracking-widest">Hierarchy</span>
       </button>
 
       <button onClick={() => setView(ViewState.PROFILE)} className={navItemClass(ViewState.PROFILE)}>

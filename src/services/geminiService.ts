@@ -2,7 +2,8 @@
 import { GoogleGenAI, Chat, Type } from "@google/genai";
 import { UserStats, FeatResponse, SearchResult, MirrorScenario, MirrorResult, Artifact, DailyTask } from "../types";
 
-const apiKey = import.meta.env.VITE_API_KEY || "";
+// Try to use GOOGLE_API_KEY from secrets, fall back to VITE_API_KEY from env
+const apiKey = typeof GOOGLE_API_KEY !== 'undefined' ? GOOGLE_API_KEY : (import.meta.env.VITE_API_KEY || "");
 const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
 const TEXT_MODEL = 'gemini-1.5-flash';

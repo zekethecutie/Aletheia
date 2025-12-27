@@ -6,10 +6,11 @@ export enum ViewState {
   EMBARK = 'EMBARK',
   SANCTUM = 'SANCTUM',
   EXPLORE = 'EXPLORE',
-  ORACLE = 'ORACLE',
+  HIERARCHY = 'HIERARCHY',
   MIRROR = 'MIRROR',
-  SYSTEM = 'SYSTEM',
-  PROFILE = 'PROFILE'
+  ORACLE = 'ORACLE',
+  PROFILE = 'PROFILE',
+  SYSTEM = 'SYSTEM'
 }
 
 export interface UserStats {

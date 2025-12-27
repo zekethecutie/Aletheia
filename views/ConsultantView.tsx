@@ -59,9 +59,22 @@ export const ConsultantView: React.FC = () => {
 
   const currentTheme = ADVISORS[advisor];
 
+  const formatMessage = (text: string) => {
+    return text.split(/(\*\*.*?\*\*)/).map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={i}>{part.slice(2, -2)}</strong>;
+      }
+      return part;
+    });
+  };
+
   return (
     <div className="flex flex-col h-screen pb-20 bg-void">
       <Header title="Consult" subtitle={advisor} rightAction={<button onClick={() => { localStorage.removeItem(getStorageKey(advisor)); switchAdvisor(advisor); }} className="text-slate-600 hover:text-red-500 transition-colors"><IconTrash className="w-5 h-5" /></button>} />
+      
+      <div className="px-6 py-2 bg-black/40 border-b border-slate-900">
+        <p className="text-[10px] text-slate-400 font-serif italic">{currentTheme.desc}</p>
+      </div>
       
       <div className="flex overflow-x-auto p-4 gap-3 bg-black/50 backdrop-blur sticky top-20 z-30 scrollbar-hide">
         {Object.keys(ADVISORS).map((t) => (

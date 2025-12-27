@@ -57,6 +57,17 @@ export const SanctumView: React.FC = () => {
       resonance: 0,
       liked_by: []
     });
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user && Math.random() > 0.7) {
+      const content = await generateSystemPost();
+      await supabase.from('posts').insert({
+        author_id: 'the-council-id', // Use a dedicated ID or null if allowed
+        content,
+        created_at: new Date().toISOString(),
+        resonance: Math.floor(Math.random() * 50),
+        liked_by: []
+      });
+    }
     fetchPosts();
   };
 
@@ -93,7 +104,7 @@ export const SanctumView: React.FC = () => {
   const visiblePosts = activeTab === 'GLOBAL' ? posts : posts.filter(p => currentUser?.following?.includes(p.authorId) || p.authorId === currentUser?.id);
 
   if (viewProfileId && currentUser) return <ProfileView targetUserId={viewProfileId} currentUser={currentUser} onBack={() => setViewProfileId(null)} onUpdateUser={() => {}} />;
-  if (selectedPost) return <PostDetailView post={selectedPost} onBack={() => setSelectedPost(null)} />;
+  if (selectedPost) return <PostDetailView post={selectedPost} onBack={() => setSelectedPost(null)} onUpdate={fetchPosts} />;
 
   return (
     <div className="min-h-screen bg-void pb-24 relative overflow-x-hidden">

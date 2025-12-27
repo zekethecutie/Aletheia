@@ -7,6 +7,3 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv
 }
-
-// Google API Key from Replit Secrets
-declare const GOOGLE_API_KEY: string;

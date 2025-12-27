@@ -22,6 +22,7 @@ export interface UserStats {
   spirit: number;
   strength: number; 
   wealth: number;   
+  social: number;
   class: string;
 }
 

@@ -40,8 +40,8 @@ export const NavBar: React.FC<NavBarProps> = ({ current, setView }) => {
         <span className="text-[7px] uppercase font-black tracking-widest">Consult</span>
       </button>
       
-      <button onClick={() => setView(ViewState.EXPLORE)} className={navItemClass(ViewState.EXPLORE)}>
-        <IconHierarchy className={iconClass(ViewState.EXPLORE)} />
+      <button onClick={() => setView(ViewState.SYSTEM)} className={navItemClass(ViewState.SYSTEM)}>
+        <IconHierarchy className={iconClass(ViewState.SYSTEM)} />
         <span className="text-[7px] uppercase font-black tracking-widest">Hierarchy</span>
       </button>
 

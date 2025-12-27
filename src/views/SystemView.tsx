@@ -1,38 +1,10 @@
 
-import React, { useState } from 'react';
-import { User, DailyTask, Artifact } from '../types';
+import React, { useState, useEffect } from 'react';
+import { User, Artifact } from '../types';
 import { apiClient } from '../services/apiClient';
-import { IconSettings, IconPlus, IconEye, IconLock, IconTrash, IconMirror } from '../components/Icons';
+import { IconSettings, IconLock, IconMirror } from '../components/Icons';
 import { SettingsModal } from '../components/modals/SettingsModal';
-import { getRank, getRankColor } from '../utils/helpers';
-
-// --- Sub-components ---
-
-const StatHex: React.FC<{ label: string; value: number; color: string; description?: string; activeAnalysis: boolean }> = ({ label, value, color, description, activeAnalysis }) => (
-  <div className="relative group transition-all duration-500">
-     <div className={`flex flex-col items-center justify-center p-4 glass-card rounded-2xl border-white/5 hover:border-gold/30 transition-all ${activeAnalysis ? 'opacity-20 blur-md' : 'opacity-100'}`}>
-        <div className="relative">
-            <svg className="w-16 h-16 transform -rotate-90">
-                <circle cx="32" cy="32" r="30" fill="none" stroke="currentColor" strokeWidth="1" className="text-white/5" />
-                <circle cx="32" cy="32" r="30" fill="none" stroke="currentColor" strokeWidth="1" className={color} strokeDasharray={`${(value / 100) * 188.5} 188.5`} strokeLinecap="round" />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
-                <span className={`text-xl font-black font-mono tracking-tighter ${color}`}>{value}</span>
-            </div>
-        </div>
-        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mt-4 font-sans">{label}</span>
-     </div>
-     
-     {activeAnalysis && (
-        <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-            <div className="bg-black/90 border border-gold/30 p-3 rounded shadow-[0_0_30px_rgba(212,175,55,0.2)] w-40 text-center animate-fade-in-up z-30 relative backdrop-blur-xl">
-                <p className={`text-[10px] font-black uppercase ${color} mb-2 tracking-[0.1em]`}>{label} ANALYTICS</p>
-                <p className="text-[9px] text-slate-300 leading-relaxed font-serif italic">"{description}"</p>
-            </div>
-        </div>
-     )}
-  </div>
-);
+import { getRank } from '../utils/helpers';
 
 const ArtifactCard: React.FC<{ artifact: Artifact }> = ({ artifact }) => {
     const rarityColors: Record<string, string> = {
@@ -56,9 +28,7 @@ const ArtifactCard: React.FC<{ artifact: Artifact }> = ({ artifact }) => {
             ) : (
                 <div className="text-3xl mb-2 filter drop-shadow-md transform group-hover:scale-110 transition-transform duration-300">{artifact.icon || '📦'}</div>
             )}
-            
             <div className="text-[8px] font-black uppercase tracking-wide truncate w-full px-1 z-10 relative mt-auto mb-1 drop-shadow-md">{artifact.name}</div>
-            
             <div className="absolute inset-0 bg-black/95 flex flex-col items-center justify-center p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 backdrop-blur-sm pointer-events-none">
                 <p className={`text-[8px] font-bold uppercase mb-2 ${textColor}`}>{artifact.rarity}</p>
                 <p className="text-[9px] text-white leading-tight mb-2 font-serif italic line-clamp-3">"{artifact.description}"</p>
@@ -70,14 +40,14 @@ const ArtifactCard: React.FC<{ artifact: Artifact }> = ({ artifact }) => {
 };
 
 export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void; onLogout: () => void }> = ({ user, onUpdateUser, onLogout }) => {
-  const [tab, setTab] = useState<'STATUS' | 'QUESTS' | 'INVENTORY'>('STATUS');
-  const [taskInput, setTaskInput] = useState('');
+  const [tab, setTab] = useState<'STATUS' | 'QUESTS' | 'INVENTORY'>('QUESTS');
   const [featInput, setFeatInput] = useState('');
   const [calculating, setCalculating] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [analyzeMode, setAnalyzeMode] = useState(false);
   const [generatingQuest, setGeneratingQuest] = useState(false);
+  const [quests, setQuests] = useState<any[]>([]);
 
+  useEffect(() => {
     const fetchQuests = async () => {
       try {
         const data = await apiClient.getQuests(user.id);
@@ -107,7 +77,6 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
     try {
       const res = await apiClient.completeQuest(quest.id);
       if (res.success) {
-        // Apply rewards
         let newXp = user.stats.xp + (res.reward.xp || 100);
         let newLevel = user.stats.level;
         let nextXp = user.stats.xpToNextLevel;
@@ -116,12 +85,13 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
         const newStats = { ...user.stats, xp: newXp, level: newLevel, xpToNextLevel: nextXp };
         if (res.reward.stats) {
           Object.keys(res.reward.stats).forEach(k => {
-            newStats[k] = (newStats[k] || 0) + res.reward.stats[k];
+            const key = k as keyof typeof newStats;
+            if (typeof newStats[key] === 'number') {
+                (newStats[key] as any) += res.reward.stats[k];
+            }
           });
         }
         onUpdateUser({ ...user, stats: newStats });
-        
-        // Refresh quests
         const data = await apiClient.getQuests(user.id);
         setQuests(data);
       }
@@ -130,49 +100,11 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
     }
   };
 
-  const [quests, setQuests] = useState<any[]>([]);
-
-  const rank = getRank(user.stats.level);
-  const xpPercent = (user.stats.xp / user.stats.xpToNextLevel) * 100;
-
-  const addTask = (type: 'DAILY' | 'HABIT') => {
-    if (!taskInput) return;
-    const newTask: DailyTask = { 
-        id: Date.now().toString(), 
-        text: taskInput, 
-        completed: false, 
-        type: type,
-        streak: 0,
-        difficulty: 'E'
-    };
-    onUpdateUser({ ...user, tasks: [...user.tasks, newTask] });
-    setTaskInput('');
-  };
-
-  const toggleTask = (id: string) => {
-    const updated = user.tasks.map(t => {
-        if (t.id === id) {
-             if (t.type === 'HABIT') {
-                 return { ...t, streak: (t.streak || 0) + 1 };
-             }
-             return { ...t, completed: !t.completed };
-        }
-        return t;
-    });
-    onUpdateUser({ ...user, tasks: updated });
-  };
-
-  const removeTask = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const updated = user.tasks.filter(t => t.id !== id);
-    onUpdateUser({ ...user, tasks: updated });
-  };
-
   const submitFeat = async () => {
+    if (!featInput.trim()) return;
     setCalculating(true);
     try {
       const res = await apiClient.calculateFeat(featInput);
-      
       let newXp = user.stats.xp + res.xpGained;
       let newLevel = user.stats.level;
       let nextXp = user.stats.xpToNextLevel;
@@ -180,13 +112,13 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
 
       const newStats = { ...user.stats, xp: newXp, level: newLevel, xpToNextLevel: nextXp };
       if (res.statsIncreased) {
-        if (res.statsIncreased.wealth) newStats.wealth = (newStats.wealth || 0) + res.statsIncreased.wealth;
-        if (res.statsIncreased.physical) newStats.physical = (newStats.physical || 0) + res.statsIncreased.physical;
-        if (res.statsIncreased.spiritual) newStats.spiritual = (newStats.spiritual || 0) + res.statsIncreased.spiritual;
-        if (res.statsIncreased.intelligence) newStats.intelligence = (newStats.intelligence || 0) + res.statsIncreased.intelligence;
-        if (res.statsIncreased.social) newStats.social = (newStats.social || 0) + res.statsIncreased.social;
+        Object.keys(res.statsIncreased).forEach(k => {
+          const key = k as keyof typeof newStats;
+          if (typeof newStats[key] === 'number') {
+            (newStats[key] as any) += res.statsIncreased[k];
+          }
+        });
       }
-
       onUpdateUser({ ...user, stats: newStats });
       setFeatInput('');
       alert(`SYSTEM ALERT:\n${res.systemMessage}`);
@@ -197,10 +129,10 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
     }
   };
 
+  const xpPercent = (user.stats.xp / user.stats.xpToNextLevel) * 100;
+
   return (
     <div className="min-h-screen bg-void pb-24 font-sans text-slate-200">
-      <div className="fixed inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 pointer-events-none"></div>
-
       <div className="relative w-full h-56 bg-slate-950 group">
           <div className="absolute inset-0 z-0 overflow-hidden">
              {user.coverUrl ? (
@@ -210,7 +142,6 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
              ) }
              <div className="absolute inset-0 bg-gradient-to-t from-void via-transparent to-transparent"></div>
           </div>
-
           <button onClick={() => setShowSettings(true)} className="absolute top-6 right-6 p-2 bg-black/50 backdrop-blur rounded-full text-white hover:bg-white hover:text-black transition-colors z-20 border border-white/10">
              <IconSettings className="w-5 h-5" />
           </button>
@@ -221,13 +152,9 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
             <div className="relative">
                 <div className="w-48 h-56 bg-gradient-to-br from-gold/40 via-gold/10 to-transparent rounded-2xl p-0.5 shadow-[0_20px_50px_rgba(255,149,0,0.1)]">
                     <div className="w-full h-full bg-black rounded-2xl overflow-hidden relative group">
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-gold/10 via-transparent to-transparent opacity-50"></div>
                         <div className="absolute top-4 left-0 right-0 flex justify-center">
                             <div className="w-32 h-32 glass-card rounded-xl border-white/10 p-2 relative">
-                                <img 
-                                    src={user.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${user.username}&backgroundColor=000000`} 
-                                    className="w-full h-full object-cover rounded-lg"
-                                />
+                                <img src={user.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${user.username}&backgroundColor=000000`} className="w-full h-full object-cover rounded-lg" />
                                 <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-black border border-white/20 text-white text-[10px] font-black px-3 py-1 rounded-full whitespace-nowrap">
                                     LVL {user.stats.level}
                                 </div>
@@ -235,7 +162,7 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                         </div>
                         <div className="absolute bottom-6 left-0 right-0 text-center px-4">
                             <h2 className="text-xl font-display font-black text-white uppercase tracking-tighter mb-1">{user.username}</h2>
-                            <p className="text-gold text-[9px] uppercase font-black tracking-[0.3em] opacity-80">{user.title || user.stats.class || "SCHOLAR"}</p>
+                            <p className="text-gold text-[9px] uppercase font-black tracking-[0.3em] opacity-80">{user.stats.class || "SCHOLAR"}</p>
                         </div>
                     </div>
                 </div>
@@ -251,7 +178,6 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                         <div className="h-full bg-red-500/80 transition-all duration-500" style={{ width: `${Math.min(100, ((user.stats.health || 0) / (user.stats.maxHealth || 100)) * 100)}%` }}></div>
                     </div>
                 </div>
-
                 <div>
                     <div className="flex justify-between text-[10px] uppercase font-bold tracking-widest mb-1">
                         <span className="text-slate-500">Resonance</span>
@@ -261,7 +187,6 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                         <div className="h-full bg-blue-500/80 transition-all duration-500" style={{ width: `${Math.min(100, ((user.stats.resonance || 0) / (user.stats.maxResonance || 100)) * 100)}%` }}></div>
                     </div>
                 </div>
-
                 <div>
                     <div className="flex justify-between text-[10px] uppercase font-bold tracking-widest mb-1">
                         <span className="text-slate-500">Experience</span>
@@ -277,11 +202,7 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
 
       <div className="flex px-4 gap-2 mb-8">
          {['QUESTS', 'ACHIEVEMENTS', 'STATS'].map(t => (
-             <button 
-                key={t}
-                onClick={() => setTab(t === 'STATS' ? 'STATUS' : (t === 'QUESTS' ? 'QUESTS' : 'INVENTORY'))} 
-                className={`flex-1 py-2 rounded-full text-[10px] font-display font-black uppercase tracking-[0.2em] transition-all border ${tab === (t === 'STATS' ? 'STATUS' : (t === 'QUESTS' ? 'QUESTS' : 'INVENTORY')) ? 'bg-slate-800 text-white border-white/20' : 'bg-transparent text-slate-600 border-transparent hover:text-slate-400'}`}
-             >
+             <button key={t} onClick={() => setTab(t === 'STATS' ? 'STATUS' : (t === 'QUESTS' ? 'QUESTS' : 'INVENTORY'))} className={`flex-1 py-2 rounded-full text-[10px] font-display font-black uppercase tracking-[0.2em] transition-all border ${tab === (t === 'STATS' ? 'STATUS' : (t === 'QUESTS' ? 'QUESTS' : 'INVENTORY')) ? 'bg-slate-800 text-white border-white/20' : 'bg-transparent text-slate-600 border-transparent hover:text-slate-400'}`}>
                 {t}
              </button>
          ))}
@@ -291,42 +212,22 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
           {tab === 'STATUS' && (
               <div className="animate-fade-in space-y-4">
                   <div className="grid grid-cols-2 gap-3">
-                      <div className="glass-card p-4 rounded-xl border-white/5 flex justify-between items-center group hover:border-gold/30 transition-all">
-                        <div>
+                      {[
+                        { label: 'Intelligence', val: user.stats.intelligence, color: 'bg-blue-400' },
+                        { label: 'Physical', val: user.stats.physical, color: 'bg-red-500' },
+                        { label: 'Spiritual', val: user.stats.spiritual, color: 'bg-purple-400' },
+                        { label: 'Social', val: user.stats.social, color: 'bg-amber-400' }
+                      ].map(s => (
+                        <div key={s.label} className="glass-card p-4 rounded-xl border-white/5 flex justify-between items-center group hover:border-gold/30 transition-all">
+                          <div>
                             <div className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
-                                <div className="w-1 h-1 bg-blue-400 rounded-full"></div>
-                                Intelligence
+                                <div className={`w-1 h-1 ${s.color} rounded-full`}></div>
+                                {s.label}
                             </div>
-                            <div className="text-2xl font-display font-black text-white">{user.stats.intelligence}</div>
+                            <div className="text-2xl font-display font-black text-white">{s.val}</div>
+                          </div>
                         </div>
-                      </div>
-                      <div className="glass-card p-4 rounded-xl border-white/5 flex justify-between items-center group hover:border-gold/30 transition-all">
-                        <div>
-                            <div className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
-                                <div className="w-1 h-1 bg-red-500 rounded-full"></div>
-                                Physical
-                            </div>
-                            <div className="text-2xl font-display font-black text-white">{user.stats.physical}</div>
-                        </div>
-                      </div>
-                      <div className="glass-card p-4 rounded-xl border-white/5 flex justify-between items-center group hover:border-gold/30 transition-all">
-                        <div>
-                            <div className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
-                                <div className="w-1 h-1 bg-purple-400 rounded-full"></div>
-                                Spiritual
-                            </div>
-                            <div className="text-2xl font-display font-black text-white">{user.stats.spiritual}</div>
-                        </div>
-                      </div>
-                      <div className="glass-card p-4 rounded-xl border-white/5 flex justify-between items-center group hover:border-gold/30 transition-all">
-                        <div>
-                            <div className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
-                                <div className="w-1 h-1 bg-amber-400 rounded-full"></div>
-                                Social
-                            </div>
-                            <div className="text-2xl font-display font-black text-white">{user.stats.social}</div>
-                        </div>
-                      </div>
+                      ))}
                       <div className="glass-card p-4 rounded-xl border-white/5 flex justify-between items-center group hover:border-gold/30 transition-all col-span-2">
                         <div>
                             <div className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
@@ -335,31 +236,19 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                             </div>
                             <div className="text-2xl font-display font-black text-white">{user.stats.wealth || 0}</div>
                         </div>
-                        <div className="w-6 h-6 opacity-20 group-hover:opacity-100 transition-opacity">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-emerald-400">
-                                <path d="M12 1v22m5-18H8a3 3 0 000 6h9a3 3 0 010 6H7" />
-                            </svg>
+                        <div className="w-6 h-6 opacity-20 group-hover:opacity-100 transition-opacity text-emerald-400">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1v22m5-18H8a3 3 0 000 6h9a3 3 0 010 6H7" /></svg>
                         </div>
                       </div>
                   </div>
-
                   <div className="border border-slate-800 bg-slate-950 p-6 relative group">
                       <div className="absolute -left-1 top-4 bottom-4 w-1 bg-gold"></div>
                       <h3 className="text-sm font-bold text-white uppercase mb-4 tracking-widest flex items-center gap-2">
                           <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
                           Log Achievement
                       </h3>
-                      <textarea 
-                        value={featInput} 
-                        onChange={e => setFeatInput(e.target.value)} 
-                        className="w-full h-24 bg-slate-900 border border-slate-800 p-4 text-white text-sm outline-none mb-4 focus:border-gold transition-colors placeholder-slate-600 font-mono" 
-                        placeholder="State your feat, Seeker..." 
-                      />
-                      <button 
-                        onClick={submitFeat} 
-                        disabled={calculating} 
-                        className="w-full py-4 bg-white text-black font-black uppercase text-xs tracking-widest hover:bg-slate-200 transition-colors"
-                      >
+                      <textarea value={featInput} onChange={e => setFeatInput(e.target.value)} className="w-full h-24 bg-slate-900 border border-slate-800 p-4 text-white text-sm outline-none mb-4 focus:border-gold transition-colors placeholder-slate-600 font-mono" placeholder="State your feat, Seeker..." />
+                      <button onClick={submitFeat} disabled={calculating} className="w-full py-4 bg-white text-black font-black uppercase text-xs tracking-widest hover:bg-slate-200 transition-colors">
                         {calculating ? 'Analyzing...' : 'Submit to System'}
                       </button>
                   </div>
@@ -370,31 +259,16 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
               <div className="animate-fade-in space-y-6">
                   <div className="flex justify-between items-center mb-4">
                       <h2 className="text-2xl font-display font-black text-white uppercase tracking-widest">Active Quests</h2>
-                      <button 
-                        onClick={handleGenerateQuests} 
-                        disabled={generatingQuest}
-                        className="text-[10px] bg-gold/10 text-gold border border-gold/20 px-3 py-1 rounded-full uppercase font-black hover:bg-gold/20 transition-all disabled:opacity-50"
-                      >
+                      <button onClick={handleGenerateQuests} disabled={generatingQuest} className="text-[10px] bg-gold/10 text-gold border border-gold/20 px-3 py-1 rounded-full uppercase font-black hover:bg-gold/20 transition-all disabled:opacity-50">
                         {generatingQuest ? 'Scanning...' : 'Seek New Directives'}
                       </button>
                   </div>
-
                   <div className="space-y-4">
                       {quests.map(t => (
-                          <div 
-                            key={t.id} 
-                            onClick={() => handleCompleteQuest(t)}
-                            className={`glass-card p-6 rounded-xl flex items-center justify-between cursor-pointer transition-all relative overflow-hidden group ${t.completed ? 'opacity-40 border-green-500/30' : 'hover:border-gold/50'}`}
-                          >
+                          <div key={t.id} onClick={() => handleCompleteQuest(t)} className={`glass-card p-6 rounded-xl flex items-center justify-between cursor-pointer transition-all relative overflow-hidden group ${t.completed ? 'opacity-40 border-green-500/30' : 'hover:border-gold/50'}`}>
                               <div className="flex items-center gap-6">
                                   <div className={`w-10 h-10 glass-card rounded-lg flex items-center justify-center border-white/10 ${t.completed ? 'bg-green-500/10 border-green-500/30' : 'group-hover:border-gold/30'}`}>
-                                      {t.completed ? (
-                                        <div className="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
-                                      ) : (
-                                        <div className="w-4 h-4 border border-slate-500 rounded-full flex items-center justify-center">
-                                            <div className="w-1.5 h-1.5 border border-slate-500 rounded-full"></div>
-                                        </div>
-                                      )}
+                                      {t.completed ? <div className="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div> : <div className="w-4 h-4 border border-slate-500 rounded-full flex items-center justify-center"><div className="w-1.5 h-1.5 border border-slate-500 rounded-full"></div></div>}
                                   </div>
                                   <div>
                                      <p className="text-[10px] font-display font-black text-gold uppercase tracking-[0.2em] mb-1">{t.difficulty} Tier Directive</p>
@@ -411,12 +285,7 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                               </div>
                           </div>
                       ))}
-                      
-                      {quests.length === 0 && !generatingQuest && (
-                        <div className="py-12 text-center text-slate-600 text-[10px] uppercase border border-dashed border-slate-800 rounded-xl">
-                            No active directives. Seek the void for purpose.
-                        </div>
-                      )}
+                      {quests.length === 0 && !generatingQuest && <div className="py-12 text-center text-slate-600 text-[10px] uppercase border border-dashed border-slate-800 rounded-xl">No active directives. Seek the void for purpose.</div>}
                   </div>
               </div>
           )}
@@ -424,17 +293,13 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
           {tab === 'INVENTORY' && (
               <div className="animate-fade-in space-y-6">
                   <div>
-                    <h3 className="text-xs font-bold text-slate-500 uppercase mb-4 tracking-widest flex items-center gap-2">
-                        <IconLock className="w-3 h-3" /> Mental Artifacts
-                    </h3>
+                    <h3 className="text-xs font-bold text-slate-500 uppercase mb-4 tracking-widest flex items-center gap-2"><IconLock className="w-3 h-3" /> Mental Artifacts</h3>
                     <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                         {user.inventory && user.inventory.length > 0 ? (
                             user.inventory.map((item, i) => <ArtifactCard key={item.id || i} artifact={item} />)
                         ) : (
                             <div className="col-span-3 flex flex-col items-center justify-center py-12 border border-dashed border-slate-800 text-slate-600 text-[10px] uppercase rounded-lg">
-                                <IconMirror className="w-6 h-6 mb-2 text-slate-700" />
-                                <span>The void is empty.</span>
-                                <span className="mt-1">Enter The Mirror to manifest self.</span>
+                                <IconMirror className="w-6 h-6 mb-2 text-slate-700" /><span className="mt-1">The void is empty. Enter Mirror to manifest self.</span>
                             </div>
                         )}
                     </div>
@@ -442,51 +307,7 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
               </div>
           )}
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-24 px-6">
-          <div className="glass-card p-8 rounded-2xl border-white/5 relative overflow-hidden group">
-              <div className="flex items-center gap-4 mb-6">
-                  <div className="w-10 h-10 glass-card rounded-lg flex items-center justify-center border-gold/20">
-                      <div className="w-5 h-5 border-2 border-gold rounded rotate-45"></div>
-                  </div>
-                  <div>
-                      <h3 className="text-lg font-display font-black text-white uppercase tracking-widest">Recent Achievement</h3>
-                      <p className="text-[10px] text-gold font-bold uppercase tracking-widest opacity-60">System Notification</p>
-                  </div>
-              </div>
-              <p className="text-sm text-slate-400 leading-relaxed font-serif italic mb-4">
-                  "You've reached a 14-day streak in Daily Manifestation. +5 Luck attribute permanently assigned."
-              </p>
-              <div className="w-full h-[1px] bg-white/5"></div>
-          </div>
-
-          <div className="glass-card p-8 rounded-2xl border-white/5 relative overflow-hidden group">
-              <div className="flex items-center gap-4 mb-6">
-                  <div className="w-10 h-10 glass-card rounded-lg flex items-center justify-center border-blue-500/20">
-                      <div className="w-5 h-5 border-2 border-blue-500 rounded-full"></div>
-                  </div>
-                  <div>
-                      <h3 className="text-lg font-display font-black text-white uppercase tracking-widest">Safety Protocol</h3>
-                      <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest opacity-60">AI Monitor Active</p>
-                  </div>
-              </div>
-              <p className="text-sm text-slate-400 leading-relaxed font-serif italic mb-4">
-                  "System integrity at 98%. AI monitoring suggests resting within the next 4 hours to avoid HP drain."
-              </p>
-              <div className="w-full h-[1px] bg-white/5"></div>
-          </div>
-      </div>
-
       {showSettings && <SettingsModal user={user} onClose={() => setShowSettings(false)} onUpdate={onUpdateUser} />}
-      
-      <div className="fixed bottom-32 right-6 z-40">
-        <button 
-          onClick={onLogout}
-          className="px-6 py-3 bg-red-900/20 border border-red-500/30 text-red-400 text-xs font-bold uppercase tracking-widest hover:bg-red-900/40 hover:border-red-500 transition-all rounded-lg"
-        >
-          Disconnect
-        </button>
-      </div>
     </div>
   );
 };

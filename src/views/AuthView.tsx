@@ -161,7 +161,7 @@ export const CreateIdentityView: React.FC<{ onComplete: (u: User) => void; onBac
   // --- 1. Username Availability Checker ---
   useEffect(() => {
     const checkAvailability = async () => {
-      const clean = username.trim();
+      const clean = username.trim().toLowerCase(); // Normalize
       if (clean.length < 3) {
         setAvailability('IDLE');
         return;
@@ -169,12 +169,13 @@ export const CreateIdentityView: React.FC<{ onComplete: (u: User) => void; onBac
 
       setAvailability('CHECKING');
       try {
-        const { count, error } = await supabase
+        const { data, error } = await supabase
           .from('profiles')
-          .select('*', { count: 'exact', head: true })
-          .eq('username', clean); // Strict equality check
+          .select('id')
+          .eq('username', clean)
+          .maybeSingle();
         
-        if (!error && count !== null && count > 0) {
+        if (data) {
           setAvailability('TAKEN');
         } else {
           setAvailability('AVAILABLE');
@@ -204,8 +205,9 @@ export const CreateIdentityView: React.FC<{ onComplete: (u: User) => void; onBac
 
     try {
       const cleanUsername = username.trim();
+      const lowerUsername = cleanUsername.toLowerCase();
       // Generate SAFE ID
-      const backendEmail = generateBackendID(cleanUsername);
+      const backendEmail = generateBackendID(lowerUsername);
 
       // --- Step 1: AI Analysis ---
       setStatusMsg("The Council is judging your intent...");
@@ -226,6 +228,7 @@ export const CreateIdentityView: React.FC<{ onComplete: (u: User) => void; onBac
       // --- Step 2: Backend Creation ---
       setStatusMsg("Forging identity...");
 
+      // Use lowerUsername as email part to match login logic
       const { data, error: authError } = await supabase.auth.signUp({
         email: backendEmail,
         password: password,
@@ -235,18 +238,12 @@ export const CreateIdentityView: React.FC<{ onComplete: (u: User) => void; onBac
       });
 
       if (authError) {
-          const msg = authError.message.toLowerCase();
-          if (msg.includes('already registered') || msg.includes('unique constraint')) {
-              throw new Error("This designation is already claimed.");
-          }
-          // Generic fallback
           throw authError;
       }
 
       if (!data.user) throw new Error("The Void rejected the signal.");
 
       // --- Step 3: Profile Creation ---
-      // Fix missing following property
       const newUser: User = {
         id: data.user.id,
         username: cleanUsername,
@@ -264,7 +261,8 @@ export const CreateIdentityView: React.FC<{ onComplete: (u: User) => void; onBac
 
       const { error: profileError } = await supabase.from('profiles').insert({
         id: newUser.id,
-        username: newUser.username,
+        username: lowerUsername, // Store normalized username for uniqueness check
+        display_name: cleanUsername, // Store original casing for display
         manifesto: newUser.manifesto,
         origin_story: newUser.originStory,
         stats: newUser.stats,
@@ -273,14 +271,14 @@ export const CreateIdentityView: React.FC<{ onComplete: (u: User) => void; onBac
       });
       
       if (profileError) {
-          // If profile fails (rare), we might want to clean up auth, but for now just log
-          console.error("Profile creation warning:", profileError);
+          console.error("Profile creation error:", profileError);
+          throw profileError;
       }
 
       // --- SUCCESS ---
       saveUser(newUser);
       setCreatedUser(newUser);
-      setPhase('ACCEPTED'); // Move to acceptance screen
+      setPhase('ACCEPTED');
 
     } catch (err: any) {
       console.error(err);

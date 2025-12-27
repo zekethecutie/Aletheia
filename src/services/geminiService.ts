@@ -201,16 +201,15 @@ export const askAdvisor = async (chat: Chat | null, message: string): Promise<st
 
 export const generateQuest = async (stats: UserStats): Promise<DailyTask> => {
   try {
-    const aiInstance = getAI();
-    const response = await aiInstance.models.generateContent({
-      model: TEXT_MODEL,
-      contents: `Quest for ${stats.class} lvl ${stats.level}.`,
-      config: { responseMimeType: 'application/json', responseSchema: { type: Type.OBJECT, properties: { text: { type: Type.STRING }, difficulty: { type: Type.STRING } }, required: ["text", "difficulty"] } }
+    const response = await fetch('/api/ai/quest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: `Generate a short, intense personal growth quest (max 5 words) for a user with these stats: ${JSON.stringify(stats)}. Format as JSON: { "text": "...", "difficulty": "E|D|C|B|A|S" }` })
     });
-    const res = JSON.parse(response.text || '{}');
+    const res = await response.json();
     return { id: Date.now().toString(), text: res.text, completed: false, type: 'DAILY', difficulty: res.difficulty };
   } catch (e) {
-    return { id: Date.now().toString(), text: "Gaze into the void.", completed: false, type: 'DAILY', difficulty: 'E' };
+    return { id: Date.now().toString(), text: "Master React Three Fiber", completed: false, type: 'DAILY', difficulty: 'B' };
   }
 };
 

@@ -184,51 +184,62 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void 
           </div>
       </div>
 
-      <div className="mt-16 px-8 mb-12 flex gap-8">
-         <div className="flex-1">
-            <div className="flex justify-between items-end mb-4">
-                <div>
-                    <h1 className="text-4xl font-display font-black text-white uppercase tracking-tighter leading-none mb-2">{user.username}</h1>
-                    <p className="text-gold text-[10px] uppercase font-black tracking-[0.5em] opacity-80">{user.title || user.stats.class || "Seeker"}</p>
+      <div className="mt-16 px-8 mb-12">
+         <div className="flex gap-12 items-start">
+            <div className="relative">
+                <div className="w-48 h-56 bg-gradient-to-br from-gold/40 via-gold/10 to-transparent rounded-2xl p-0.5 shadow-[0_20px_50px_rgba(255,149,0,0.1)]">
+                    <div className="w-full h-full bg-black rounded-2xl overflow-hidden relative group">
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-gold/10 via-transparent to-transparent opacity-50"></div>
+                        <div className="absolute top-4 left-0 right-0 flex justify-center">
+                            <div className="w-32 h-32 glass-card rounded-xl border-white/10 p-2 relative">
+                                <img 
+                                    src={user.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${user.username}&backgroundColor=000000`} 
+                                    className="w-full h-full object-cover rounded-lg"
+                                />
+                                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-black border border-white/20 text-white text-[10px] font-black px-3 py-1 rounded-full whitespace-nowrap">
+                                    LVL {user.stats.level}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="absolute bottom-6 left-0 right-0 text-center px-4">
+                            <h2 className="text-xl font-display font-black text-white uppercase tracking-tighter mb-1">{user.username}</h2>
+                            <p className="text-gold text-[9px] uppercase font-black tracking-[0.3em] opacity-80">{user.title || user.stats.class || "SCHOLAR"}</p>
+                        </div>
+                    </div>
                 </div>
             </div>
-            
-            <div className="space-y-4 max-w-md">
+
+            <div className="flex-1 space-y-6 max-w-md pt-4">
                 <div>
-                    <div className="flex justify-between text-[10px] uppercase font-bold tracking-widest mb-1">
+                    <div className="flex justify-between text-[10px] uppercase font-bold tracking-widest mb-2">
                         <span className="text-slate-500">Health Point</span>
                         <span className="text-slate-300">85 / 100</span>
                     </div>
                     <div className="stats-bar">
-                        <div className="stats-bar-fill bg-red-500" style={{ width: '85%' }}></div>
+                        <div className="stats-bar-fill bg-red-500/80" style={{ width: '85%' }}></div>
                     </div>
                 </div>
 
                 <div>
-                    <div className="flex justify-between text-[10px] uppercase font-bold tracking-widest mb-1">
+                    <div className="flex justify-between text-[10px] uppercase font-bold tracking-widest mb-2">
                         <span className="text-slate-500">Mana Point</span>
                         <span className="text-slate-300">120 / 150</span>
                     </div>
                     <div className="stats-bar">
-                        <div className="stats-bar-fill bg-blue-500" style={{ width: '80%' }}></div>
+                        <div className="stats-bar-fill bg-blue-500/80" style={{ width: '80%' }}></div>
                     </div>
                 </div>
 
                 <div>
-                    <div className="flex justify-between text-[10px] uppercase font-bold tracking-widest mb-1">
+                    <div className="flex justify-between text-[10px] uppercase font-bold tracking-widest mb-2">
                         <span className="text-slate-500">Experience</span>
                         <span className="text-slate-300">{user.stats.xp} / {user.stats.xpToNextLevel}</span>
                     </div>
                     <div className="stats-bar">
-                        <div className="stats-bar-fill bg-gold" style={{ width: `${xpPercent}%` }}></div>
+                        <div className="stats-bar-fill bg-gold/80" style={{ width: `${xpPercent}%` }}></div>
                     </div>
                 </div>
             </div>
-         </div>
-
-         <div className="w-48 glass-card rounded-2xl p-4 flex flex-col items-center justify-center border-gold/20">
-            <div className="text-[10px] font-display font-black uppercase text-gold mb-2 tracking-widest">Recent Achievement</div>
-            <p className="text-[9px] text-slate-400 text-center leading-relaxed">14-day streak in Daily Manifestation. +5 Luck attribute assigned.</p>
          </div>
       </div>
 
@@ -256,14 +267,24 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void 
                             </div>
                             <div className="text-2xl font-display font-black text-white">{user.stats.strength}</div>
                         </div>
+                        <div className="w-6 h-6 opacity-20 group-hover:opacity-100 transition-opacity">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gold">
+                                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                            </svg>
+                        </div>
                       </div>
                       <div className="glass-card p-4 rounded-xl border-white/5 flex justify-between items-center group hover:border-gold/30 transition-all">
                         <div>
                             <div className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
                                 <div className="w-1 h-1 bg-gold rounded-full"></div>
-                                Intellect
+                                Intelligence
                             </div>
                             <div className="text-2xl font-display font-black text-white">{user.stats.intellect}</div>
+                        </div>
+                        <div className="w-6 h-6 opacity-20 group-hover:opacity-100 transition-opacity">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gold">
+                                <path d="M12 2a10 10 0 100 20 10 10 0 000-20zM12 16v-4M12 8h.01" />
+                            </svg>
                         </div>
                       </div>
                       <div className="glass-card p-4 rounded-xl border-white/5 flex justify-between items-center group hover:border-gold/30 transition-all">
@@ -274,6 +295,11 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void 
                             </div>
                             <div className="text-2xl font-display font-black text-white">{user.stats.social}</div>
                         </div>
+                        <div className="w-6 h-6 opacity-20 group-hover:opacity-100 transition-opacity">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gold">
+                                <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                        </div>
                       </div>
                       <div className="glass-card p-4 rounded-xl border-white/5 flex justify-between items-center group hover:border-gold/30 transition-all">
                         <div>
@@ -282,6 +308,11 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void 
                                 Luck
                             </div>
                             <div className="text-2xl font-display font-black text-white">7</div>
+                        </div>
+                        <div className="w-6 h-6 opacity-20 group-hover:opacity-100 transition-opacity">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gold">
+                                <path d="M12 15l-2 5L3 9l18-6-5 18-4-6z" />
+                            </svg>
                         </div>
                       </div>
                   </div>
@@ -311,62 +342,52 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void 
 
           {tab === 'QUESTS' && (
               <div className="animate-fade-in space-y-6">
-                  <div className="flex gap-4 mb-2">
-                     <button onClick={() => setActiveQuestType('DAILY')} className={`text-xs font-bold uppercase tracking-widest ${activeQuestType === 'DAILY' ? 'text-white underline decoration-gold underline-offset-4' : 'text-slate-600'}`}>Daily</button>
-                     <button onClick={() => setActiveQuestType('HABIT')} className={`text-xs font-bold uppercase tracking-widest ${activeQuestType === 'HABIT' ? 'text-white underline decoration-gold underline-offset-4' : 'text-slate-600'}`}>Habits</button>
+                  <div className="flex justify-between items-center mb-4">
+                      <h2 className="text-2xl font-display font-black text-white uppercase tracking-widest">Active Quests</h2>
+                      <div className="text-[10px] text-slate-500 font-mono uppercase tracking-widest">Cycle 4 // Day 12</div>
                   </div>
 
-                  <div className="flex gap-2">
-                    <input 
-                        value={taskInput} 
-                        onChange={e => setTaskInput(e.target.value)} 
-                        className="flex-1 bg-slate-900 border border-slate-800 p-4 text-white text-sm outline-none focus:border-gold transition-colors placeholder-slate-600" 
-                        placeholder="Add new directive..." 
-                    />
-                    <button onClick={() => addTask(activeQuestType)} className="px-5 bg-slate-800 text-white hover:bg-slate-700 transition-colors border border-slate-700">
-                        <IconPlus className="w-5 h-5" />
-                    </button>
-                  </div>
-
-                  {/* AI Quest Gen Button */}
-                  {activeQuestType === 'DAILY' && (
-                      <button 
-                        onClick={handleGenerateQuest} 
-                        disabled={generatingQuest}
-                        className="w-full py-3 bg-indigo-900/30 border border-indigo-500/50 text-indigo-300 font-bold uppercase text-[10px] tracking-widest hover:bg-indigo-900/50 transition-colors flex items-center justify-center gap-2"
-                      >
-                        {generatingQuest ? 'Consulting The Void...' : 'Generate Quest Protocol'}
-                      </button>
-                  )}
-
-                  <div className="space-y-3">
-                      {user.tasks.filter(t => (t.type || 'DAILY') === activeQuestType).map(t => (
+                  <div className="space-y-4">
+                      {user.tasks.map(t => (
                           <div 
                             key={t.id} 
                             onClick={() => toggleTask(t.id)}
-                            className={`p-4 border border-slate-800 flex items-center justify-between cursor-pointer transition-all relative overflow-hidden group ${t.completed && t.type === 'DAILY' ? 'opacity-40 bg-slate-900' : 'bg-slate-950 hover:border-gold/50'}`}
+                            className={`glass-card p-6 rounded-xl flex items-center justify-between cursor-pointer transition-all relative overflow-hidden group ${t.completed ? 'opacity-40' : 'hover:border-gold/50'}`}
                           >
-                              {t.type === 'HABIT' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"></div>}
-                              <div className="flex items-center gap-4">
-                                  {t.type === 'DAILY' && (
-                                    <div className={`w-5 h-5 border-2 rounded-sm flex items-center justify-center transition-colors ${t.completed ? 'bg-gold border-gold' : 'border-slate-600'}`}>
-                                        {t.completed && <div className="w-2 h-2 bg-black"></div>}
-                                    </div>
-                                  )}
+                              <div className="flex items-center gap-6">
+                                  <div className="w-10 h-10 glass-card rounded-lg flex items-center justify-center border-white/10 group-hover:border-gold/30">
+                                      <div className="w-4 h-4 border border-slate-500 rounded-full flex items-center justify-center">
+                                          <div className="w-1.5 h-1.5 border border-slate-500 rounded-full"></div>
+                                      </div>
+                                  </div>
                                   <div>
-                                     <span className={`text-sm font-bold ${t.completed && t.type === 'DAILY' ? 'line-through text-slate-500' : 'text-white'}`}>{t.text}</span>
-                                     <div className="flex gap-2 mt-1">
-                                        {t.difficulty && <span className={`text-[8px] px-1 bg-slate-900 border border-slate-800 text-slate-400 font-mono`}>RANK {t.difficulty}</span>}
-                                        {t.type === 'HABIT' && <span className="text-[9px] text-slate-500 uppercase tracking-widest">Streak: {t.streak || 0}</span>}
-                                     </div>
+                                     <p className="text-[10px] font-display font-black text-gold uppercase tracking-[0.2em] mb-1">{t.type === 'HABIT' ? 'Stamina Boost' : 'Skill Upgrade'}</p>
+                                     <p className="text-sm font-bold text-white tracking-wide">{t.text}</p>
                                   </div>
                               </div>
-                              <button onClick={(e) => removeTask(t.id, e)} className="text-slate-700 hover:text-red-500 p-2"><IconTrash className="w-4 h-4" /></button>
+                              <div className="flex items-center gap-4">
+                                  <div className="text-right">
+                                      <p className="text-[10px] font-mono text-slate-400 uppercase">+{t.difficulty === 'S' ? '1000' : '450'} EXP</p>
+                                      <div className="w-16 h-[2px] bg-white/10 mt-1">
+                                          <div className="h-full bg-white/40" style={{ width: t.completed ? '100%' : '30%' }}></div>
+                                      </div>
+                                  </div>
+                                  <button onClick={(e) => removeTask(t.id, e)} className="text-slate-700 hover:text-red-500 p-2"><IconTrash className="w-4 h-4" /></button>
+                              </div>
                           </div>
                       ))}
-                      {user.tasks.filter(t => (t.type || 'DAILY') === activeQuestType).length === 0 && (
-                          <div className="text-center py-8 text-slate-600 text-xs italic">No active directives.</div>
-                      )}
+                      
+                      <div className="flex gap-2 mt-8">
+                        <input 
+                            value={taskInput} 
+                            onChange={e => setTaskInput(e.target.value)} 
+                            className="flex-1 bg-slate-900 border border-slate-800 p-4 text-white text-sm outline-none focus:border-gold transition-colors placeholder-slate-600 rounded-lg font-mono" 
+                            placeholder="State new directive..." 
+                        />
+                        <button onClick={() => addTask('DAILY')} className="px-6 bg-white text-black font-black uppercase text-xs tracking-widest hover:bg-slate-200 transition-colors rounded-lg">
+                            Deploy
+                        </button>
+                      </div>
                   </div>
               </div>
           )}
@@ -391,6 +412,40 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void 
                   </div>
               </div>
           )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-24 px-6">
+          <div className="glass-card p-8 rounded-2xl border-white/5 relative overflow-hidden group">
+              <div className="flex items-center gap-4 mb-6">
+                  <div className="w-10 h-10 glass-card rounded-lg flex items-center justify-center border-gold/20">
+                      <div className="w-5 h-5 border-2 border-gold rounded rotate-45"></div>
+                  </div>
+                  <div>
+                      <h3 className="text-lg font-display font-black text-white uppercase tracking-widest">Recent Achievement</h3>
+                      <p className="text-[10px] text-gold font-bold uppercase tracking-widest opacity-60">System Notification</p>
+                  </div>
+              </div>
+              <p className="text-sm text-slate-400 leading-relaxed font-serif italic mb-4">
+                  "You've reached a 14-day streak in Daily Manifestation. +5 Luck attribute permanently assigned."
+              </p>
+              <div className="w-full h-[1px] bg-white/5"></div>
+          </div>
+
+          <div className="glass-card p-8 rounded-2xl border-white/5 relative overflow-hidden group">
+              <div className="flex items-center gap-4 mb-6">
+                  <div className="w-10 h-10 glass-card rounded-lg flex items-center justify-center border-blue-500/20">
+                      <div className="w-5 h-5 border-2 border-blue-500 rounded-full"></div>
+                  </div>
+                  <div>
+                      <h3 className="text-lg font-display font-black text-white uppercase tracking-widest">Safety Protocol</h3>
+                      <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest opacity-60">AI Monitor Active</p>
+                  </div>
+              </div>
+              <p className="text-sm text-slate-400 leading-relaxed font-serif italic mb-4">
+                  "System integrity at 98%. AI monitoring suggests resting within the next 4 hours to avoid HP drain."
+              </p>
+              <div className="w-full h-[1px] bg-white/5"></div>
+          </div>
       </div>
 
       {showSettings && <SettingsModal user={user} onClose={() => setShowSettings(false)} onUpdate={onUpdateUser} />}

@@ -101,15 +101,15 @@ export const HierarchyView: React.FC = () => {
 
       <div className="p-6 relative z-10 max-w-4xl mx-auto">
         {/* Stat Filter Buttons */}
-        <div className="flex gap-2 mb-8 flex-wrap justify-center">
+        <div className="flex gap-3 mb-10 flex-wrap justify-center">
           {(['level', 'intellect', 'discipline', 'spirit', 'strength', 'wealth'] as const).map((stat) => (
             <button
               key={stat}
               onClick={() => setSortBy(stat)}
-              className={`px-4 py-2 rounded text-xs font-black uppercase tracking-widest transition-all ${
+              className={`px-6 py-2 rounded-full text-[9px] font-display font-black uppercase tracking-[0.2em] transition-all border ${
                 sortBy === stat
-                  ? `${statColors[stat]} bg-slate-900 border-2 border-current`
-                  : 'text-slate-500 border border-slate-800 hover:text-slate-300 hover:border-slate-700'
+                  ? `text-white bg-slate-800 border-white/20`
+                  : 'text-slate-500 border-transparent hover:text-slate-300'
               }`}
             >
               {stat}
@@ -133,15 +133,15 @@ export const HierarchyView: React.FC = () => {
             {leaderboard.map((user) => (
               <div
                 key={user.id}
-                className={`border transition-all p-4 rounded backdrop-blur-sm hover:border-indigo-500/50 ${getRankBgColor(user.rank)}`}
+                className={`glass-card transition-all p-6 rounded-2xl hover:border-gold/30 group ${getRankBgColor(user.rank)}`}
               >
                 <div className="flex items-center gap-4">
                   {/* Rank */}
                   <div className={`text-center min-w-[50px] ${getRankColor(user.rank)}`}>
-                    <div className="text-xl font-black"># {user.rank}</div>
-                    {user.rank === 1 && <span className="text-xs text-gold">APEX</span>}
-                    {user.rank === 2 && <span className="text-xs text-slate-300">ASCENDED</span>}
-                    {user.rank === 3 && <span className="text-xs text-orange-400">ELITE</span>}
+                    <div className="text-xl font-display font-black"># {user.rank}</div>
+                    {user.rank === 1 && <span className="text-[8px] text-gold font-display font-black uppercase tracking-widest">APEX</span>}
+                    {user.rank === 2 && <span className="text-[8px] text-slate-300 font-display font-black uppercase tracking-widest">ASCENDED</span>}
+                    {user.rank === 3 && <span className="text-[8px] text-orange-400 font-display font-black uppercase tracking-widest">ELITE</span>}
                   </div>
 
                   {/* Avatar */}
@@ -157,14 +157,14 @@ export const HierarchyView: React.FC = () => {
 
                   {/* User Info */}
                   <div className="flex-1">
-                    <h3 className="text-white font-black uppercase tracking-wide">{user.username}</h3>
-                    <p className="text-xs text-slate-400">{user.class}</p>
+                    <h3 className="text-white font-display font-black uppercase tracking-widest text-sm">{user.username}</h3>
+                    <p className="text-[9px] text-slate-400 font-display font-black uppercase tracking-[0.2em]">{user.class}</p>
                   </div>
 
                   {/* Level */}
                   <div className="text-right min-w-[80px]">
-                    <div className="text-2xl font-black text-white">Lvl {user.level}</div>
-                    <div className="text-xs text-slate-500">{user.xp} XP</div>
+                    <div className="text-xl font-display font-black text-white uppercase tracking-tighter">Lvl {user.level}</div>
+                    <div className="text-[8px] text-slate-500 font-mono uppercase tracking-widest">{user.xp} XP</div>
                   </div>
 
                   {/* Sort Stat */}
@@ -174,26 +174,26 @@ export const HierarchyView: React.FC = () => {
                 </div>
 
                 {/* Stats Bar */}
-                <div className="mt-3 grid grid-cols-5 gap-2 text-center text-[10px]">
-                  <div className="bg-slate-900/50 p-2 rounded border border-slate-800">
-                    <div className="text-blue-400 font-bold">{user.intellect}</div>
-                    <div className="text-slate-500 uppercase">INT</div>
+                <div className="mt-4 grid grid-cols-5 gap-3 text-center text-[8px]">
+                  <div className="bg-slate-900/50 p-2 rounded-lg border border-white/5 group-hover:border-blue-500/20 transition-all">
+                    <div className="text-blue-400 font-display font-black uppercase tracking-widest mb-1">{user.intellect}</div>
+                    <div className="text-slate-600 font-bold uppercase tracking-widest">INT</div>
                   </div>
-                  <div className="bg-slate-900/50 p-2 rounded border border-slate-800">
-                    <div className="text-cyan-400 font-bold">{user.discipline}</div>
-                    <div className="text-slate-500 uppercase">DIS</div>
+                  <div className="bg-slate-900/50 p-2 rounded-lg border border-white/5 group-hover:border-cyan-500/20 transition-all">
+                    <div className="text-cyan-400 font-display font-black uppercase tracking-widest mb-1">{user.discipline}</div>
+                    <div className="text-slate-600 font-bold uppercase tracking-widest">DIS</div>
                   </div>
-                  <div className="bg-slate-900/50 p-2 rounded border border-slate-800">
-                    <div className="text-purple-400 font-bold">{user.spirit}</div>
-                    <div className="text-slate-500 uppercase">SPI</div>
+                  <div className="bg-slate-900/50 p-2 rounded-lg border border-white/5 group-hover:border-purple-500/20 transition-all">
+                    <div className="text-purple-400 font-display font-black uppercase tracking-widest mb-1">{user.spirit}</div>
+                    <div className="text-slate-600 font-bold uppercase tracking-widest">SPI</div>
                   </div>
-                  <div className="bg-slate-900/50 p-2 rounded border border-slate-800">
-                    <div className="text-red-400 font-bold">{user.strength}</div>
-                    <div className="text-slate-500 uppercase">STR</div>
+                  <div className="bg-slate-900/50 p-2 rounded-lg border border-white/5 group-hover:border-red-500/20 transition-all">
+                    <div className="text-red-400 font-display font-black uppercase tracking-widest mb-1">{user.strength}</div>
+                    <div className="text-slate-600 font-bold uppercase tracking-widest">STR</div>
                   </div>
-                  <div className="bg-slate-900/50 p-2 rounded border border-slate-800">
-                    <div className="text-yellow-500 font-bold">{user.wealth}</div>
-                    <div className="text-slate-500 uppercase">WEL</div>
+                  <div className="bg-slate-900/50 p-2 rounded-lg border border-white/5 group-hover:border-yellow-500/20 transition-all">
+                    <div className="text-yellow-500 font-display font-black uppercase tracking-widest mb-1">{user.wealth}</div>
+                    <div className="text-slate-600 font-bold uppercase tracking-widest">WEL</div>
                   </div>
                 </div>
               </div>

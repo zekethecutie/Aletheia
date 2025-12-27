@@ -127,21 +127,21 @@ export const SanctumView: React.FC = () => {
             <div className="relative">
               <div className="absolute inset-0 bg-gold/20 blur-xl rounded-full animate-pulse"></div>
               <div className="w-12 h-12 glass-card rounded-xl flex items-center justify-center relative z-10 border-gold/30">
-                <div className="w-6 h-6 bg-gold/80 rotate-45 animate-pulse rounded-sm"></div>
+                <div className="w-6 h-6 bg-gold rotate-45 animate-pulse rounded-sm"></div>
               </div>
             </div>
             <div>
-              <p className="text-white font-black text-[10px] tracking-[0.4em] uppercase">Transmission Received</p>
+              <p className="text-white font-display font-black text-[10px] tracking-[0.4em] uppercase">Transmission Received</p>
               <p className="text-gold/50 text-[8px] tracking-[0.2em] uppercase font-mono mt-1">From: The Council</p>
             </div>
           </div>
 
           <div className="pl-6 border-l-2 border-gold/40 py-2 mb-8">
-            <p className="text-[9px] text-gold font-black tracking-[0.3em] uppercase mb-4 opacity-50">Sacred Wisdom</p>
+            <p className="text-[9px] text-gold font-display font-black tracking-[0.3em] uppercase mb-4 opacity-50">Sacred Wisdom</p>
             <p className="text-2xl md:text-3xl font-serif italic text-white leading-relaxed tracking-wide">
               "{dailyQuote.text}"
             </p>
-            <p className="text-gold/60 text-[10px] uppercase font-black tracking-[0.2em] mt-4">— {dailyQuote.author}</p>
+            <p className="text-gold/60 text-[10px] uppercase font-display font-black tracking-[0.2em] mt-4">— {dailyQuote.author}</p>
           </div>
         </div>
       )}
@@ -164,8 +164,8 @@ export const SanctumView: React.FC = () => {
                       <img src={post.authorAvatar || `https://api.dicebear.com/7.x/initials/svg?seed=${post.authorName}&backgroundColor=000000`} className="w-full h-full object-cover" />
                     </div>
                     <div>
-                      <button onClick={(e) => { e.stopPropagation(); setViewProfileId(post.authorId); }} className="text-white font-black uppercase text-[10px] tracking-[0.2em] hover:text-gold block text-left transition-colors">{post.authorName}</button>
-                      <p className="text-gold/50 text-[8px] uppercase font-bold tracking-[0.3em] mt-1">{post.authorClass}</p>
+                      <button onClick={(e) => { e.stopPropagation(); setViewProfileId(post.authorId); }} className="text-white font-display font-black uppercase text-[10px] tracking-[0.2em] hover:text-gold block text-left transition-colors">{post.authorName}</button>
+                      <p className="text-gold/50 text-[8px] uppercase font-display font-black tracking-[0.3em] mt-1">{post.authorClass}</p>
                     </div>
                   </div>
                   <div className="flex gap-6 items-center">

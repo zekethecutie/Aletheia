@@ -51,6 +51,29 @@ app.get('/api/test-supabase', async (req: Request, res: Response) => {
   }
 });
 
+// AI Quest Protocol
+app.post('/api/ai/quest', async (req: Request, res: Response) => {
+  if (!genAI) return res.status(500).json({ error: 'AI not configured' });
+  try {
+    const { prompt } = req.body;
+    // Fix: Access models via genAI.models for @google/genai version consistency
+    const response = await genAI.models.generateContent({
+      model: 'gemini-1.5-flash',
+      contents: prompt,
+    });
+    const text = response.text || "";
+    // Basic extraction - in production we'd use more robust parsing
+    const jsonMatch = text.match(/\{.*\}/s);
+    if (jsonMatch) {
+        res.json(JSON.parse(jsonMatch[0]));
+    } else {
+        res.json({ text: "Master the void's silence", difficulty: "B" });
+    }
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Start server
 app.listen(Number(PORT), '0.0.0.0', () => {
   console.log(`Server running on http://0.0.0.0:${PORT}`);

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Post, DailyQuote } from '../types';
-import { generateMysteriousName, generateMirrorScenario, generateArtifactImage, getDailyWisdom, submitApplication, evaluateMirrorChoice, createAdvisorSession, askAdvisor, generateQuest, generateSystemPost } from '../services/geminiService';
+import { generateMysteriousName, generateMirrorScenario, generateArtifactImage, getDailyWisdom, submitApplication, evaluateMirrorChoice, createAdvisorSession, askAdvisor, generateQuest, calculateFeat } from '../services/geminiService';
 import { Header } from '../components/Header';
 import { ProfileView } from './ProfileView';
 import { CreatePostModal } from '../components/modals/CreatePostModal';
@@ -59,9 +59,10 @@ export const SanctumView: React.FC = () => {
     });
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user && Math.random() > 0.7) {
-      const content = await generateSystemPost();
+      // Create a temporary post content for the council
+      const content = "The void acknowledges your presence in the stream.";
       await supabase.from('posts').insert({
-        author_id: 'the-council-id', // Use a dedicated ID or null if allowed
+        author_id: 'the-council-id',
         content,
         created_at: new Date().toISOString(),
         resonance: Math.floor(Math.random() * 50),

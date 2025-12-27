@@ -25,7 +25,8 @@ Aletheia is a mystical RPG-styled personal development application built with Re
 ```
 
 ## Environment Variables
-- `VITE_API_KEY`: Google Gemini API key (required for AI features)
+- `VITE_GEMINI_API_KEY`: Gemini API key (auto-configured via Replit AI Integrations)
+- `VITE_GEMINI_BASE_URL`: Gemini API base URL (auto-configured via Replit AI Integrations)
 
 ## Running the App
 - Development: `npm run dev` (runs on port 5000)
@@ -40,6 +41,9 @@ Aletheia is a mystical RPG-styled personal development application built with Re
 - Tailwind CSS (via CDN)
 
 ## Recent Changes
-- 2025-12-27: Configured for Replit environment
-  - Updated vite.config.ts to bind to 0.0.0.0:5000 with allowedHosts
-  - Fixed environment variable access to use Vite's import.meta.env pattern
+- 2025-12-27: Upgraded to Replit Gemini AI Integration
+  - Integrated Replit's native Gemini AI service (no API key management needed)
+  - Updated geminiService.ts to use gemini-2.5-flash (text) and gemini-2.5-flash-image (images)
+  - Environment variables now auto-configured: VITE_GEMINI_API_KEY and VITE_GEMINI_BASE_URL
+  - Backend integration modules available in .replit_integration_files/ for future server development
+  - Previous: Used VITE_API_KEY with gemini-1.5-flash models

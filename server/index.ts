@@ -182,22 +182,29 @@ app.post('/api/ai/mysterious-name', async (req: Request, res: Response) => {
 app.post('/api/ai/quest/generate', async (req: Request, res: Response) => {
   try {
     const { userId, stats, recentAchievements } = req.body;
-    const prompt = `SYSTEM PROTOCOL: Generate 3 unique quests for a ${stats.class} lvl ${stats.level}. 
-    User context: ${recentAchievements || 'Beginning their journey'}.
-    Attributes: ${JSON.stringify(stats)}.
-    Quests should be actionable, mystical, and challenging.
+    const system = `You are the Eye of Aletheia, an architect of destiny observing from the celestial void. Your voice is ancient, wise, and slightly ominous.
+    The subject is a ${stats.class} (Level ${stats.level}).
+    Their essence profile: ${JSON.stringify(stats)}.
+    Context of their journey: ${recentAchievements || 'A soul newly awakened to the architecture.'}
+
+    PROTOCOL: Construct 3 sacred trials (quests) that will force their evolution.
+    Each trial must be:
+    1. Practical: A real-world action they can perform.
+    2. Mystical: Cloaked in the language of the Great Work.
+    3. Aligned: Specifically targeting the improvement of their weakest attributes or reinforcing their path.
+
     Return JSON ONLY: 
     {
       "quests": [
         {
-          "text": "quest description",
+          "text": "Trial description in the voice of a cosmic architect",
           "difficulty": "E|D|C|B|A|S",
           "xp_reward": number,
           "stat_reward": {"physical": number, "intelligence": number, "spiritual": number, "social": number, "wealth": number}
         }
       ]
     }`;
-    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
+    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(system) + '?json=true');
     const text = await response.text();
     const jsonMatch = text.match(/\{.*\}/s);
     if (jsonMatch) {
@@ -210,7 +217,7 @@ app.post('/api/ai/quest/generate', async (req: Request, res: Response) => {
       }
       res.json({ success: true });
     } else {
-      res.status(500).json({ error: 'Failed to generate quests' });
+      res.status(500).json({ error: 'The void is silent. Trial generation failed.' });
     }
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -246,17 +253,17 @@ app.post('/api/quests/:id/complete', async (req: Request, res: Response) => {
 app.post('/api/ai/identity', async (req: Request, res: Response) => {
   try {
     const { manifesto } = req.body;
-    const prompt = `CRITICAL SYSTEM PROTOCOL: You are a meticulous and slightly cold AI evaluator for the Aletheia RPG. 
-    Analyze this user's manifesto: "${manifesto}". 
-    Assign a character class based on their underlying personality traits revealed.
-    Assign starting attributes (stats) from 1 to 10. BE METICULOUS AND UNFORGIVING.
-    Most users should start with 1-3 in most stats.
+    const prompt = `CRITICAL SYSTEM PROTOCOL: You are the High Council of Aletheia, the final arbiters of soul-architecture. 
+    Analyze the seeker's manifesto: "${manifesto}". 
+    Your verdict must be spoken from the heights of the celestial spire—wise, mysterious, and absolute.
+    Determine their character class and assign their starting attributes based on the depth of their intent.
+    BE METICULOUS. Most seekers are found lacking; start them with 1-3 in most attributes.
     Attributes meaning:
-    - Intelligence: Analytical depth and knowledge.
-    - Physical: Discipline and real-world vitality.
-    - Spiritual: Connection to the unseen and inner peace.
-    - Social: Influence and frequency within the collective.
-    - Wealth: Manifestation of value and resources.
+    - Intelligence: Depth of perception.
+    - Physical: Manifestation of will in the material.
+    - Spiritual: Alignment with the unseen.
+    - Social: Resonance within the collective frequency.
+    - Wealth: Ability to transmute value.
     
     Response must be JSON ONLY: 
     {
@@ -272,7 +279,7 @@ app.post('/api/ai/identity', async (req: Request, res: Response) => {
         "resonance": number,
         "maxResonance": number
       }, 
-      "reason": "poetic and analytical verdict of their soul"
+      "reason": "A poetic, wise, and slightly cold verdict from the High Council."
     }`;
     const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
     const text = await response.text();
@@ -280,7 +287,7 @@ app.post('/api/ai/identity', async (req: Request, res: Response) => {
     if (jsonMatch) {
       res.json(JSON.parse(jsonMatch[0]));
     } else {
-      res.json({ initialStats: { intelligence: 1, physical: 1, spiritual: 1, social: 1, wealth: 1, class: "Initiate", health: 10, maxHealth: 100, resonance: 10, maxResonance: 100 }, reason: "The void finds you lacking in definition." });
+      res.json({ initialStats: { intelligence: 1, physical: 1, spiritual: 1, social: 1, wealth: 1, class: "Initiate", health: 10, maxHealth: 100, resonance: 10, maxResonance: 100 }, reason: "The void finds you lacking in definition. Begin as a shadow." });
     }
   } catch (error: any) {
     res.status(500).json({ error: error.message });

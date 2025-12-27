@@ -99,7 +99,12 @@ export const SanctumView: React.FC = () => {
     <div className="min-h-screen bg-void pb-24 relative overflow-x-hidden">
       <Header title="Sanctum" subtitle="The Infinite Stream" />
       
-      {/* Daily Wisdom UI */}
+      <div className="flex border-b border-slate-900 sticky top-20 z-20 bg-black/90 backdrop-blur mt-8">
+        <button onClick={() => setActiveTab('GLOBAL')} className={`flex-1 py-4 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest ${activeTab === 'GLOBAL' ? 'text-white border-b-2 border-white' : 'text-slate-600'}`}><IconGlobe className="w-4 h-4" /> The Void</button>
+        <button onClick={() => setActiveTab('FOLLOWING')} className={`flex-1 py-4 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest ${activeTab === 'FOLLOWING' ? 'text-white border-b-2 border-white' : 'text-slate-600'}`}><IconUsers className="w-4 h-4" /> Frequency</button>
+      </div>
+
+      {/* Daily Wisdom UI moved below tabs */}
       {dailyQuote && (
         <div className="mx-6 mt-8 p-8 bg-gradient-to-br from-slate-900 to-black border border-gold/20 rounded-xl relative group overflow-hidden animate-fade-in shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
           <div className="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity">
@@ -112,11 +117,6 @@ export const SanctumView: React.FC = () => {
           </div>
         </div>
       )}
-
-      <div className="flex border-b border-slate-900 sticky top-20 z-20 bg-black/90 backdrop-blur mt-8">
-        <button onClick={() => setActiveTab('GLOBAL')} className={`flex-1 py-4 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest ${activeTab === 'GLOBAL' ? 'text-white border-b-2 border-white' : 'text-slate-600'}`}><IconGlobe className="w-4 h-4" /> The Void</button>
-        <button onClick={() => setActiveTab('FOLLOWING')} className={`flex-1 py-4 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest ${activeTab === 'FOLLOWING' ? 'text-white border-b-2 border-white' : 'text-slate-600'}`}><IconUsers className="w-4 h-4" /> Frequency</button>
-      </div>
 
       <button onClick={() => setIsCreatingPost(true)} className="fixed bottom-24 right-6 w-14 h-14 bg-white text-black rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.3)] z-30 transition-transform active:scale-95"><IconPlus className="w-8 h-8" /></button>
 

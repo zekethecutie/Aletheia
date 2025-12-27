@@ -75,7 +75,7 @@ export const ConsultantView: React.FC = () => {
         {messages.map(m => (
           <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
             <div className={`max-w-[85%] p-4 text-sm leading-relaxed ${m.role === 'user' ? 'bg-slate-900 text-white rounded-lg rounded-br-none' : `${currentTheme.bg} ${currentTheme.color} ${currentTheme.border} border rounded-lg rounded-bl-none font-serif`}`}>
-              {m.text}
+              {formatMessage(m.text)}
             </div>
           </div>
         ))}

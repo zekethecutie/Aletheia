@@ -2,16 +2,22 @@
 import { GoogleGenAI, Chat, Type } from "@google/genai";
 import { UserStats, FeatResponse, SearchResult, MirrorScenario, MirrorResult, Artifact, DailyTask } from "../types";
 
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
-const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
-
 const TEXT_MODEL = 'gemini-1.5-flash';
 const IMAGE_MODEL = 'gemini-1.5-flash';
 
-// Helper to check if AI is initialized
+// Lazy initialization - get API key at runtime, not module load time
+let cachedAI: GoogleGenAI | null = null;
+
 const getAI = () => {
-  if (!ai) throw new Error("An API Key must be set in Secrets (VITE_GEMINI_API_KEY) to use AI features.");
-  return ai;
+  if (cachedAI) return cachedAI;
+  
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("API Key must be set (VITE_GEMINI_API_KEY) to use AI features.");
+  }
+  
+  cachedAI = new GoogleGenAI({ apiKey });
+  return cachedAI;
 };
 
 // Add missing generateMysteriousName function

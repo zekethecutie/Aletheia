@@ -44,8 +44,15 @@ export const SanctumView: React.FC = () => {
   };
 
   useEffect(() => {
-    getDailyWisdom().then(q => setDailyQuote({ ...q, date: new Date().toISOString() }));
     fetchPosts();
+    getDailyWisdom().then(q => {
+      if (q && q.text) {
+        setDailyQuote({ ...q, date: new Date().toISOString() });
+      }
+    }).catch(err => {
+      console.warn("Daily wisdom fetch failed:", err);
+      setDailyQuote({ text: "Silence is the void's most eloquent whisper.", author: "The Council", date: new Date().toISOString() });
+    });
   }, []);
 
   const handleCreatePost = async (content: string) => {
@@ -111,7 +118,7 @@ export const SanctumView: React.FC = () => {
     <div className="min-h-screen bg-void pb-24 relative overflow-x-hidden">
       <Header title="Sanctum" subtitle="The Infinite Stream" />
       
-      <div className="flex border-b border-slate-900 sticky top-20 z-20 bg-black/90 backdrop-blur mt-8">
+      <div className="flex border-b border-slate-900 sticky top-20 z-20 bg-black/90 backdrop-blur">
         <button onClick={() => setActiveTab('GLOBAL')} className={`flex-1 py-4 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest ${activeTab === 'GLOBAL' ? 'text-white border-b-2 border-white' : 'text-slate-600'}`}><IconGlobe className="w-4 h-4" /> The Void</button>
         <button onClick={() => setActiveTab('FOLLOWING')} className={`flex-1 py-4 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest ${activeTab === 'FOLLOWING' ? 'text-white border-b-2 border-white' : 'text-slate-600'}`}><IconUsers className="w-4 h-4" /> Frequency</button>
       </div>

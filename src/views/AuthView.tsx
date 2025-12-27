@@ -64,51 +64,75 @@ export const AuthChoiceView: React.FC<{ onChoice: (c: 'CREATE' | 'EMBARK') => vo
 
 // --- ACCEPTANCE CARD COMPONENT ---
 const AcceptanceCard: React.FC<{ user: User, onEnter: () => void }> = ({ user, onEnter }) => (
-    <div className="animate-fade-in-up w-full max-w-md bg-slate-950 border border-gold/30 p-8 shadow-[0_0_30px_rgba(212,175,55,0.1)] relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold to-transparent"></div>
-        
-        <div className="text-center mb-8">
-            <h2 className="text-3xl font-black text-white uppercase tracking-tight mb-2">Identity Accepted</h2>
-            <p className="text-gold text-xs font-bold uppercase tracking-widest">Welcome, {user.username}</p>
+    <div className="animate-fade-in-up w-full max-w-2xl">
+        <div className="bg-gradient-to-br from-slate-900 via-slate-950 to-black border border-gold/40 p-10 shadow-[0_0_50px_rgba(212,175,55,0.2)] relative overflow-hidden rounded-xl">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold to-transparent"></div>
+            <div className="absolute -right-12 -top-12 w-32 h-32 bg-gold/5 rounded-full blur-2xl"></div>
+            
+            <div className="text-center mb-10 relative z-10">
+                <div className="inline-block px-4 py-2 bg-gold/10 border border-gold/30 rounded-full mb-4">
+                    <p className="text-gold text-xs font-bold uppercase tracking-widest">IDENTITY PROTOCOL COMPLETE</p>
+                </div>
+                <h2 className="text-5xl font-black text-white uppercase tracking-tighter mb-2">Identity Accepted</h2>
+                <p className="text-gold text-sm font-bold uppercase tracking-widest">Welcome, {user.username.toUpperCase()}</p>
+            </div>
+
+            <div className="space-y-6 mb-10 relative z-10">
+                <div className="bg-gradient-to-r from-gold/5 to-transparent p-6 border-l-4 border-gold rounded-r-lg">
+                    <p className="text-gold text-[10px] uppercase font-black tracking-widest mb-3">COUNCIL VERDICT</p>
+                    <p className="text-white text-lg font-serif italic leading-relaxed">"{user.originStory}"</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-slate-900/60 p-4 border border-gold/30 rounded-lg text-center">
+                        <p className="text-gold text-[10px] uppercase font-bold tracking-widest mb-2">Class Archetype</p>
+                        <p className="text-2xl font-black text-white uppercase">{user.stats.class}</p>
+                    </div>
+                    <div className="bg-slate-900/60 p-4 border border-gold/30 rounded-lg text-center">
+                        <p className="text-slate-400 text-[10px] uppercase font-bold tracking-widest mb-2">Starting Level</p>
+                        <p className="text-2xl font-black text-white">LVL {user.stats.level}</p>
+                    </div>
+                </div>
+
+                <div className="bg-slate-900/40 p-6 border border-slate-800 rounded-lg">
+                    <p className="text-slate-400 text-[10px] uppercase font-bold tracking-widest mb-4">INITIAL ATTRIBUTES</p>
+                    <div className="grid grid-cols-5 gap-3">
+                         <div className="text-center">
+                            <IconUser className="w-5 h-5 mx-auto mb-2 text-blue-400" />
+                            <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Intellect</p>
+                            <span className="text-white font-black text-lg">{user.stats.intellect}</span>
+                         </div>
+                         <div className="text-center">
+                            <IconDumbbell className="w-5 h-5 mx-auto mb-2 text-red-400" />
+                            <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Strength</p>
+                            <span className="text-white font-black text-lg">{user.stats.strength}</span>
+                         </div>
+                         <div className="text-center">
+                            <IconSpirit className="w-5 h-5 mx-auto mb-2 text-purple-400" />
+                            <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Spirit</p>
+                            <span className="text-white font-black text-lg">{user.stats.spirit}</span>
+                         </div>
+                         <div className="text-center">
+                            <IconLock className="w-5 h-5 mx-auto mb-2 text-amber-400" />
+                            <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Discipline</p>
+                            <span className="text-white font-black text-lg">{user.stats.discipline}</span>
+                         </div>
+                         <div className="text-center">
+                            <IconCoin className="w-5 h-5 mx-auto mb-2 text-yellow-400" />
+                            <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Wealth</p>
+                            <span className="text-white font-black text-lg">{user.stats.wealth}</span>
+                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <button 
+                onClick={onEnter} 
+                className="w-full py-6 bg-white text-black font-black uppercase text-xs tracking-widest hover:bg-slate-100 transition-all hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] relative z-10"
+            >
+                Enter The Sanctum
+            </button>
         </div>
-
-        <div className="space-y-6 mb-8">
-            <div className="bg-slate-900/50 p-4 border-l-2 border-gold">
-                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-2">Council Verdict</p>
-                <p className="text-white font-serif italic leading-relaxed">"{user.originStory}"</p>
-            </div>
-
-            <div className="flex justify-between items-center bg-slate-900/30 p-4">
-                <span className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Assigned Class</span>
-                <span className="text-xl font-black text-white uppercase">{user.stats.class}</span>
-            </div>
-
-            <div className="grid grid-cols-4 gap-2 text-center">
-                 <div className="p-2 bg-slate-900/50 border border-slate-800">
-                    <IconCoin className="w-4 h-4 mx-auto mb-1 text-yellow-500" />
-                    <span className="text-white font-bold">{user.stats.wealth}</span>
-                 </div>
-                 <div className="p-2 bg-slate-900/50 border border-slate-800">
-                    <IconDumbbell className="w-4 h-4 mx-auto mb-1 text-red-500" />
-                    <span className="text-white font-bold">{user.stats.strength}</span>
-                 </div>
-                 <div className="p-2 bg-slate-900/50 border border-slate-800">
-                    <IconSpirit className="w-4 h-4 mx-auto mb-1 text-purple-500" />
-                    <span className="text-white font-bold">{user.stats.spirit}</span>
-                 </div>
-                 <div className="p-2 bg-slate-900/50 border border-slate-800">
-                    <IconUser className="w-4 h-4 mx-auto mb-1 text-blue-500" />
-                    <span className="text-white font-bold">{user.stats.intellect}</span>
-                 </div>
-            </div>
-        </div>
-
-        <button 
-            onClick={onEnter} 
-            className="w-full py-5 bg-white text-black font-black uppercase text-xs tracking-[0.2em] hover:bg-slate-200 transition-all hover:scale-[1.01]"
-        >
-            Enter The Sanctum
-        </button>
     </div>
 );
 

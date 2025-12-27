@@ -16,21 +16,23 @@
             colors: {
               midnight: '#010409',
               void: '#000000',
-              gold: '#D4AF37',
-              'gold-dim': '#8A7E50',
-              'gold-light': '#F3E5AB',
+              gold: '#FF9500', // Reference image uses a more vibrant orange/gold
+              'gold-dim': '#CC7A00',
+              'gold-light': '#FFB347',
               mystic: '#0D1117',
-              crimson: '#8B0000',
+              crimson: '#FF3B30',
               slate: {
                 950: '#010409',
                 900: '#0D1117',
                 800: '#161B22',
+                700: '#21262D',
               }
             },
             fontFamily: {
               serif: ['Cormorant Garamond', 'serif'],
-              sans: ['Space Grotesk', 'sans-serif'],
+              sans: ['Inter', 'sans-serif'], // Cleaner sans-serif like the image
               mono: ['JetBrains Mono', 'monospace'],
+              display: ['Orbitron', 'sans-serif'], // For headers like in the image
             },
             animation: {
               'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
@@ -72,17 +74,18 @@
       };
     </script>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,700;1,400&family=Space+Grotesk:wght@300;700&family=JetBrains+Mono:wght@300;700&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,700;1,400&family=Inter:wght@300;400;700;900&family=JetBrains+Mono:wght@300;700&family=Orbitron:wght@400;700;900&display=swap');
 
       /* Custom Scrollbar */
       ::-webkit-scrollbar {
-        width: 2px;
+        width: 4px;
       }
       ::-webkit-scrollbar-track {
         background: #000;
       }
       ::-webkit-scrollbar-thumb {
-        background: #D4AF37;
+        background: #FF9500;
+        border-radius: 10px;
       }
       
       body {
@@ -94,9 +97,24 @@
       }
 
       .glass-card {
-        background: rgba(13, 17, 23, 0.7);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(212, 175, 55, 0.1);
+        background: rgba(18, 18, 18, 0.8);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+      }
+
+      .stats-bar {
+        height: 6px;
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.05);
+        overflow: hidden;
+        position: relative;
+      }
+
+      .stats-bar-fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
       }
 
       .text-glow {

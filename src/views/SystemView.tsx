@@ -184,34 +184,60 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void 
           </div>
       </div>
 
-      <div className="mt-16 px-8 mb-8">
-         <div className="flex justify-between items-end mb-4">
-            <div>
-                <h1 className="text-5xl font-black text-white uppercase tracking-tighter leading-none mb-2 drop-shadow-[0_0_20px_rgba(255,255,255,0.1)]">{user.username}</h1>
-                <p className="text-gold text-[10px] uppercase font-black tracking-[0.5em] opacity-80">{user.title || user.stats.class || "Seeker"}</p>
+      <div className="mt-16 px-8 mb-12 flex gap-8">
+         <div className="flex-1">
+            <div className="flex justify-between items-end mb-4">
+                <div>
+                    <h1 className="text-4xl font-display font-black text-white uppercase tracking-tighter leading-none mb-2">{user.username}</h1>
+                    <p className="text-gold text-[10px] uppercase font-black tracking-[0.5em] opacity-80">{user.title || user.stats.class || "Seeker"}</p>
+                </div>
             </div>
-            <div className="text-right">
-                <span className={`text-4xl font-black font-mono ${getRankColor(rank)} opacity-50`}>{rank}</span>
-                <p className="text-[8px] text-slate-500 uppercase font-bold tracking-widest">Global Grade</p>
+            
+            <div className="space-y-4 max-w-md">
+                <div>
+                    <div className="flex justify-between text-[10px] uppercase font-bold tracking-widest mb-1">
+                        <span className="text-slate-500">Health Point</span>
+                        <span className="text-slate-300">85 / 100</span>
+                    </div>
+                    <div className="stats-bar">
+                        <div className="stats-bar-fill bg-red-500" style={{ width: '85%' }}></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div className="flex justify-between text-[10px] uppercase font-bold tracking-widest mb-1">
+                        <span className="text-slate-500">Mana Point</span>
+                        <span className="text-slate-300">120 / 150</span>
+                    </div>
+                    <div className="stats-bar">
+                        <div className="stats-bar-fill bg-blue-500" style={{ width: '80%' }}></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div className="flex justify-between text-[10px] uppercase font-bold tracking-widest mb-1">
+                        <span className="text-slate-500">Experience</span>
+                        <span className="text-slate-300">{user.stats.xp} / {user.stats.xpToNextLevel}</span>
+                    </div>
+                    <div className="stats-bar">
+                        <div className="stats-bar-fill bg-gold" style={{ width: `${xpPercent}%` }}></div>
+                    </div>
+                </div>
             </div>
          </div>
-         
-         <div className="w-full h-[2px] bg-white/5 rounded-full overflow-hidden relative">
-             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gold/20 to-transparent animate-scanline"></div>
-             <div className="h-full bg-gold shadow-[0_0_15px_rgba(212,175,55,0.5)] transition-all duration-1000" style={{ width: `${xpPercent}%` }}></div>
-         </div>
-         <div className="flex justify-between mt-2 text-[8px] text-slate-500 font-mono uppercase tracking-[0.2em]">
-             <span>Sync Progress</span>
-             <span>{user.stats.xp} / {user.stats.xpToNextLevel} XP</span>
+
+         <div className="w-48 glass-card rounded-2xl p-4 flex flex-col items-center justify-center border-gold/20">
+            <div className="text-[10px] font-display font-black uppercase text-gold mb-2 tracking-widest">Recent Achievement</div>
+            <p className="text-[9px] text-slate-400 text-center leading-relaxed">14-day streak in Daily Manifestation. +5 Luck attribute assigned.</p>
          </div>
       </div>
 
-      <div className="flex border-b border-slate-900 bg-black/50 backdrop-blur z-10 sticky top-0 mx-4 rounded-t-lg overflow-hidden">
-         {['STATUS', 'QUESTS', 'INVENTORY'].map(t => (
+      <div className="flex px-4 gap-2 mb-8">
+         {['SYSTEM', 'VERIFY', 'STATS'].map(t => (
              <button 
                 key={t}
-                onClick={() => setTab(t as any)} 
-                className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest transition-all ${tab === t ? 'bg-slate-900 text-white border-b-2 border-gold' : 'bg-slate-950/50 text-slate-600 hover:text-slate-400'}`}
+                onClick={() => setTab(t === 'STATS' ? 'STATUS' : t as any)} 
+                className={`flex-1 py-2 rounded-full text-[10px] font-display font-black uppercase tracking-[0.2em] transition-all border ${tab === (t === 'STATS' ? 'STATUS' : t) ? 'bg-slate-800 text-white border-white/20' : 'bg-transparent text-slate-600 border-transparent hover:text-slate-400'}`}
              >
                 {t}
              </button>
@@ -220,23 +246,44 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void 
 
       <div className="p-6 pt-6">
           {tab === 'STATUS' && (
-              <div className="animate-fade-in space-y-6">
-                  <div className="flex justify-end">
-                      <button 
-                        onClick={() => setAnalyzeMode(!analyzeMode)} 
-                        className={`flex items-center gap-2 px-3 py-1 rounded text-[9px] font-bold uppercase tracking-widest border transition-all ${analyzeMode ? 'bg-gold text-black border-gold' : 'bg-slate-900 text-slate-500 border-slate-800'}`}
-                      >
-                          <IconEye className="w-3 h-3" /> {analyzeMode ? 'Analysis Active' : 'Analyze System'}
-                      </button>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 bg-slate-900/30 p-6 rounded-lg border border-slate-800">
-                      <StatHex label="Strength" value={user.stats.strength} color="text-red-500" activeAnalysis={analyzeMode} description="Vitality and raw power." />
-                      <StatHex label="Intellect" value={user.stats.intellect} color="text-blue-500" activeAnalysis={analyzeMode} description="Cognitive processing speed." />
-                      <StatHex label="Discipline" value={user.stats.discipline || 0} color="text-green-500" activeAnalysis={analyzeMode} description="Willpower and consistency." />
-                      <StatHex label="Spirit" value={user.stats.spirit} color="text-purple-500" activeAnalysis={analyzeMode} description="Connection to the void." />
-                      <StatHex label="Wealth" value={user.stats.wealth || 0} color="text-yellow-500" activeAnalysis={analyzeMode} description="Material and ethereal resources." />
-                      <StatHex label="Social" value={user.stats.social || 0} color="text-pink-400" activeAnalysis={analyzeMode} description="Resonance with other souls." />
+              <div className="animate-fade-in space-y-8">
+                  <div className="grid grid-cols-2 gap-4">
+                      <div className="glass-card p-4 rounded-xl border-white/5 flex justify-between items-center group hover:border-gold/30 transition-all">
+                        <div>
+                            <div className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
+                                <div className="w-1 h-1 bg-gold rounded-full"></div>
+                                Strength
+                            </div>
+                            <div className="text-2xl font-display font-black text-white">{user.stats.strength}</div>
+                        </div>
+                      </div>
+                      <div className="glass-card p-4 rounded-xl border-white/5 flex justify-between items-center group hover:border-gold/30 transition-all">
+                        <div>
+                            <div className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
+                                <div className="w-1 h-1 bg-gold rounded-full"></div>
+                                Intellect
+                            </div>
+                            <div className="text-2xl font-display font-black text-white">{user.stats.intellect}</div>
+                        </div>
+                      </div>
+                      <div className="glass-card p-4 rounded-xl border-white/5 flex justify-between items-center group hover:border-gold/30 transition-all">
+                        <div>
+                            <div className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
+                                <div className="w-1 h-1 bg-gold rounded-full"></div>
+                                Agility
+                            </div>
+                            <div className="text-2xl font-display font-black text-white">{user.stats.social}</div>
+                        </div>
+                      </div>
+                      <div className="glass-card p-4 rounded-xl border-white/5 flex justify-between items-center group hover:border-gold/30 transition-all">
+                        <div>
+                            <div className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
+                                <div className="w-1 h-1 bg-gold rounded-full"></div>
+                                Luck
+                            </div>
+                            <div className="text-2xl font-display font-black text-white">7</div>
+                        </div>
+                      </div>
                   </div>
 
                   <div className="border border-slate-800 bg-slate-950 p-6 relative group">

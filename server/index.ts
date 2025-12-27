@@ -22,15 +22,21 @@ app.get('/api/health', (req: Request, res: Response) => {
 
 // AI Proxy Example (to demonstrate full-stack AI integration)
 app.post('/api/ai/mysterious-name', async (req: Request, res: Response) => {
-  if (!genAI) return res.status(500).json({ error: 'AI not configured' });
+  console.log('Backend AI Request received: Generate mysterious name');
+  if (!genAI) {
+    console.error('Backend AI Error: genAI not initialized');
+    return res.status(500).json({ error: 'AI not configured' });
+  }
   try {
-    // Correcting to use the models property like in the frontend
     const response = await genAI.models.generateContent({
       model: 'gemini-1.5-flash',
       contents: "Generate a single mysterious RPG-style name.",
     });
-    res.json({ name: response.text?.trim() || "Initiate" });
+    const name = response.text?.trim() || "Initiate";
+    console.log(`Backend AI Success: Generated name "${name}"`);
+    res.json({ name });
   } catch (error: any) {
+    console.error(`Backend AI Error: ${error.message}`);
     res.status(500).json({ error: error.message });
   }
 });

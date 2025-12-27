@@ -12,6 +12,7 @@ const getAI = () => {
   if (cachedAI) return cachedAI;
   
   const apiKey = import.meta.env.VITE_API_KEY || import.meta.env.VITE_GEMINI_API_KEY || "dummy";
+  console.log('Frontend AI: Initializing with API key prefix:', apiKey.substring(0, 4));
   
   cachedAI = new GoogleGenAI({ apiKey });
   return cachedAI;
@@ -19,15 +20,18 @@ const getAI = () => {
 
 // Add missing generateMysteriousName function
 export const generateMysteriousName = async (): Promise<string> => {
+  console.log('Frontend AI Request: Generating mysterious name...');
   try {
     const aiInstance = getAI();
     const response = await aiInstance.models.generateContent({
       model: TEXT_MODEL,
       contents: "Generate a single mysterious RPG-style name (e.g., Kaelen, Vyr, Sylas). Just the name.",
     });
-    return response.text?.trim() || "Initiate";
-  } catch (e) {
-    console.warn("AI Name Generation failed:", e);
+    const name = response.text?.trim() || "Initiate";
+    console.log('Frontend AI Success: Received answer:', name);
+    return name;
+  } catch (e: any) {
+    console.warn("Frontend AI Error:", e.message);
     return "Initiate";
   }
 };

@@ -12,19 +12,41 @@ export const ExploreView: React.FC = () => {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
 
+  const [posts, setPosts] = useState<any[]>([]);
+
   const handleSearch = async () => {
     if (!query.trim()) return;
     setSearching(true);
-    const dbResults: SearchResult[] = [];
-    // Searching logic placeholder after migration
-    dbResults.push({ type: 'USER', title: query, subtitle: 'Seeker', content: 'Searching the void...', id: '1' });
-    setResults(dbResults);
+    try {
+      const allPosts = await apiClient.getPosts();
+      const filtered = allPosts.filter((p: any) => 
+        p.content.toLowerCase().includes(query.toLowerCase()) || 
+        p.username?.toLowerCase().includes(query.toLowerCase())
+      );
+      setResults(filtered.map((p: any) => ({
+        type: 'POST',
+        title: p.username || 'The Council',
+        subtitle: p.author_class || 'System',
+        content: p.content,
+        id: p.id.toString(),
+        avatar: p.avatar_url
+      })));
+    } catch (error) {
+      console.error("Search failed:", error);
+    }
     setSearching(false);
   };
 
   const fetchLeaderboard = async () => {
-    // Leaderboard logic placeholder
-    setLeaderboard([]);
+    try {
+      const response = await fetch('/api/leaderboard');
+      if (response.ok) {
+        const data = await response.json();
+        setLeaderboard(data);
+      }
+    } catch (e) {
+      console.error("Leaderboard fetch failed:", e);
+    }
   };
 
   useEffect(() => { 

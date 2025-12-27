@@ -23,6 +23,51 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ targetUserId, onBack, 
   const [showSettings, setShowSettings] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
 
+  const handleToggleLike = async (post: Post, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!currentUser) return;
+
+    const isLiked = post.likedBy.includes(currentUser.id);
+    const newLikedBy = isLiked 
+      ? post.likedBy.filter(id => id !== currentUser.id)
+      : [...post.likedBy, currentUser.id];
+    
+    setPosts(prev => prev.map(p => 
+      p.id === post.id 
+        ? { ...p, likedBy: newLikedBy, resonance: newLikedBy.length } 
+        : p
+    ));
+
+    try {
+      await apiClient.toggleLikePost(parseInt(post.id), currentUser.id);
+    } catch (error) {
+      console.error("Error liking post:", error);
+      // Fetch profile to refresh posts from DB
+      const uid = targetUserId || currentUser.id;
+      const { data: postData } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('author_id', uid)
+        .order('created_at', { ascending: false });
+      
+      if (postData) {
+         setPosts(postData.map((p:any) => ({
+             id: p.id,
+             authorId: p.author_id,
+             authorName: profileUser?.username || '',
+             authorAvatar: profileUser?.avatarUrl,
+             content: p.content,
+             resonance: p.resonance || 0,
+             likedBy: p.liked_by || [],
+             timestamp: new Date(p.created_at).getTime(),
+             tags: [],
+             comments: [],
+             commentCount: 0
+         })));
+      }
+    }
+  };
+
   const isOwnProfile = !targetUserId || targetUserId === currentUser.id;
 
   useEffect(() => {
@@ -215,9 +260,14 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ targetUserId, onBack, 
                            <p className="text-[6px] text-slate-500 line-clamp-6 text-center leading-relaxed">{post.content}</p>
                        </div>
                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                           <div className="flex items-center gap-1 text-white">
-                               <IconResonance className="w-4 h-4 text-gold" />
-                               <span className="text-xs font-bold">{post.resonance}</span>
+                           <div className="flex flex-col items-center gap-2">
+                               <button 
+                                 onClick={(e) => handleToggleLike(post, e)} 
+                                 className={`flex items-center gap-1 transition-all ${post.likedBy.includes(currentUser.id) ? 'text-gold' : 'text-white'}`}
+                               >
+                                   <IconResonance className={`w-4 h-4 ${post.likedBy.includes(currentUser.id) ? 'drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]' : ''}`} />
+                                   <span className="text-xs font-bold">{post.resonance}</span>
+                               </button>
                            </div>
                        </div>
                    </div>

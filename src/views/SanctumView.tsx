@@ -71,11 +71,23 @@ export const SanctumView: React.FC = () => {
     e.stopPropagation();
     if (!currentUser) return;
     
+    // Optimistic Update
+    const isLiked = post.likedBy.includes(currentUser.id);
+    const newLikedBy = isLiked 
+      ? post.likedBy.filter(id => id !== currentUser.id)
+      : [...post.likedBy, currentUser.id];
+    
+    setPosts(prev => prev.map(p => 
+      p.id === post.id 
+        ? { ...p, likedBy: newLikedBy, resonance: newLikedBy.length } 
+        : p
+    ));
+
     try {
       await apiClient.toggleLikePost(parseInt(post.id), currentUser.id);
-      fetchPosts();
     } catch (error) {
       console.error("Error liking post:", error);
+      fetchPosts(); // Rollback
     }
   };
 

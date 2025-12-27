@@ -312,11 +312,13 @@ app.post('/api/ai/advisor', async (req: Request, res: Response) => {
 // AI Daily Wisdom
 app.get('/api/ai/wisdom', async (req: Request, res: Response) => {
   try {
-    const prompt = "Generate a profound short philosophical quote. Return JSON: {\"text\": \"string\", \"author\": \"string\"}";
+    const philosophers = ["Friedrich Nietzsche", "Franz Kafka", "Albert Camus", "Plato", "Aristotle", "Marcus Aurelius", "Socrates", "Arthur Schopenhauer"];
+    const selected = philosophers[Math.floor(Math.random() * philosophers.length)];
+    const prompt = `Generate a profound, short, and authentic quote from ${selected} or in his specific philosophical style. Return JSON: {"text": "string", "author": "${selected}"}`;
     const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
     const text = await response.text();
     const jsonMatch = text.match(/\{.*\}/s);
-    res.json(jsonMatch ? JSON.parse(jsonMatch[0]) : { text: "Silence is the void's whisper.", author: "The Council" });
+    res.json(jsonMatch ? JSON.parse(jsonMatch[0]) : { text: "He who has a why to live can bear almost any how.", author: "Friedrich Nietzsche" });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -348,6 +350,20 @@ const runSystemCron = async () => {
 };
 setInterval(runSystemCron, 1000 * 60 * 60 * 12); // Every 12 hours
 runSystemCron(); // Run once on start
+
+app.get('/api/leaderboard', async (req: Request, res: Response) => {
+  try {
+    const result = await query(`
+      SELECT id, username, avatar_url, stats, entropy 
+      FROM profiles 
+      ORDER BY (stats->>'level')::int DESC, entropy DESC 
+      LIMIT 20
+    `);
+    res.json(result.rows);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 app.listen(Number(PORT), '0.0.0.0', () => {
   console.log(`Server running on http://0.0.0.0:${PORT}`);

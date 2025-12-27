@@ -1,0 +1,136 @@
+
+export enum ViewState {
+  INTRO = 'INTRO',
+  AUTH_CHOICE = 'AUTH_CHOICE',
+  CREATE_IDENTITY = 'CREATE_IDENTITY',
+  EMBARK = 'EMBARK',
+  SANCTUM = 'SANCTUM',
+  EXPLORE = 'EXPLORE',
+  ORACLE = 'ORACLE',
+  MIRROR = 'MIRROR',
+  SYSTEM = 'SYSTEM',
+  PROFILE = 'PROFILE'
+}
+
+export interface UserStats {
+  level: number;
+  xp: number;
+  xpToNextLevel: number;
+  intellect: number;
+  discipline: number;
+  spirit: number;
+  strength: number; 
+  wealth: number;   
+  class: string;
+}
+
+export interface Artifact {
+  id: string;
+  name: string;
+  description: string;
+  rarity: 'COMMON' | 'RARE' | 'LEGENDARY' | 'MYTHIC';
+  effect: string; 
+  icon: string; 
+  imageUrl?: string; 
+  color?: string; 
+  dateAcquired: number;
+  creatorId?: string; 
+}
+
+export interface DailyTask {
+  id: string;
+  text: string;
+  completed: boolean;
+  type: 'DAILY' | 'HABIT'; 
+  streak?: number;
+  difficulty?: 'E' | 'D' | 'C' | 'B' | 'A' | 'S';
+}
+
+export interface User {
+  id: string; 
+  username: string;
+  isVerified: boolean;
+  joinDate: string;
+  lastLogin: number;
+  stats: UserStats;
+  tasks: DailyTask[];
+  inventory: Artifact[]; 
+  manifesto?: string;
+  originStory?: string; 
+  following: string[]; 
+  followersCount?: number; 
+  entropy?: number; 
+  rank?: string; 
+  title?: string; 
+  avatarUrl?: string;
+  coverUrl?: string;
+}
+
+export interface Comment {
+  id: string;
+  authorId: string;
+  authorName: string;
+  authorAvatar?: string;
+  content: string;
+  timestamp: number;
+  replies: Comment[];
+}
+
+export interface Post {
+  id: string;
+  authorId: string;
+  authorName: string;
+  authorAvatar?: string;
+  authorCover?: string; 
+  authorClass?: string; 
+  content: string;
+  resonance: number; 
+  likedBy: string[]; 
+  timestamp: number;
+  tags: string[];
+  comments: Comment[];
+  commentCount: number;
+  isSystemPost?: boolean;
+}
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'model';
+  text: string;
+  timestamp: number;
+}
+
+export interface DailyQuote {
+  text: string;
+  author: string; 
+  date: string;
+}
+
+export interface FeatResponse {
+  xpGained: number;
+  statsIncreased: Partial<UserStats>;
+  systemMessage: string;
+}
+
+export interface SearchResult {
+  type: 'USER' | 'POST';
+  title: string;
+  subtitle: string;
+  content?: string;
+  id: string;
+  avatar?: string;
+}
+
+export interface MirrorScenario {
+  situation: string;
+  choiceA: string;
+  choiceB: string;
+  context: string;
+  testedStat: keyof UserStats;
+}
+
+export interface MirrorResult {
+  outcome: string;
+  statChange: Partial<UserStats>;
+  reward?: Artifact;
+}

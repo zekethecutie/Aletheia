@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-const genAI = process.env.VITE_API_KEY ? new GoogleGenAI({ apiKey: process.env.VITE_API_KEY }) : null;
+const genAI = (process.env.VITE_API_KEY || process.env.API_KEY) ? new GoogleGenAI({ apiKey: process.env.VITE_API_KEY || process.env.API_KEY || '' }) : null;
 
 // Health check
 app.get('/api/health', (req: Request, res: Response) => {

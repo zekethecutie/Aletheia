@@ -5,23 +5,22 @@ export const IntroView: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
 
   useEffect(() => {
     const sequence = [
-      { t: 4000 }, 
-      { t: 4000 },
-      { t: 4000 },
-      { t: 100 },
+      { t: 4000, p: 0 }, 
+      { t: 4000, p: 1 },
+      { t: 4000, p: 2 },
+      { t: 100, p: 3 },
     ];
     
-    let current = 0;
-    const interval = setInterval(() => {
-      current++;
-      if (current >= sequence.length) {
-        clearInterval(interval);
-      } else {
-        setPhase(current);
-      }
-    }, sequence[current].t);
+    let timer: NodeJS.Timeout;
+    const runSequence = (idx: number) => {
+      if (idx >= sequence.length) return;
+      setPhase(sequence[idx].p);
+      timer = setTimeout(() => runSequence(idx + 1), sequence[idx].t);
+    };
 
-    return () => clearInterval(interval);
+    runSequence(0);
+
+    return () => clearTimeout(timer);
   }, []);
 
   return (

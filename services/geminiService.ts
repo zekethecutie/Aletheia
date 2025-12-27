@@ -177,14 +177,26 @@ export const generateQuest = async (stats: UserStats): Promise<DailyTask> => {
   return { id: Date.now().toString(), text: res.text, completed: false, type: 'DAILY', difficulty: res.difficulty };
 };
 
-export const generateSystemPost = async (): Promise<string> => {
+export const calculateFeat = async (feat: string, stats: UserStats): Promise<FeatResponse> => {
   try {
     const response = await ai.models.generateContent({
       model: TEXT_MODEL,
-      contents: "Generate a short, mystical, philosophical post from 'The Council' about existence, growth, or the void. Max 30 words. Poetic style.",
+      contents: `Feat: ${feat}. Stats: ${JSON.stringify(stats)}. Calculate XP and stat gains.`,
+      config: { 
+        responseMimeType: 'application/json', 
+        responseSchema: { 
+          type: Type.OBJECT, 
+          properties: { 
+            xpGained: { type: Type.NUMBER }, 
+            statsIncreased: { type: Type.OBJECT }, 
+            systemMessage: { type: Type.STRING } 
+          }, 
+          required: ["xpGained", "statsIncreased", "systemMessage"] 
+        } 
+      }
     });
-    return response.text?.trim() || "The void speaks in silence.";
+    return JSON.parse(response.text || '{}');
   } catch (e) {
-    return "The void speaks in silence.";
+    return { xpGained: 10, statsIncreased: {}, systemMessage: "The void acknowledges your effort." };
   }
 };

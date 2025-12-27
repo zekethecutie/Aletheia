@@ -156,7 +156,7 @@ export const CreateIdentityView: React.FC<{ onComplete: (u: User) => void; onBac
 
       setAvailability('CHECKING');
       try {
-        const response = await fetch(`http://localhost:3001/api/check-username?username=${clean}`);
+        const response = await fetch(`/api/check-username?username=${clean}`);
         const data = await response.json();
         setAvailability(data.available ? 'AVAILABLE' : 'TAKEN');
       } catch (e) {
@@ -185,14 +185,14 @@ export const CreateIdentityView: React.FC<{ onComplete: (u: User) => void; onBac
       
       setStatusMsg("The Council is judging your intent...");
       
-      let stats = { level: 1, xp: 0, xpToNextLevel: 100, intelligence: 1, physical: 1, spiritual: 1, wealth: 1, social: 1, class: "Initiate" };
+      let stats = { level: 1, xp: 0, xpToNextLevel: 100, intelligence: 1, physical: 1, spiritual: 1, wealth: 1, social: 1, class: "Initiate", resonance: 100, maxResonance: 100, health: 100, maxHealth: 100 };
       let originStory = "Accepted into the void.";
       
       try {
-         const analysis = await submitApplication(manifesto);
+         const analysis = await apiClient.calculateFeat(manifesto, stats);
          if (analysis) {
-             if (analysis.initialStats) stats = analysis.initialStats;
-             if (analysis.reason) originStory = analysis.reason;
+             if (analysis.initialStats) stats = { ...stats, ...analysis.initialStats };
+             if (analysis.systemMessage) originStory = analysis.systemMessage;
          }
       } catch (aiError) {
          console.warn("AI skipped.");
@@ -244,12 +244,35 @@ export const CreateIdentityView: React.FC<{ onComplete: (u: User) => void; onBac
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
       </div>
       
-      <button onClick={onBack} className="absolute top-6 left-6 text-slate-500 uppercase text-[10px] font-bold tracking-widest hover:text-white z-20">Back</button>
+      <div className="relative w-full h-48 bg-slate-950/50 group">
+          <div className="absolute inset-0 z-0 overflow-hidden">
+             <div className="w-full h-full bg-gradient-to-b from-slate-900 to-black"></div>
+             <div className="absolute inset-0 bg-gradient-to-t from-void via-transparent to-transparent"></div>
+          </div>
+          <button onClick={onBack} className="absolute top-6 left-6 text-slate-500 uppercase text-[10px] font-bold tracking-widest hover:text-white z-20">Back</button>
+      </div>
       
-      <div className="flex-1 flex flex-col justify-center px-8 py-20 max-w-md mx-auto w-full space-y-8 relative z-10">
-         <div className="space-y-2">
-            <h2 className="text-3xl font-black text-white uppercase tracking-tight">Identify</h2>
-            <p className="text-slate-500 text-xs font-serif italic">Who are you in the dark?</p>
+      <div className="flex-1 flex flex-col px-8 pb-20 max-w-md mx-auto w-full space-y-8 relative z-10 -mt-12">
+         <div className="flex gap-8 items-end mb-4">
+            <div className="relative">
+                <div className="w-32 h-36 bg-gradient-to-br from-gold/40 via-gold/10 to-transparent rounded-xl p-0.5 shadow-[0_20px_50px_rgba(255,149,0,0.1)]">
+                    <div className="w-full h-full bg-black rounded-xl overflow-hidden relative group">
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-gold/10 via-transparent to-transparent opacity-50"></div>
+                        <div className="absolute inset-0 flex items-center justify-center p-2">
+                             <div className="w-full h-full glass-card rounded-lg border-white/10 p-1 relative flex items-center justify-center">
+                                <IconUser className="w-12 h-12 text-slate-800" />
+                                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-black border border-white/20 text-white text-[8px] font-black px-2 py-0.5 rounded-full whitespace-nowrap">
+                                    INITIATE
+                                </div>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div className="pb-2">
+                <h2 className="text-3xl font-black text-white uppercase tracking-tight">Identify</h2>
+                <p className="text-slate-500 text-[10px] font-serif italic tracking-widest uppercase">Protocol Initiate</p>
+            </div>
          </div>
 
          <div className="space-y-6">

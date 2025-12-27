@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Header } from '../components/Header';
-import { IconSearch, IconUser, IconScroll, IconResonance, IconSpirit } from '../components/Icons';
+import { IconSearch, IconUser, IconScroll } from '../components/Icons';
 import { apiClient } from '../services/apiClient';
 import { SearchResult } from '../types';
 
@@ -68,7 +68,7 @@ export const ExploreView: React.FC = () => {
         </div>
       ) : (
         <div className="p-6 space-y-3 animate-fade-in">
-          {leaderboard.map((user, idx) => (
+          {leaderboard.map((user: any, idx) => (
             <div key={user.id} className="flex items-center gap-4 bg-slate-950 border border-slate-900 p-4 relative overflow-hidden group">
                <div className={`text-xl font-black w-10 text-center ${idx < 3 ? 'text-gold' : 'text-slate-700'}`}>{idx + 1}</div>
                <img src={user.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user.username}&backgroundColor=000000`} className="w-12 h-12 rounded-full border border-slate-800 bg-black" />

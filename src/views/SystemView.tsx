@@ -153,25 +153,13 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                  <img src={user.coverUrl} className="w-full h-full object-cover opacity-80 transition-transform duration-1000 group-hover:scale-105" />
              ) : (
                  <div className="w-full h-full bg-gradient-to-b from-slate-900 to-black"></div>
-             )}
+             ) }
              <div className="absolute inset-0 bg-gradient-to-t from-void via-transparent to-transparent"></div>
           </div>
 
           <button onClick={() => setShowSettings(true)} className="absolute top-6 right-6 p-2 bg-black/50 backdrop-blur rounded-full text-white hover:bg-white hover:text-black transition-colors z-20 border border-white/10">
              <IconSettings className="w-5 h-5" />
           </button>
-
-          <div className="absolute -bottom-10 left-6 z-20">
-             <div className="w-24 h-24 rounded-xl bg-black border-2 border-gold p-1 shadow-[0_0_20px_rgba(0,0,0,0.8)] relative">
-                <img 
-                    src={user.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${user.username}&backgroundColor=000000`} 
-                    className="w-full h-full object-cover rounded-lg bg-slate-900"
-                />
-                <div className="absolute -bottom-2 -right-2 bg-black border border-gold text-gold text-[10px] font-black px-2 py-0.5 rounded-full">
-                    LVL {user.stats.level}
-                </div>
-             </div>
-          </div>
       </div>
 
       <div className="mt-16 px-8 mb-12">

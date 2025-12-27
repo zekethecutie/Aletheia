@@ -127,16 +127,15 @@ export const ConsultantView: React.FC = () => {
         </div>
 
         {/* Council Frequency Selector */}
-        <div className="flex overflow-x-auto px-6 py-5 gap-5 bg-black/60 backdrop-blur-2xl border-y border-white/5 scrollbar-hide">
+        <div className="flex px-6 py-4 gap-2 bg-black/60 backdrop-blur-2xl border-y border-white/5 overflow-x-hidden">
           {Object.keys(ADVISORS).map((t) => {
             const theme = ADVISORS[t as keyof typeof ADVISORS];
             return (
               <button 
                 key={t} 
                 onClick={() => switchAdvisor(t as any)} 
-                className={`px-8 py-3 text-[11px] font-black uppercase tracking-[0.4em] transition-all flex-shrink-0 rounded-xl border relative group ${advisor === t ? 'bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.2)]' : 'text-slate-600 border-white/5 hover:border-white/20'}`}
+                className={`flex-1 py-2 text-[9px] font-black uppercase tracking-[0.2em] transition-all rounded-lg border relative group ${advisor === t ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.1)]' : 'text-slate-600 border-white/5 hover:border-white/20'}`}
               >
-                {advisor === t && <div className={`absolute -top-1 -right-1 w-2 h-2 rounded-full ${theme.color.replace('text-', 'bg-')} animate-ping`}></div>}
                 {t}
               </button>
             );
@@ -144,25 +143,25 @@ export const ConsultantView: React.FC = () => {
         </div>
 
         {/* Signal History */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-10 scrollbar-hide">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide">
           {messages.map(m => (
             <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in-up`}>
               {m.role === 'model' && (
-                <div className="w-10 h-10 rounded-xl glass-card flex items-center justify-center mr-4 mt-1 shrink-0 border-white/10 shadow-xl">
-                   <div className={`w-3 h-3 rounded-sm rotate-45 animate-pulse ${currentTheme.color.replace('text-', 'bg-')}`}></div>
+                <div className="w-8 h-8 rounded-lg glass-card flex items-center justify-center mr-3 mt-1 shrink-0 border-white/10 shadow-lg">
+                   <div className={`w-2 h-2 rounded-sm rotate-45 animate-pulse ${currentTheme.color.replace('text-', 'bg-')}`}></div>
                 </div>
               )}
-              <div className={`max-w-[85%] p-6 text-[15px] leading-relaxed tracking-wide ${m.role === 'user' ? 'glass-card border-white/10 text-white rounded-3xl rounded-tr-none' : `text-slate-300 font-serif italic border-l-2 border-white/10 pl-8 relative`}`}>
+              <div className={`max-w-[85%] p-4 text-[14px] leading-relaxed tracking-wide ${m.role === 'user' ? 'glass-card border-white/10 text-white rounded-2xl rounded-tr-none' : `text-slate-300 font-serif italic border-l-2 border-white/10 pl-6 relative`}`}>
                 {m.role === 'model' && <div className={`absolute left-0 top-0 bottom-0 w-[2px] ${currentTheme.color.replace('text-', 'bg-')} opacity-40`}></div>}
                 {formatMessage(m.text)}
               </div>
             </div>
           ))}
           {loading && (
-             <div className="flex items-center gap-4 ml-14">
-                <div className={`w-2 h-2 rounded-full animate-bounce ${currentTheme.color.replace('text-', 'bg-')} opacity-60`}></div>
-                <div className={`w-2 h-2 rounded-full animate-bounce [animation-delay:0.2s] ${currentTheme.color.replace('text-', 'bg-')} opacity-40`}></div>
-                <div className={`w-2 h-2 rounded-full animate-bounce [animation-delay:0.4s] ${currentTheme.color.replace('text-', 'bg-')} opacity-20`}></div>
+             <div className="flex items-center gap-3 ml-11">
+                <div className={`w-1.5 h-1.5 rounded-full animate-bounce ${currentTheme.color.replace('text-', 'bg-')} opacity-60`}></div>
+                <div className={`w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:0.2s] ${currentTheme.color.replace('text-', 'bg-')} opacity-40`}></div>
+                <div className={`w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:0.4s] ${currentTheme.color.replace('text-', 'bg-')} opacity-20`}></div>
              </div>
           )}
           <div ref={scrollRef} />
@@ -170,21 +169,21 @@ export const ConsultantView: React.FC = () => {
       </div>
 
       {/* Transmission Terminal */}
-      <div className="p-6 border-t border-white/5 bg-black/90 backdrop-blur-3xl safe-pb relative z-20">
-         <div className="flex gap-4 glass-card p-2 rounded-3xl border-white/10 shadow-2xl">
+      <div className="p-4 border-t border-white/5 bg-black/90 backdrop-blur-3xl safe-pb relative z-20">
+         <div className="flex gap-2 glass-card p-1.5 rounded-2xl border-white/10 shadow-xl">
             <input 
               value={input} 
               onChange={e => setInput(e.target.value)} 
               onKeyDown={e => e.key === 'Enter' && handleSend()} 
-              className="flex-1 bg-transparent px-6 py-5 text-white text-[15px] outline-none placeholder-slate-800 font-sans" 
-              placeholder="Inquire of the Council..." 
+              className="flex-1 bg-transparent px-4 py-3 text-white text-[14px] outline-none placeholder-slate-800 font-sans" 
+              placeholder="Inquire..." 
             />
             <button 
               onClick={handleSend} 
               disabled={loading} 
-              className="bg-white text-black w-16 h-16 flex items-center justify-center hover:bg-slate-200 transition-all rounded-2xl shadow-[0_0_30px_rgba(255,255,255,0.1)] active:scale-90 disabled:opacity-30 group"
+              className="bg-white text-black w-12 h-12 flex items-center justify-center hover:bg-slate-200 transition-all rounded-xl shadow-[0_0_20px_rgba(255,255,255,0.05)] active:scale-90 disabled:opacity-30 group"
             >
-              <IconSend className="w-7 h-7 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+              <IconSend className="w-5 h-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </button>
          </div>
       </div>

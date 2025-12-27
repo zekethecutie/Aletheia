@@ -1,98 +1,76 @@
 # Aletheia App - Full Stack
 
 ## Overview
-Aletheia is a mystical RPG-styled personal development application. Full-stack architecture with React frontend, Express backend, and Supabase database.
+Aletheia is a mystical RPG-styled personal development application. Now with complete full-stack setup using React frontend, Express backend, and PostgreSQL database hosted on Replit.
 
-## Project Structure
-```
-/
-├── src/                   # React Frontend
-│   ├── components/        # Reusable UI components
-│   ├── services/          # External service integrations
-│   ├── utils/             # Helper utilities
-│   ├── views/             # Page views/screens
-│   ├── App.tsx
-│   ├── index.tsx
-│   └── types.ts
-├── server/                # Express Backend
-│   ├── index.ts          # Main server file
-│   └── tsconfig.json
-├── supabase-schema.sql   # Database schema
-├── vite.config.ts        # Frontend build config
-├── package.json
-└── replit.md
-```
+## Architecture
+- **Frontend**: React 18 + Vite + TypeScript on port 5000
+- **Backend**: Node.js + Express + TypeScript on port 3001
+- **Database**: Replit PostgreSQL with persistent storage
+- **Authentication**: Secure password hashing with crypto (PBKDF2)
 
-## Setup Instructions
+## Key Features
+- User registration with username availability checking
+- Secure password-based authentication
+- Profile persistence in PostgreSQL
+- User stats, inventory, and tasks tracked in database
+- AI-powered advisor chat integration
+- Post/feed system with resonance tracking
+- Character progression and leaderboards
 
-### 1. Environment Variables
-Create `.env` file in root (use `.env.example` as template):
-```bash
-VITE_API_KEY=your_free_gemini_api_key
-PORT=3001
-SUPABASE_URL=https://yjxqvwyudhvfkzkaixax.supabase.co
-SUPABASE_ANON_KEY=sb_publishable_ZBnRdLQurXmLcAey93aBQg_au2EEvut
-```
-
-Get free Gemini API key at: https://ai.google.dev
-
-### 2. Database Setup
-Run the SQL from `supabase-schema.sql` in Supabase SQL Editor to create tables and enable RLS.
-
-### 3. Running the App
-```bash
-# Frontend only (dev)
-npm run dev
-
-# Backend only
-npm run server
-
-# Both (requires concurrently)
-npm run dev:full
-```
-
-## Stack
-- **Frontend**: React 18 + Vite + TypeScript + Tailwind CSS
-- **Backend**: Node.js + Express + TypeScript
-- **Database**: Supabase (PostgreSQL) + RLS
-- **AI**: Google Gemini (Free tier)
-- **Authentication**: Supabase Auth
+## Database Schema
+- `profiles` table: User accounts with stats, inventory, tasks, manifesto
+- `posts` table: Feed posts with resonance (likes) tracking
 
 ## API Endpoints
 
-### Health
-- `GET /api/health` - Server health check
+### Authentication
+- `POST /api/auth/register` - Create new account
+- `POST /api/auth/login` - Login with username/password
+- `GET /api/check-username` - Check username availability
 
-### Supabase
-- `GET /api/test-supabase` - Test database connection
+### Profiles
+- `GET /api/profile/:id` - Get user profile
+- `POST /api/profile/:id/update` - Update user profile (stats, inventory, tasks, etc.)
 
-## Features
-- User authentication and profiles
-- Real-time character stats and progression
-- AI-powered advisor chat (Oracle, Strategist, Titan, Mystic)
-- Mirror scenarios for decision-making
-- Quest generation and tracking
-- Post/feed system with resonance
-- Artifact inventory system
-- Leaderboards and hierarchy
+### AI Integration
+- `POST /api/ai/mysterious-name` - Generate random mystical name
+- `POST /api/ai/quest` - Generate AI quests
 
-## Development Notes
-- Frontend runs on port 5000 (Vite)
-- Backend runs on port 3001 (Express)
-- CORS enabled for frontend-backend communication
-- RLS policies ensure data privacy and security
+## Running the Application
 
-## For APK Deployment
-When building for mobile APK:
-1. Build frontend: `npm run build`
-2. Frontend assets ready in `dist/`
-3. API available at backend URL for mobile app
-4. Database handles all persistence via Supabase
+### Development
+Both servers run automatically:
+- Frontend: http://localhost:5000
+- Backend: http://localhost:3001
+- API proxy: Vite proxies /api requests to backend
 
-## Recent Changes
-- 2025-12-27: Full-stack setup
-  - Created Express backend server
-  - Added Supabase RLS policies and schema
-  - Updated package.json with backend dependencies
-  - Reverted to free Gemini API (VITE_API_KEY)
-  - Fixed NavBar Hierarchy button navigation
+### Building for Production
+```bash
+npm run build  # Creates optimized frontend bundle
+npm run server # Runs production backend
+```
+
+## Environment Variables
+Automatically configured by Replit:
+- `DATABASE_URL` - PostgreSQL connection string
+- `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE`
+- `VITE_API_KEY` - Google Gemini API key (optional)
+
+## Data Persistence
+All user data is persisted in the PostgreSQL database:
+- User accounts and profiles
+- Character stats and progression
+- Inventory items and tasks
+- Posts and social interactions
+- Following relationships
+
+Data survives application restarts and is backed by Replit's managed PostgreSQL.
+
+## Recent Changes (2025-12-27)
+- Migrated from Supabase to Replit PostgreSQL
+- Created Express backend with authentication endpoints
+- Implemented password hashing with crypto
+- Set up Vite proxy for API requests
+- Fixed account creation and database persistence
+- All data now stored in local PostgreSQL database

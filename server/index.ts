@@ -94,6 +94,21 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
   }
 });
 
+// Check username availability
+app.get('/api/check-username', async (req: Request, res: Response) => {
+  try {
+    const { username } = req.query;
+    if (!username || typeof username !== 'string') {
+      return res.status(400).json({ error: 'Username required' });
+    }
+    
+    const user = await getUserByUsername(username);
+    res.json({ available: !user });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get profile
 app.get('/api/profile/:id', async (req: Request, res: Response) => {
   try {

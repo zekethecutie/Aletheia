@@ -2,7 +2,7 @@
 import { GoogleGenAI, Chat, Type } from "@google/genai";
 import { UserStats, FeatResponse, SearchResult, MirrorScenario, MirrorResult, Artifact, DailyTask } from "../types";
 
-const apiKey = import.meta.env.VITE_API_KEY || "";
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
 const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
 const TEXT_MODEL = 'gemini-1.5-flash';
@@ -10,7 +10,7 @@ const IMAGE_MODEL = 'gemini-1.5-flash';
 
 // Helper to check if AI is initialized
 const getAI = () => {
-  if (!ai) throw new Error("An API Key must be set in Secrets (VITE_API_KEY) to use AI features.");
+  if (!ai) throw new Error("An API Key must be set in Secrets (VITE_GEMINI_API_KEY) to use AI features.");
   return ai;
 };
 

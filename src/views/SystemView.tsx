@@ -236,6 +236,7 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void 
                       <StatHex label="Discipline" value={user.stats.discipline || 0} color="text-green-500" activeAnalysis={analyzeMode} description="Willpower and consistency." />
                       <StatHex label="Spirit" value={user.stats.spirit} color="text-purple-500" activeAnalysis={analyzeMode} description="Connection to the void." />
                       <StatHex label="Wealth" value={user.stats.wealth || 0} color="text-yellow-500" activeAnalysis={analyzeMode} description="Material and ethereal resources." />
+                      <StatHex label="Social" value={user.stats.social || 0} color="text-pink-400" activeAnalysis={analyzeMode} description="Resonance with other souls." />
                   </div>
 
                   <div className="border border-slate-800 bg-slate-950 p-6 relative group">

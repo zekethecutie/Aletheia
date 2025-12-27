@@ -140,7 +140,7 @@ export const submitApplication = async (manifesto: string): Promise<{ approved: 
     });
     return JSON.parse(response.text || '{}');
   } catch (e) {
-    return { approved: true, reason: "The void accepts your silence.", initialStats: { level: 1, xp: 0, xpToNextLevel: 100, intellect: 5, discipline: 5, spirit: 5, strength: 5, wealth: 5, class: "Seeker" } };
+    return { approved: true, reason: "The void accepts your silence.", initialStats: { level: 1, xp: 0, xpToNextLevel: 100, intellect: 5, discipline: 5, spirit: 5, strength: 5, wealth: 5, social: 5, class: "Seeker" } };
   }
 };
 

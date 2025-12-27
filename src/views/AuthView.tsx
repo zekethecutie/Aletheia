@@ -212,7 +212,7 @@ export const CreateIdentityView: React.FC<{ onComplete: (u: User) => void; onBac
       // --- Step 1: AI Analysis ---
       setStatusMsg("The Council is judging your intent...");
       
-      let stats = { level: 1, xp: 0, xpToNextLevel: 100, intellect: 1, discipline: 1, spirit: 1, strength: 1, wealth: 1, class: "Initiate" };
+      let stats = { level: 1, xp: 0, xpToNextLevel: 100, intellect: 1, discipline: 1, spirit: 1, strength: 1, wealth: 1, social: 1, class: "Initiate" };
       let originStory = "Accepted into the void.";
       
       try {

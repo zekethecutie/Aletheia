@@ -120,7 +120,7 @@ export const SanctumView: React.FC = () => {
 
       {/* Daily Wisdom UI moved below tabs */}
       {dailyQuote && (
-        <div className="mx-6 mt-8 p-10 glass-card rounded-2xl relative group overflow-hidden animate-blur-in shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-white/5">
+        <div className="mx-6 mt-8 p-10 glass-card rounded-2xl relative group overflow-hidden animate-blur-in shadow-[0_20px_50px_rgba(0,0,0,0.3)] border-white/5">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold/40 to-transparent"></div>
           
           <div className="flex items-center gap-4 mb-8">
@@ -131,27 +131,17 @@ export const SanctumView: React.FC = () => {
               </div>
             </div>
             <div>
-              <p className="text-white font-black text-[10px] tracking-[0.4em] uppercase">Analysis Complete</p>
-              <p className="text-gold/50 text-[8px] tracking-[0.2em] uppercase font-mono mt-1">Subject: {currentUser?.username || "Seeker"}</p>
+              <p className="text-white font-black text-[10px] tracking-[0.4em] uppercase">Transmission Received</p>
+              <p className="text-gold/50 text-[8px] tracking-[0.2em] uppercase font-mono mt-1">From: The Council</p>
             </div>
           </div>
 
           <div className="pl-6 border-l-2 border-gold/40 py-2 mb-8">
-            <p className="text-[9px] text-gold font-black tracking-[0.3em] uppercase mb-4 opacity-50">The Council's Verdict</p>
+            <p className="text-[9px] text-gold font-black tracking-[0.3em] uppercase mb-4 opacity-50">Sacred Wisdom</p>
             <p className="text-2xl md:text-3xl font-serif italic text-white leading-relaxed tracking-wide">
               "{dailyQuote.text}"
             </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 border-t border-white/5 pt-8">
-            <div>
-              <p className="text-slate-500 text-[8px] font-black tracking-[0.2em] uppercase mb-1">Personality Sync</p>
-              <p className="text-white font-mono text-lg font-black">{(Math.random() * (99.9 - 95.0) + 95.0).toFixed(1)}%</p>
-            </div>
-            <div className="text-right">
-              <p className="text-slate-500 text-[8px] font-black tracking-[0.2em] uppercase mb-1">Potential Index</p>
-              <p className="text-gold font-black tracking-[0.1em] text-lg uppercase font-sans">Omega</p>
-            </div>
+            <p className="text-gold/60 text-[10px] uppercase font-black tracking-[0.2em] mt-4">— {dailyQuote.author}</p>
           </div>
         </div>
       )}

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { User, MirrorScenario, MirrorResult, Artifact } from '../types';
 import { Header } from '../components/Header';
 import { apiClient } from '../services/apiClient';
-import { IconEye } from '../components/Icons';
+import { IconEye, IconMirror } from '../components/Icons';
 
 interface MirrorViewProps {
   user: User;
@@ -91,10 +91,10 @@ export const MirrorView: React.FC<MirrorViewProps> = ({ user, onUpdateUser }) =>
             {gameMode === 'IDLE' && (
                 <div className="text-center max-w-sm space-y-12 animate-blur-in">
                     <div className="relative">
-                        <div className="absolute inset-0 bg-gold/20 blur-3xl rounded-full animate-pulse"></div>
-                        <div className="w-40 h-40 mx-auto rounded-2xl glass-card p-1 shadow-[0_0_60px_rgba(212,175,55,0.15)] rotate-45 group hover:rotate-[225deg] transition-all duration-1000 relative z-10">
+                        <div className="absolute inset-0 bg-gold/20 blur-[100px] rounded-full animate-pulse"></div>
+                        <div className="w-48 h-48 mx-auto rounded-2xl glass-card p-1 shadow-[0_0_80px_rgba(212,175,55,0.2)] rotate-45 group hover:rotate-[225deg] transition-all duration-1000 relative z-10 overflow-visible">
                             <div className="w-full h-full bg-black rounded-xl flex items-center justify-center -rotate-45 group-hover:rotate-[-225deg] transition-all duration-1000">
-                                <IconEye className="w-16 h-16 text-gold/80 drop-shadow-[0_0_15px_rgba(212,175,55,0.4)]" />
+                                <IconMirror className="w-20 h-20 text-gold/80 drop-shadow-[0_0_20px_rgba(212,175,55,0.5)]" />
                             </div>
                         </div>
                     </div>

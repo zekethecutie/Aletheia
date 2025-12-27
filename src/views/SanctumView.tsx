@@ -4,7 +4,7 @@ import { apiClient } from '../services/apiClient';
 import { Header } from '../components/Header';
 import { ProfileView } from './ProfileView';
 import { CreatePostModal } from '../components/modals/CreatePostModal';
-import { IconResonance, IconPlus, IconUsers, IconGlobe, IconTrash, IconFeather, IconEdit } from '../components/Icons';
+import { IconResonance, IconPlus, IconUsers, IconGlobe, IconTrash, IconFeather, IconEdit, IconMirror } from '../components/Icons';
 import { formatTime, loadUser } from '../utils/helpers';
 import { PostDetailView } from './PostDetailView';
 
@@ -119,7 +119,7 @@ export const SanctumView: React.FC = () => {
             <div className="relative">
               <div className="absolute inset-0 bg-gold/20 blur-xl rounded-full animate-pulse"></div>
               <div className="w-12 h-12 glass-card rounded-xl flex items-center justify-center relative z-10 border-gold/30">
-                <div className="w-6 h-6 bg-gold rotate-45 animate-pulse rounded-sm"></div>
+                <IconMirror className="w-6 h-6 text-gold animate-pulse" />
               </div>
             </div>
             <div>

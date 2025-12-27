@@ -1,18 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { User, UserStats } from '../types';
-import { submitApplication, generateMysteriousName } from '../services/geminiService';
+import { submitApplication } from '../services/geminiService';
 import { saveUser } from '../utils/helpers';
 import { IconLock, IconEye, IconDumbbell, IconSpirit, IconUser, IconCoin } from '../components/Icons';
-import { supabase } from '../services/supabaseClient';
+import { apiClient } from '../services/apiClient';
 
-// --- Shared Logic ---
-
-/**
- * HEX-ENCODED Deterministic ID Generation
- * Converts username to hex string to guarantee valid email format (a-z0-9 only).
- * Example: "Zeus" -> "u_7a657573@aletheia.app"
- */
 const stringToHex = (str: string) => {
   let hex = '';
   for(let i=0;i<str.length;i++) {
@@ -26,13 +19,10 @@ const generateBackendID = (username: string) => {
   if (!clean) return `u_initiate_${Date.now()}@aletheia.app`;
   
   const hex = stringToHex(clean);
-  // Ensure we don't exceed generic length limits (unlikely, but safe)
   const safeHex = hex.substring(0, 50); 
   
   return `u_${safeHex}@aletheia.app`; 
 };
-
-// --- Components ---
 
 export const AuthChoiceView: React.FC<{ onChoice: (c: 'CREATE' | 'EMBARK') => void }> = ({ onChoice }) => (
   <div className="h-screen w-full bg-void flex flex-col items-center justify-center p-8 animate-fade-in relative overflow-hidden">
@@ -71,7 +61,6 @@ export const AuthChoiceView: React.FC<{ onChoice: (c: 'CREATE' | 'EMBARK') => vo
   </div>
 );
 
-// --- ACCEPTANCE CARD COMPONENT ---
 const AcceptanceCard: React.FC<{ user: User, onEnter: () => void }> = ({ user, onEnter }) => (
     <div className="animate-fade-in-up w-full max-w-2xl">
         <div className="bg-gradient-to-br from-slate-900 via-slate-950 to-black border border-gold/40 p-10 shadow-[0_0_50px_rgba(212,175,55,0.2)] relative overflow-hidden rounded-xl">
@@ -150,7 +139,6 @@ export const CreateIdentityView: React.FC<{ onComplete: (u: User) => void; onBac
   const [password, setPassword] = useState('');
   const [manifesto, setManifesto] = useState('');
   
-  // Logic States
   const [phase, setPhase] = useState<'FORM' | 'PROCESSING' | 'ACCEPTED'>('FORM');
   const [statusMsg, setStatusMsg] = useState('');
   const [error, setError] = useState('');
@@ -158,10 +146,9 @@ export const CreateIdentityView: React.FC<{ onComplete: (u: User) => void; onBac
   const [availability, setAvailability] = useState<'IDLE' | 'CHECKING' | 'AVAILABLE' | 'TAKEN'>('IDLE');
   const [createdUser, setCreatedUser] = useState<User | null>(null);
 
-  // --- 1. Username Availability Checker ---
   useEffect(() => {
     const checkAvailability = async () => {
-      const clean = username.trim().toLowerCase(); // Normalize
+      const clean = username.trim().toLowerCase();
       if (clean.length < 3) {
         setAvailability('IDLE');
         return;
@@ -169,17 +156,9 @@ export const CreateIdentityView: React.FC<{ onComplete: (u: User) => void; onBac
 
       setAvailability('CHECKING');
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('username', clean)
-          .maybeSingle();
-        
-        if (data) {
-          setAvailability('TAKEN');
-        } else {
-          setAvailability('AVAILABLE');
-        }
+        const response = await fetch(`http://localhost:3001/api/check-username?username=${clean}`);
+        const data = await response.json();
+        setAvailability(data.available ? 'AVAILABLE' : 'TAKEN');
       } catch (e) {
         setAvailability('AVAILABLE');
       }
@@ -189,12 +168,10 @@ export const CreateIdentityView: React.FC<{ onComplete: (u: User) => void; onBac
     return () => clearTimeout(timer);
   }, [username]);
 
-
   const handleRegister = async () => {
     setError('');
     setStatusMsg('');
     
-    // Validation
     if (availability === 'TAKEN') return setError("Designation is already claimed.");
     if (username.length < 3) return setError("Designation too short.");
     if (password.length < 6) return setError("Key must be 6+ chars.");
@@ -205,11 +182,7 @@ export const CreateIdentityView: React.FC<{ onComplete: (u: User) => void; onBac
 
     try {
       const cleanUsername = username.trim();
-      const lowerUsername = cleanUsername.toLowerCase();
-      // Generate SAFE ID
-      const backendEmail = generateBackendID(lowerUsername);
-
-      // --- Step 1: AI Analysis ---
+      
       setStatusMsg("The Council is judging your intent...");
       
       let stats = { level: 1, xp: 0, xpToNextLevel: 100, intellect: 1, discipline: 1, spirit: 1, strength: 1, wealth: 1, social: 1, class: "Initiate" };
@@ -225,27 +198,12 @@ export const CreateIdentityView: React.FC<{ onComplete: (u: User) => void; onBac
          console.warn("AI skipped.");
       }
 
-      // --- Step 2: Backend Creation ---
       setStatusMsg("Forging identity...");
 
-      // Use lowerUsername as email part to match login logic
-      const { data, error: authError } = await supabase.auth.signUp({
-        email: backendEmail,
-        password: password,
-        options: {
-          data: { username: cleanUsername }
-        }
-      });
+      const result = await apiClient.register(cleanUsername, password, manifesto, stats, originStory);
 
-      if (authError) {
-          throw authError;
-      }
-
-      if (!data.user) throw new Error("The Void rejected the signal.");
-
-      // --- Step 3: Profile Creation ---
       const newUser: User = {
-        id: data.user.id,
+        id: result.id,
         username: cleanUsername,
         isVerified: true,
         joinDate: new Date().toISOString(),
@@ -259,23 +217,6 @@ export const CreateIdentityView: React.FC<{ onComplete: (u: User) => void; onBac
         following: []
       };
 
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: newUser.id,
-        username: lowerUsername, // Store normalized username for uniqueness check
-        display_name: cleanUsername, // Store original casing for display
-        manifesto: newUser.manifesto,
-        origin_story: newUser.originStory,
-        stats: newUser.stats,
-        inventory: newUser.inventory,
-        updated_at: newUser.joinDate
-      });
-      
-      if (profileError) {
-          console.error("Profile creation error:", profileError);
-          throw profileError;
-      }
-
-      // --- SUCCESS ---
       saveUser(newUser);
       setCreatedUser(newUser);
       setPhase('ACCEPTED');
@@ -312,7 +253,6 @@ export const CreateIdentityView: React.FC<{ onComplete: (u: User) => void; onBac
          </div>
 
          <div className="space-y-6">
-            {/* Username */}
             <div>
               <div className="flex justify-between items-baseline mb-1">
                  <label className="text-[10px] text-gold uppercase font-bold tracking-widest block">Designation</label>
@@ -329,7 +269,7 @@ export const CreateIdentityView: React.FC<{ onComplete: (u: User) => void; onBac
                 />
                 <button 
                   onClick={async () => {
-                     const name = await generateMysteriousName();
+                     const name = await apiClient.generateMysteriousName();
                      setUsername(name);
                   }}
                   className="px-4 bg-slate-800 border border-slate-700 text-slate-400 text-[10px] font-bold uppercase hover:bg-slate-700 hover:text-white transition-colors"
@@ -340,7 +280,6 @@ export const CreateIdentityView: React.FC<{ onComplete: (u: User) => void; onBac
               <p className="text-[9px] text-slate-600 mt-1 uppercase tracking-wider">Letters and numbers only.</p>
             </div>
 
-            {/* Password */}
             <div>
                <label className="text-[10px] text-gold uppercase font-bold tracking-widest mb-1 block">Secure Key</label>
                <div className="relative">
@@ -362,7 +301,6 @@ export const CreateIdentityView: React.FC<{ onComplete: (u: User) => void; onBac
                </div>
             </div>
 
-            {/* Manifesto */}
             <div>
                <label className="text-[10px] text-gold uppercase font-bold tracking-widest mb-1 block">Manifesto</label>
                <textarea 
@@ -411,40 +349,10 @@ export const EmbarkView: React.FC<{ onComplete: (u: User) => void; onBack: () =>
 
     try {
       const cleanUsername = username.trim();
-      const backendEmail = generateBackendID(cleanUsername);
 
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email: backendEmail,
-        password
-      });
-
-      if (authError) throw new Error("Identity or Key incorrect.");
-
-      if (data.user) {
-        // Fetch Profile
-        const { data: profile } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
-        
-        // Fix missing following property
-        const user: User = {
-          id: data.user.id,
-          username: profile?.username || cleanUsername,
-          isVerified: true,
-          joinDate: new Date().toISOString(),
-          lastLogin: Date.now(),
-          stats: profile?.stats || { level: 1, xp: 0, xpToNextLevel: 100, intellect: 1, discipline: 1, spirit: 1, strength: 1, wealth: 1, class: "Unknown" },
-          tasks: profile?.tasks || [],
-          inventory: profile?.inventory || [],
-          manifesto: profile?.manifesto,
-          originStory: profile?.origin_story,
-          avatarUrl: profile?.avatar_url,
-          coverUrl: profile?.cover_url,
-          entropy: profile?.entropy || 0,
-          following: profile?.following || []
-        };
-
-        saveUser(user);
-        onComplete(user);
-      }
+      const user = await apiClient.login(cleanUsername, password);
+      saveUser(user);
+      onComplete(user);
     } catch (err: any) {
       setError(err.message);
     } finally {

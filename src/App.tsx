@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ViewState, User } from './types';
 import { NavBar } from './components/NavBar';
 import { loadUser, saveUser } from './utils/helpers';
-import { supabase } from './services/supabaseClient';
+import { apiClient } from './services/apiClient';
 
 import { IntroView } from './views/IntroView';
 import { AuthChoiceView, CreateIdentityView, EmbarkView } from './views/AuthView';
@@ -19,30 +19,32 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   const initSession = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-      if (profile) {
-         const syncedUser: User = {
-           id: session.user.id,
-           username: profile.username,
-           isVerified: true,
-           joinDate: profile.created_at,
-           lastLogin: Date.now(),
-           stats: profile.stats,
-           tasks: profile.tasks || [],
-           inventory: profile.inventory || [],
-           manifesto: profile.manifesto,
-           originStory: profile.origin_story,
-           avatarUrl: profile.avatar_url,
-           coverUrl: profile.cover_url,
-           entropy: profile.entropy || 0,
-           following: profile.following || []
-         };
-         setCurrentUser(syncedUser);
-         saveUser(syncedUser);
-         setView(ViewState.SANCTUM);
+    try {
+      const saved = loadUser();
+      if (saved?.id) {
+        const profile = await apiClient.getProfile(saved.id);
+        const syncedUser: User = {
+          id: saved.id,
+          username: profile.username,
+          isVerified: true,
+          joinDate: profile.created_at,
+          lastLogin: Date.now(),
+          stats: profile.stats,
+          tasks: profile.tasks || [],
+          inventory: profile.inventory || [],
+          manifesto: profile.manifesto,
+          originStory: profile.origin_story,
+          avatarUrl: profile.avatar_url,
+          coverUrl: profile.cover_url,
+          entropy: profile.entropy || 0,
+          following: profile.following || []
+        };
+        setCurrentUser(syncedUser);
+        saveUser(syncedUser);
+        setView(ViewState.SANCTUM);
       }
+    } catch (error) {
+      console.log('No session found');
     }
   };
 
@@ -52,16 +54,19 @@ export default function App() {
     setCurrentUser(updatedUser);
     saveUser(updatedUser);
     if (updatedUser.id) {
-       await supabase.from('profiles').update({
+      try {
+        await apiClient.updateProfile(updatedUser.id, {
           stats: updatedUser.stats,
           tasks: updatedUser.tasks,
           inventory: updatedUser.inventory,
-          avatar_url: updatedUser.avatarUrl,
-          cover_url: updatedUser.coverUrl,
+          avatarUrl: updatedUser.avatarUrl,
+          coverUrl: updatedUser.coverUrl,
           entropy: updatedUser.entropy,
-          following: updatedUser.following,
-          updated_at: new Date().toISOString()
-       }).eq('id', updatedUser.id);
+          following: updatedUser.following
+        });
+      } catch (error) {
+        console.error('Profile update failed:', error);
+      }
     }
   };
 

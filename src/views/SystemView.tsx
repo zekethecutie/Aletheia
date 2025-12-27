@@ -9,20 +9,25 @@ import { getRank, getRankColor } from '../utils/helpers';
 // --- Sub-components ---
 
 const StatHex: React.FC<{ label: string; value: number; color: string; description?: string; activeAnalysis: boolean }> = ({ label, value, color, description, activeAnalysis }) => (
-  <div className="relative group transition-all duration-300">
-     <div className={`flex flex-col items-center justify-center p-2 ${activeAnalysis ? 'opacity-20 blur-sm' : 'opacity-100'}`}>
-        <div className="w-14 h-14 rounded-full border-2 border-slate-800 bg-slate-950 flex items-center justify-center shadow-[0_0_15px_rgba(0,0,0,0.5)] relative">
-            <div className={`absolute inset-0 rounded-full opacity-20 ${color.replace('text-', 'bg-')}`}></div>
-            <span className={`text-lg font-black ${color}`}>{value}</span>
+  <div className="relative group transition-all duration-500">
+     <div className={`flex flex-col items-center justify-center p-4 glass-card rounded-2xl border-white/5 hover:border-gold/30 transition-all ${activeAnalysis ? 'opacity-20 blur-md' : 'opacity-100'}`}>
+        <div className="relative">
+            <svg className="w-16 h-16 transform -rotate-90">
+                <circle cx="32" cy="32" r="30" fill="none" stroke="currentColor" strokeWidth="1" className="text-white/5" />
+                <circle cx="32" cy="32" r="30" fill="none" stroke="currentColor" strokeWidth="1" className={color} strokeDasharray={`${(value / 100) * 188.5} 188.5`} strokeLinecap="round" />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+                <span className={`text-xl font-black font-mono tracking-tighter ${color}`}>{value}</span>
+            </div>
         </div>
-        <span className="text-[8px] font-bold uppercase tracking-widest text-slate-500 mt-2">{label}</span>
+        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mt-4 font-sans">{label}</span>
      </div>
      
      {activeAnalysis && (
-        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-            <div className="bg-slate-900 border border-slate-700 p-2 rounded shadow-2xl w-32 text-center animate-fade-in-up z-20 relative">
-                <p className={`text-[10px] font-black uppercase ${color} mb-1`}>{label}</p>
-                <p className="text-[9px] text-slate-300 leading-tight">{description}</p>
+        <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+            <div className="bg-black/90 border border-gold/30 p-3 rounded shadow-[0_0_30px_rgba(212,175,55,0.2)] w-40 text-center animate-fade-in-up z-30 relative backdrop-blur-xl">
+                <p className={`text-[10px] font-black uppercase ${color} mb-2 tracking-[0.1em]`}>{label} ANALYTICS</p>
+                <p className="text-[9px] text-slate-300 leading-relaxed font-serif italic">"{description}"</p>
             </div>
         </div>
      )}

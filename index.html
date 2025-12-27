@@ -14,23 +14,32 @@
         theme: {
           extend: {
             colors: {
-              midnight: '#020617', // slate-950
-              void: '#050505',
-              gold: '#d4af37',
-              'gold-dim': '#8a7e50',
-              'gold-light': '#f3e5ab',
-              mystic: '#1e293b', // slate-800
+              midnight: '#010409',
+              void: '#000000',
+              gold: '#D4AF37',
+              'gold-dim': '#8A7E50',
+              'gold-light': '#F3E5AB',
+              mystic: '#0D1117',
+              crimson: '#8B0000',
+              slate: {
+                950: '#010409',
+                900: '#0D1117',
+                800: '#161B22',
+              }
             },
             fontFamily: {
-              serif: ['Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif'],
-              sans: ['Inter', 'system-ui', 'sans-serif'],
+              serif: ['Cormorant Garamond', 'serif'],
+              sans: ['Space Grotesk', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace'],
             },
             animation: {
               'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-              'fade-in': 'fadeIn 0.8s ease-out forwards',
-              'fade-in-up': 'fadeInUp 1s ease-out forwards',
-              'blur-in': 'blurIn 1.5s ease-out forwards',
-              'slide-up': 'slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+              'fade-in': 'fadeIn 1s ease-out forwards',
+              'fade-in-up': 'fadeInUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+              'blur-in': 'blurIn 2s ease-out forwards',
+              'slide-up': 'slideUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+              'float': 'float 6s ease-in-out infinite',
+              'scanline': 'scanline 8s linear infinite',
             },
             keyframes: {
               fadeIn: {
@@ -38,55 +47,81 @@
                 '100%': { opacity: '1' },
               },
               fadeInUp: {
-                '0%': { opacity: '0', transform: 'translateY(20px)' },
+                '0%': { opacity: '0', transform: 'translateY(30px)' },
                 '100%': { opacity: '1', transform: 'translateY(0)' },
               },
               blurIn: {
-                '0%': { opacity: '0', filter: 'blur(10px)', transform: 'scale(0.95)' },
+                '0%': { opacity: '0', filter: 'blur(20px)', transform: 'scale(0.98)' },
                 '100%': { opacity: '1', filter: 'blur(0)', transform: 'scale(1)' },
               },
               slideUp: {
                 '0%': { transform: 'translateY(100%)' },
                 '100%': { transform: 'translateY(0)' },
               },
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-10px)' },
+              },
+              scanline: {
+                '0%': { transform: 'translateY(-100%)' },
+                '100%': { transform: 'translateY(100%)' },
+              }
             },
           },
         },
       };
     </script>
     <style>
-      /* Custom Scrollbar for dark theme */
+      @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,700;1,400&family=Space+Grotesk:wght@300;700&family=JetBrains+Mono:wght@300;700&display=swap');
+
+      /* Custom Scrollbar */
       ::-webkit-scrollbar {
-        width: 4px;
+        width: 2px;
       }
       ::-webkit-scrollbar-track {
-        background: #020617;
+        background: #000;
       }
       ::-webkit-scrollbar-thumb {
-        background: #334155;
-        border-radius: 2px;
+        background: #D4AF37;
       }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #475569;
-      }
+      
       body {
-        background-color: #050505;
-        color: #e2e8f0;
+        background-color: #000;
+        color: #E2E8F0;
         -webkit-font-smoothing: antialiased;
-        overscroll-behavior-y: none; /* Prevents pull-to-refresh on mobile */
+        overscroll-behavior-y: none;
+        overflow-x: hidden;
       }
-      .scrollbar-hide::-webkit-scrollbar {
-          display: none;
+
+      .glass-card {
+        background: rgba(13, 17, 23, 0.7);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(212, 175, 55, 0.1);
       }
-      .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
+
+      .text-glow {
+        text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
       }
-      /* Safe area padding for notched phones */
-      .safe-pb {
-          padding-bottom: env(safe-area-inset-bottom);
+
+      .scanline-overlay {
+        position: fixed;
+        inset: 0;
+        background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.1) 50%);
+        background-size: 100% 4px;
+        pointer-events: none;
+        z-index: 100;
+      }
+
+      .noise-overlay {
+        position: fixed;
+        inset: 0;
+        background: url('https://www.transparenttextures.com/patterns/black-linen.png');
+        opacity: 0.05;
+        pointer-events: none;
+        z-index: 101;
       }
     </style>
+
   </head>
   <body>
     <div id="root"></div>

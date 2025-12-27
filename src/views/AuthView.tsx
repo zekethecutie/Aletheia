@@ -36,27 +36,36 @@ const generateBackendID = (username: string) => {
 
 export const AuthChoiceView: React.FC<{ onChoice: (c: 'CREATE' | 'EMBARK') => void }> = ({ onChoice }) => (
   <div className="h-screen w-full bg-void flex flex-col items-center justify-center p-8 animate-fade-in relative overflow-hidden">
-    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-900/40 via-black to-black opacity-60"></div>
-    <div className="z-10 w-full max-w-sm flex flex-col items-center space-y-12">
-      <div className="text-center">
-         <h1 className="text-6xl font-black text-white tracking-tighter uppercase mb-4 drop-shadow-lg">Aletheia</h1>
-         <p className="text-gold text-[10px] uppercase tracking-[0.4em] font-bold">The Hidden Wisdom</p>
+    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-gold/5 via-black to-black opacity-40"></div>
+    <div className="z-10 w-full max-w-sm flex flex-col items-center">
+      <div className="text-center mb-16 animate-blur-in">
+         <h1 className="text-7xl font-black text-white tracking-tighter uppercase mb-2 drop-shadow-[0_0_30px_rgba(255,255,255,0.1)] font-sans">Aletheia</h1>
+         <div className="flex items-center justify-center gap-3">
+            <div className="h-[1px] w-8 bg-gold/50"></div>
+            <p className="text-gold text-[9px] uppercase tracking-[0.6em] font-bold">The Great Unveiling</p>
+            <div className="h-[1px] w-8 bg-gold/50"></div>
+         </div>
       </div>
 
-      <div className="w-full space-y-4">
+      <div className="w-full space-y-4 animate-fade-in-up">
         <button 
           onClick={() => onChoice('CREATE')} 
-          className="group w-full py-4 bg-white text-black font-black uppercase text-xs tracking-[0.2em] hover:bg-slate-200 transition-all transform hover:scale-[1.02]"
+          className="group w-full py-5 glass-card text-gold font-black uppercase text-[10px] tracking-[0.3em] hover:bg-gold/10 transition-all transform hover:scale-[1.02] border-gold/20 relative overflow-hidden"
         >
-          Initiate Protocol
+          <span className="relative z-10">Initiate Protocol</span>
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gold/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
         </button>
         
         <button 
           onClick={() => onChoice('EMBARK')} 
-          className="w-full py-4 border border-slate-800 text-slate-400 font-bold uppercase text-xs tracking-[0.2em] hover:text-white hover:border-slate-600 transition-colors"
+          className="w-full py-5 text-slate-500 font-bold uppercase text-[10px] tracking-[0.3em] hover:text-white transition-all border border-transparent hover:border-slate-800"
         >
           Resume Path
         </button>
+      </div>
+
+      <div className="absolute bottom-12 left-0 right-0 text-center">
+        <p className="text-[8px] text-slate-700 uppercase tracking-[0.4em] font-mono">Terminal v4.1.0 // Connection Stable</p>
       </div>
     </div>
   </div>

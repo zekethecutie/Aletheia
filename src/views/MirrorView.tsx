@@ -61,17 +61,23 @@ export const MirrorView: React.FC<MirrorViewProps> = ({ user, onUpdateUser }) =>
             )}
 
             {gameMode === 'IDLE' && (
-                <div className="text-center max-w-sm space-y-8 animate-fade-in-up">
-                    <div className="w-32 h-32 mx-auto rounded-full bg-gradient-to-tr from-indigo-500 to-purple-900 p-1 shadow-[0_0_50px_rgba(99,102,241,0.4)]">
-                        <div className="w-full h-full bg-black rounded-full flex items-center justify-center relative overflow-hidden group">
-                            <IconEye className="w-12 h-12 text-indigo-400 opacity-80 group-hover:scale-110 transition-transform" />
+                <div className="text-center max-w-sm space-y-12 animate-blur-in">
+                    <div className="relative">
+                        <div className="absolute inset-0 bg-gold/20 blur-3xl rounded-full animate-pulse"></div>
+                        <div className="w-40 h-40 mx-auto rounded-2xl glass-card p-1 shadow-[0_0_60px_rgba(212,175,55,0.15)] rotate-45 group hover:rotate-[225deg] transition-all duration-1000 relative z-10">
+                            <div className="w-full h-full bg-black rounded-xl flex items-center justify-center -rotate-45 group-hover:rotate-[-225deg] transition-all duration-1000">
+                                <IconEye className="w-16 h-16 text-gold/80 drop-shadow-[0_0_15px_rgba(212,175,55,0.4)]" />
+                            </div>
                         </div>
                     </div>
                     <div>
-                        <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-2">The Reflection</h2>
-                        <p className="text-slate-400 text-sm font-serif leading-relaxed">Confront the dilemmas generated from your weakest attributes. Prevail to manifest new power.</p>
+                        <h2 className="text-4xl font-black text-white uppercase tracking-tighter mb-4 font-sans">The Reflection</h2>
+                        <p className="text-slate-400 text-[11px] font-serif leading-relaxed tracking-wide uppercase opacity-70">"Face the truth of your own architecture."</p>
                     </div>
-                    <button onClick={enterMirror} className="w-full py-5 bg-white text-black font-black uppercase text-xs tracking-widest hover:bg-indigo-100 transition-all shadow-xl">Start Reflection</button>
+                    <button onClick={enterMirror} className="group w-full py-6 glass-card text-gold font-black uppercase text-[10px] tracking-[0.4em] hover:bg-gold/10 transition-all border-gold/20 relative overflow-hidden">
+                        <span className="relative z-10">Ascend Threshold</span>
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gold/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                    </button>
                 </div>
             )}
 

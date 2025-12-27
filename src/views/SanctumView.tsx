@@ -146,25 +146,26 @@ export const SanctumView: React.FC = () => {
           {visiblePosts.map((post) => {
             const isLiked = currentUser && post.likedBy?.includes(currentUser.id);
             return (
-              <div key={post.id} onClick={() => setSelectedPost(post)} className={`bg-slate-950/40 backdrop-blur border ${post.isSystemPost ? 'border-gold/30' : 'border-slate-900'} p-6 rounded-lg cursor-pointer hover:border-slate-700 transition-all group relative`}>
-                <p className="text-white text-lg font-serif opacity-90 mb-6 leading-relaxed">{post.content}</p>
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div onClick={(e) => { e.stopPropagation(); setViewProfileId(post.authorId); }} className="w-10 h-10 rounded-full border border-slate-800 overflow-hidden bg-black shadow-lg">
+              <div key={post.id} onClick={() => setSelectedPost(post)} className={`glass-card p-8 rounded-2xl cursor-pointer hover:border-gold/40 transition-all group relative overflow-hidden animate-fade-in-up shadow-[0_20px_50px_rgba(0,0,0,0.3)] ${post.isSystemPost ? 'border-gold/30' : 'border-white/5'}`}>
+                <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-transparent via-gold/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <p className="text-white text-xl font-serif italic opacity-90 mb-8 leading-relaxed tracking-wide">"{post.content}"</p>
+                <div className="flex justify-between items-center border-t border-white/5 pt-6">
+                  <div className="flex items-center gap-4">
+                    <div onClick={(e) => { e.stopPropagation(); setViewProfileId(post.authorId); }} className="w-12 h-12 rounded-xl border border-white/10 overflow-hidden bg-black shadow-2xl transition-transform group-hover:scale-105">
                       <img src={post.authorAvatar || `https://api.dicebear.com/7.x/initials/svg?seed=${post.authorName}&backgroundColor=000000`} className="w-full h-full object-cover" />
                     </div>
                     <div>
-                      <button onClick={(e) => { e.stopPropagation(); setViewProfileId(post.authorId); }} className="text-white font-black uppercase text-xs hover:underline block text-left">{post.authorName}</button>
-                      <p className="text-gold text-[9px] uppercase font-black tracking-tighter">{post.authorClass}</p>
+                      <button onClick={(e) => { e.stopPropagation(); setViewProfileId(post.authorId); }} className="text-white font-black uppercase text-[10px] tracking-[0.2em] hover:text-gold block text-left transition-colors">{post.authorName}</button>
+                      <p className="text-gold/50 text-[8px] uppercase font-bold tracking-[0.3em] mt-1">{post.authorClass}</p>
                     </div>
                   </div>
-                  <div className="flex gap-4 items-center">
+                  <div className="flex gap-6 items-center">
                     {currentUser?.id === post.authorId && (
-                      <button onClick={(e) => handleDeletePost(post.id, e)} className="text-slate-700 hover:text-red-500 transition-colors"><IconTrash className="w-4 h-4" /></button>
+                      <button onClick={(e) => handleDeletePost(post.id, e)} className="text-slate-700 hover:text-crimson transition-colors"><IconTrash className="w-4 h-4" /></button>
                     )}
-                    <button onClick={(e) => handleToggleLike(post, e)} className={`flex flex-col items-center gap-1 transition-colors ${isLiked ? 'text-gold' : 'text-slate-600 hover:text-white'}`}>
-                      <IconResonance className="w-5 h-5" />
-                      <span className="text-[9px] font-black">{post.resonance}</span>
+                    <button onClick={(e) => handleToggleLike(post, e)} className={`flex items-center gap-2 transition-all ${isLiked ? 'text-gold' : 'text-slate-600 hover:text-white'}`}>
+                      <IconResonance className={`w-5 h-5 ${isLiked ? 'drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]' : ''}`} />
+                      <span className="text-[10px] font-black font-mono">{post.resonance}</span>
                     </button>
                   </div>
                 </div>

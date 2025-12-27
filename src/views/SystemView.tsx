@@ -184,18 +184,24 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void 
           </div>
       </div>
 
-      <div className="mt-12 px-6 mb-6">
-         <div className="flex justify-between items-end mb-1">
-            <h1 className="text-3xl font-black text-white uppercase tracking-tighter leading-none">{user.username}</h1>
-            <span className={`text-xl font-black ${getRankColor(rank)}`}>{rank}-RANK</span>
+      <div className="mt-16 px-8 mb-8">
+         <div className="flex justify-between items-end mb-4">
+            <div>
+                <h1 className="text-5xl font-black text-white uppercase tracking-tighter leading-none mb-2 drop-shadow-[0_0_20px_rgba(255,255,255,0.1)]">{user.username}</h1>
+                <p className="text-gold text-[10px] uppercase font-black tracking-[0.5em] opacity-80">{user.title || user.stats.class || "Seeker"}</p>
+            </div>
+            <div className="text-right">
+                <span className={`text-4xl font-black font-mono ${getRankColor(rank)} opacity-50`}>{rank}</span>
+                <p className="text-[8px] text-slate-500 uppercase font-bold tracking-widest">Global Grade</p>
+            </div>
          </div>
-         <p className="text-gold text-[10px] uppercase font-bold tracking-[0.3em] mb-4">{user.title || user.stats.class || "Seeker"}</p>
          
-         <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
-             <div className="h-full bg-gradient-to-r from-blue-600 via-purple-500 to-gold" style={{ width: `${xpPercent}%` }}></div>
+         <div className="w-full h-[2px] bg-white/5 rounded-full overflow-hidden relative">
+             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gold/20 to-transparent animate-scanline"></div>
+             <div className="h-full bg-gold shadow-[0_0_15px_rgba(212,175,55,0.5)] transition-all duration-1000" style={{ width: `${xpPercent}%` }}></div>
          </div>
-         <div className="flex justify-between mt-1 text-[8px] text-slate-500 font-mono uppercase">
-             <span>Progression</span>
+         <div className="flex justify-between mt-2 text-[8px] text-slate-500 font-mono uppercase tracking-[0.2em]">
+             <span>Sync Progress</span>
              <span>{user.stats.xp} / {user.stats.xpToNextLevel} XP</span>
          </div>
       </div>

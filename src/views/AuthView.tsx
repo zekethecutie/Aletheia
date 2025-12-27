@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { User, UserStats } from '../types';
 import { submitApplication } from '../services/geminiService';
 import { saveUser } from '../utils/helpers';
-import { IconLock, IconEye, IconDumbbell, IconSpirit, IconUser, IconCoin } from '../components/Icons';
+import { IconLock, IconEye, IconDumbbell, IconSpirit, IconUser, IconCoin, IconMirror } from '../components/Icons';
 import { apiClient } from '../services/apiClient';
 
 const stringToHex = (str: string) => {
@@ -255,13 +255,14 @@ export const CreateIdentityView: React.FC<{ onComplete: (u: User) => void; onBac
       <div className="flex-1 flex flex-col px-8 pb-20 max-w-md mx-auto w-full space-y-8 relative z-10 -mt-12">
          <div className="flex gap-8 items-end mb-4">
             <div className="relative">
-                <div className="w-32 h-36 bg-gradient-to-br from-gold/40 via-gold/10 to-transparent rounded-xl p-0.5 shadow-[0_20px_50px_rgba(255,149,0,0.1)]">
+                <div className="absolute inset-0 bg-gold/30 blur-[60px] rounded-full animate-pulse"></div>
+                <div className="w-32 h-36 bg-gradient-to-br from-gold/40 via-gold/10 to-transparent rounded-xl p-0.5 shadow-[0_20px_60px_rgba(255,149,0,0.2)] relative z-10 overflow-visible">
                     <div className="w-full h-full bg-black rounded-xl overflow-hidden relative group">
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-gold/10 via-transparent to-transparent opacity-50"></div>
                         <div className="absolute inset-0 flex items-center justify-center p-2">
                              <div className="w-full h-full glass-card rounded-lg border-white/10 p-1 relative flex items-center justify-center">
-                                <IconUser className="w-12 h-12 text-slate-800" />
-                                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-black border border-white/20 text-white text-[8px] font-black px-2 py-0.5 rounded-full whitespace-nowrap">
+                                <IconMirror className="w-12 h-12 text-gold/80 drop-shadow-[0_0_10px_rgba(212,175,55,0.5)]" />
+                                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-black border border-gold/40 text-white text-[8px] font-black px-3 py-1 rounded-full whitespace-nowrap shadow-[0_0_10px_rgba(212,175,55,0.3)]">
                                     INITIATE
                                 </div>
                              </div>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Post, DailyQuote } from '../types';
 import { apiClient } from '../services/apiClient';
@@ -8,7 +7,6 @@ import { CreatePostModal } from '../components/modals/CreatePostModal';
 import { IconResonance, IconPlus, IconUsers, IconGlobe, IconTrash, IconFeather, IconEdit } from '../components/Icons';
 import { formatTime, loadUser } from '../utils/helpers';
 import { PostDetailView } from './PostDetailView';
-import { supabase } from '../services/supabaseClient';
 
 export const SanctumView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'GLOBAL' | 'FOLLOWING'>('GLOBAL');
@@ -22,8 +20,26 @@ export const SanctumView: React.FC = () => {
 
   const fetchPosts = async () => {
     setLoading(true);
-    // Placeholder for fetch logic after migration
-    setPosts([]);
+    try {
+      const data = await apiClient.getPosts();
+      setPosts(data.map((p: any) => ({
+        id: p.id.toString(),
+        authorId: p.author_id,
+        authorName: p.username || 'The Council',
+        authorAvatar: p.avatar_url,
+        authorClass: p.author_class || 'System',
+        content: p.content,
+        resonance: p.resonance || 0,
+        likedBy: p.liked_by || [],
+        timestamp: new Date(p.created_at).getTime(),
+        tags: [],
+        comments: [],
+        commentCount: 0,
+        isSystemPost: !!p.is_system_post
+      })));
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+    }
     setLoading(false);
   };
 
@@ -41,50 +57,31 @@ export const SanctumView: React.FC = () => {
 
   const handleCreatePost = async (content: string) => {
     if (!currentUser) return;
-    const { error } = await supabase.from('posts').insert({
-      author_id: currentUser.id,
-      content,
-      resonance: 0,
-      liked_by: []
-    });
-    
-    if (error) {
+    try {
+      await apiClient.createPost(currentUser.id, content);
+      setIsCreatingPost(false);
+      fetchPosts();
+    } catch (error) {
       console.error("Error creating post:", error);
       alert("Transmission failed. The void is unstable.");
-      return;
     }
-
-    setIsCreatingPost(false);
-    fetchPosts();
   };
 
   const handleToggleLike = async (post: Post, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!currentUser) return;
     
-    let newLikedBy = [...(post.likedBy || [])];
-    const isLiked = newLikedBy.includes(currentUser.id);
-    
-    if (isLiked) {
-      newLikedBy = newLikedBy.filter(id => id !== currentUser.id);
-    } else {
-      newLikedBy.push(currentUser.id);
+    try {
+      await apiClient.toggleLikePost(parseInt(post.id), currentUser.id);
+      fetchPosts();
+    } catch (error) {
+      console.error("Error liking post:", error);
     }
-
-    const newResonance = isLiked ? post.resonance - 1 : post.resonance + 1;
-
-    setPosts(posts.map(p => p.id === post.id ? { ...p, resonance: newResonance, likedBy: newLikedBy } : p));
-    
-    await supabase.from('posts').update({ 
-      resonance: newResonance,
-      liked_by: newLikedBy 
-    }).eq('id', post.id);
   };
 
   const handleDeletePost = async (postId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!confirm("Extinguish this signal?")) return;
-    await supabase.from('posts').delete().eq('id', postId);
     setPosts(posts.filter(p => p.id !== postId));
   };
 
@@ -102,7 +99,6 @@ export const SanctumView: React.FC = () => {
         <button onClick={() => setActiveTab('FOLLOWING')} className={`flex-1 py-4 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest ${activeTab === 'FOLLOWING' ? 'text-white border-b-2 border-white' : 'text-slate-600'}`}><IconUsers className="w-4 h-4" /> Frequency</button>
       </div>
 
-      {/* Daily Wisdom UI moved below tabs */}
       {dailyQuote && (
         <div className="mx-6 mt-8 p-10 glass-card rounded-2xl relative group overflow-hidden animate-blur-in shadow-[0_20px_50px_rgba(0,0,0,0.3)] border-white/5">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold/40 to-transparent"></div>

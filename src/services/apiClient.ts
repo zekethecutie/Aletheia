@@ -185,5 +185,43 @@ export const apiClient = {
       console.error('Artifact image error:', error);
       throw error;
     }
+  },
+
+  async getPosts() {
+    try {
+      const response = await fetch(`${API_URL}/posts`);
+      return handleResponse(response);
+    } catch (error: any) {
+      console.error('Get posts error:', error);
+      throw error;
+    }
+  },
+
+  async createPost(author_id: string, content: string) {
+    try {
+      const response = await fetch(`${API_URL}/posts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ author_id, content })
+      });
+      return handleResponse(response);
+    } catch (error: any) {
+      console.error('Create post error:', error);
+      throw error;
+    }
+  },
+
+  async toggleLikePost(post_id: number, user_id: string) {
+    try {
+      const response = await fetch(`${API_URL}/posts/like`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ post_id, user_id })
+      });
+      return handleResponse(response);
+    } catch (error: any) {
+      console.error('Like post error:', error);
+      throw error;
+    }
   }
 };

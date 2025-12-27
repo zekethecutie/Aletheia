@@ -182,14 +182,42 @@ app.post('/api/ai/mysterious-name', async (req: Request, res: Response) => {
 app.post('/api/ai/identity', async (req: Request, res: Response) => {
   try {
     const { manifesto } = req.body;
-    const prompt = `Analyze this manifesto: "${manifesto}". Assign level 1 stats and a class. Be poetic. Response must be JSON: {"initialStats": {"intelligence": number, "physical": number, "spiritual": number, "social": number, "wealth": number, "class": "string"}, "reason": "poetic string"}`;
+    const prompt = `CRITICAL SYSTEM PROTOCOL: You are a meticulous and slightly cold AI evaluator for the Aletheia RPG. 
+    Analyze this user's manifesto: "${manifesto}". 
+    Assign a character class based on their underlying personality traits revealed.
+    Assign starting attributes (stats) from 1 to 10. BE METICULOUS AND UNFORGIVING. Do not give high stats (8-10) unless the manifesto is truly exceptional. 
+    Most users should start with 1-3 in most stats.
+    Attributes meaning:
+    - Intelligence: Analytical depth and knowledge.
+    - Physical: Discipline and real-world vitality.
+    - Spiritual: Connection to the unseen and inner peace.
+    - Social: Influence and frequency within the collective.
+    - Wealth: Manifestation of value and resources.
+    - Health/Resonance: Set both to 10 + (Physical/Spiritual * 2) respectively.
+    
+    Response must be JSON ONLY: 
+    {
+      "initialStats": {
+        "intelligence": number, 
+        "physical": number, 
+        "spiritual": number, 
+        "social": number, 
+        "wealth": number, 
+        "class": "string",
+        "health": number,
+        "maxHealth": number,
+        "resonance": number,
+        "maxResonance": number
+      }, 
+      "reason": "poetic and analytical verdict of their soul"
+    }`;
     const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
     const text = await response.text();
     const jsonMatch = text.match(/\{.*\}/s);
     if (jsonMatch) {
       res.json(JSON.parse(jsonMatch[0]));
     } else {
-      res.json({ initialStats: { intelligence: 5, physical: 5, spiritual: 5, social: 5, wealth: 5, class: "Seeker" }, reason: "The void accepts your manifesto." });
+      res.json({ initialStats: { intelligence: 1, physical: 1, spiritual: 1, social: 1, wealth: 1, class: "Initiate", health: 10, maxHealth: 100, resonance: 10, maxResonance: 100 }, reason: "The void finds you lacking in definition. Begin as an Initiate." });
     }
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -214,11 +242,73 @@ app.post('/api/ai/quest', async (req: Request, res: Response) => {
 app.post('/api/ai/feat', async (req: Request, res: Response) => {
   try {
     const { feat } = req.body;
-    const prompt = `Feat: ${feat}. Analyze this RPG achievement. Return JSON: {"xpGained": number, "statsIncreased": {"physical": number, "intelligence": number, "spiritual": number, "social": number, "wealth": number}, "systemMessage": "mystical response"}`;
+    const prompt = `SYSTEM ALERT: Achievement logged. Analyzing feat: "${feat}". 
+    Determine XP reward (10-500) and minor attribute increases (0-1) based on real-world impact.
+    If the feat is low effort, give minimal XP and 0 stat increases.
+    If the feat violates system safety (harmful, toxic), set "safetyTriggered": true and give 0 rewards.
+    Return JSON ONLY: 
+    {
+      "xpGained": number, 
+      "statsIncreased": {"physical": number, "intelligence": number, "spiritual": number, "social": number, "wealth": number}, 
+      "systemMessage": "mystical and slightly authoritative response",
+      "safetyTriggered": boolean
+    }`;
     const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
     const text = await response.text();
     const jsonMatch = text.match(/\{.*\}/s);
-    res.json(jsonMatch ? JSON.parse(jsonMatch[0]) : { xpGained: 50, statsIncreased: {}, systemMessage: "The void acknowledges your effort." });
+    res.json(jsonMatch ? JSON.parse(jsonMatch[0]) : { xpGained: 10, statsIncreased: {}, systemMessage: "The achievement is recorded.", safetyTriggered: false });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Posts API
+app.get('/api/posts', async (req: Request, res: Response) => {
+  try {
+    const result = await query(`
+      SELECT p.*, pr.username, pr.avatar_url, (pr.stats->>'class') as author_class 
+      FROM posts p 
+      LEFT JOIN profiles pr ON p.author_id = pr.id 
+      ORDER BY p.created_at DESC LIMIT 50
+    `);
+    res.json(result.rows);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/posts', async (req: Request, res: Response) => {
+  try {
+    const { author_id, content } = req.body;
+    const result = await query(
+      'INSERT INTO posts (author_id, content) VALUES ($1, $2) RETURNING *',
+      [author_id, content]
+    );
+    res.json(result.rows[0]);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/posts/like', async (req: Request, res: Response) => {
+  try {
+    const { post_id, user_id } = req.body;
+    const post = await query('SELECT liked_by FROM posts WHERE id = $1', [post_id]);
+    if (post.rows.length === 0) return res.status(404).json({ error: 'Post not found' });
+    
+    let likedBy = post.rows[0].liked_by || [];
+    const index = likedBy.indexOf(user_id);
+    if (index > -1) {
+      likedBy.splice(index, 1);
+    } else {
+      likedBy.push(user_id);
+    }
+    
+    const result = await query(
+      'UPDATE posts SET liked_by = $1, resonance = $2 WHERE id = $3 RETURNING *',
+      [likedBy, likedBy.length, post_id]
+    );
+    res.json(result.rows[0]);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -290,6 +380,21 @@ app.post('/api/ai/image/artifact', async (req: Request, res: Response) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// System Cron - Auto Posts
+const runSystemCron = async () => {
+  try {
+    const prompt = "Generate a short, profound mystical system transmission for the global feed. Topic: collective evolution, the void, or the architecture of reality. Return string only.";
+    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt));
+    const content = await response.text();
+    await query('INSERT INTO posts (content, is_system_post) VALUES ($1, $2)', [content.trim(), true]);
+    console.log('System transmission deployed');
+  } catch (e) {
+    console.error('Cron failed:', e);
+  }
+};
+setInterval(runSystemCron, 1000 * 60 * 60 * 12); // Every 12 hours
+runSystemCron(); // Run once on start
 
 app.listen(Number(PORT), '0.0.0.0', () => {
   console.log(`Server running on http://0.0.0.0:${PORT}`);

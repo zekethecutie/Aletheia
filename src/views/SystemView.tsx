@@ -240,13 +240,27 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                       <div className="glass-card p-4 rounded-xl border-white/5 flex justify-between items-center group hover:border-gold/30 transition-all">
                         <div>
                             <div className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
-                                <div className="w-1 h-1 bg-gold rounded-full"></div>
+                                <div className="w-1 h-1 bg-blue-400 rounded-full"></div>
+                                Intelligence
+                            </div>
+                            <div className="text-2xl font-display font-black text-white">{user.stats.intelligence}</div>
+                            <p className="text-[8px] text-slate-600 uppercase mt-1">Analytical depth & knowledge</p>
+                        </div>
+                        <div className="w-6 h-6 opacity-20 group-hover:opacity-100 transition-opacity">
+                            <IconEye className="text-blue-400" />
+                        </div>
+                      </div>
+                      <div className="glass-card p-4 rounded-xl border-white/5 flex justify-between items-center group hover:border-gold/30 transition-all">
+                        <div>
+                            <div className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
+                                <div className="w-1 h-1 bg-red-500 rounded-full"></div>
                                 Physical
                             </div>
                             <div className="text-2xl font-display font-black text-white">{user.stats.physical}</div>
+                            <p className="text-[8px] text-slate-600 uppercase mt-1">Discipline & real-world vitality</p>
                         </div>
                         <div className="w-6 h-6 opacity-20 group-hover:opacity-100 transition-opacity">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gold">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-red-500">
                                 <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
                             </svg>
                         </div>
@@ -254,42 +268,30 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                       <div className="glass-card p-4 rounded-xl border-white/5 flex justify-between items-center group hover:border-gold/30 transition-all">
                         <div>
                             <div className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
-                                <div className="w-1 h-1 bg-gold rounded-full"></div>
-                                Intelligence
-                            </div>
-                            <div className="text-2xl font-display font-black text-white">{user.stats.intelligence}</div>
-                        </div>
-                        <div className="w-6 h-6 opacity-20 group-hover:opacity-100 transition-opacity">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gold">
-                                <path d="M12 2a10 10 0 100 20 10 10 0 000-20zM12 16v-4M12 8h.01" />
-                            </svg>
-                        </div>
-                      </div>
-                      <div className="glass-card p-4 rounded-xl border-white/5 flex justify-between items-center group hover:border-gold/30 transition-all">
-                        <div>
-                            <div className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
-                                <div className="w-1 h-1 bg-gold rounded-full"></div>
-                                Social
-                            </div>
-                            <div className="text-2xl font-display font-black text-white">{user.stats.social}</div>
-                        </div>
-                        <div className="w-6 h-6 opacity-20 group-hover:opacity-100 transition-opacity">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gold">
-                                <path d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
-                        </div>
-                      </div>
-                      <div className="glass-card p-4 rounded-xl border-white/5 flex justify-between items-center group hover:border-gold/30 transition-all">
-                        <div>
-                            <div className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
-                                <div className="w-1 h-1 bg-gold rounded-full"></div>
+                                <div className="w-1 h-1 bg-purple-400 rounded-full"></div>
                                 Spiritual
                             </div>
                             <div className="text-2xl font-display font-black text-white">{user.stats.spiritual}</div>
+                            <p className="text-[8px] text-slate-600 uppercase mt-1">Connection to the unseen</p>
                         </div>
                         <div className="w-6 h-6 opacity-20 group-hover:opacity-100 transition-opacity">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gold">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-purple-400">
                                 <path d="M12 15l-2 5L3 9l18-6-5 18-4-6z" />
+                            </svg>
+                        </div>
+                      </div>
+                      <div className="glass-card p-4 rounded-xl border-white/5 flex justify-between items-center group hover:border-gold/30 transition-all">
+                        <div>
+                            <div className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
+                                <div className="w-1 h-1 bg-amber-400 rounded-full"></div>
+                                Social
+                            </div>
+                            <div className="text-2xl font-display font-black text-white">{user.stats.social}</div>
+                            <p className="text-[8px] text-slate-600 uppercase mt-1">Influence & frequency</p>
+                        </div>
+                        <div className="w-6 h-6 opacity-20 group-hover:opacity-100 transition-opacity">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-amber-400">
+                                <path d="M13 10V3L4 14h7v7l9-11h-7z" />
                             </svg>
                         </div>
                       </div>

@@ -33,7 +33,7 @@ export const initializeDatabase = async () => {
         cover_url VARCHAR(512),
         manifesto TEXT,
         origin_story TEXT,
-        stats JSONB DEFAULT '{"level": 1, "xp": 0, "xpToNextLevel": 100, "intelligence": 5, "physical": 5, "spiritual": 5, "social": 5, "wealth": 5, "resonance": 100, "maxResonance": 100, "health": 100, "maxHealth": 100, "class": "Seeker"}',
+        stats JSONB DEFAULT '{"level": 1, "xp": 0, "xpToNextLevel": 100, "intelligence": 1, "physical": 1, "spiritual": 1, "social": 1, "wealth": 1, "resonance": 10, "maxResonance": 100, "health": 10, "maxHealth": 100, "class": "Initiate"}',
         tasks JSONB DEFAULT '[]',
         inventory JSONB DEFAULT '[]',
         entropy INTEGER DEFAULT 0,
@@ -42,8 +42,18 @@ export const initializeDatabase = async () => {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+      CREATE TABLE IF NOT EXISTS posts (
+        id SERIAL PRIMARY KEY,
+        author_id TEXT REFERENCES profiles(id) ON DELETE CASCADE,
+        content TEXT NOT NULL,
+        resonance INTEGER DEFAULT 0,
+        liked_by TEXT[] DEFAULT '{}',
+        is_system_post BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
       CREATE INDEX IF NOT EXISTS idx_profiles_username ON profiles(username);
       CREATE INDEX IF NOT EXISTS idx_profiles_id ON profiles(id);
+      CREATE INDEX IF NOT EXISTS idx_posts_author_id ON posts(author_id);
     `);
     console.log('Database schema initialized');
   } catch (error) {

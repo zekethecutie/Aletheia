@@ -70,10 +70,8 @@ export const ConsultantView: React.FC = () => {
     setMessages(prev => [...prev, { id: Date.now().toString(), role: 'user', text: userText, timestamp: Date.now() }]);
     
     try {
-      // Free AI fallback
-      const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(`You are the ${advisor} advisor in Aletheia RPG. Respond to: ${userText}`));
-      const text = await response.text();
-      setMessages(prev => [...prev, { id: Date.now().toString(), role: 'model', text: text || "Signal lost...", timestamp: Date.now() }]);
+      const res = await apiClient.askAdvisor(advisor, userText);
+      setMessages(prev => [...prev, { id: Date.now().toString(), role: 'model', text: res.text || "Signal lost...", timestamp: Date.now() }]);
     } catch (e) {
       setMessages(prev => [...prev, { id: Date.now().toString(), role: 'model', text: "The void remains silent.", timestamp: Date.now() }]);
     } finally {

@@ -79,12 +79,12 @@ export const apiClient = {
     }
   },
 
-  async generateQuest(prompt: string) {
+  async generateQuest(stats: any) {
     try {
       const response = await fetch(`${API_URL}/ai/quest`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt })
+        body: JSON.stringify({ stats })
       });
       return handleResponse(response);
     } catch (error: any) {
@@ -93,16 +93,96 @@ export const apiClient = {
     }
   },
 
-  async calculateFeat(feat: string, stats: any) {
+  async calculateFeat(feat: string) {
     try {
       const response = await fetch(`${API_URL}/ai/feat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ feat, stats })
+        body: JSON.stringify({ feat })
       });
       return handleResponse(response);
     } catch (error: any) {
       console.error('Calculate feat error:', error);
+      throw error;
+    }
+  },
+
+  async analyzeIdentity(manifesto: string) {
+    try {
+      const response = await fetch(`${API_URL}/ai/identity`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ manifesto })
+      });
+      return handleResponse(response);
+    } catch (error: any) {
+      console.error('Identity analysis error:', error);
+      throw error;
+    }
+  },
+
+  async getDailyWisdom() {
+    try {
+      const response = await fetch(`${API_URL}/ai/wisdom`);
+      return handleResponse(response);
+    } catch (error: any) {
+      console.error('Daily wisdom error:', error);
+      throw error;
+    }
+  },
+
+  async askAdvisor(type: string, message: string) {
+    try {
+      const response = await fetch(`${API_URL}/ai/advisor`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, message })
+      });
+      return handleResponse(response);
+    } catch (error: any) {
+      console.error('Advisor error:', error);
+      throw error;
+    }
+  },
+
+  async generateMirrorScenario(stats: any) {
+    try {
+      const response = await fetch(`${API_URL}/ai/mirror/scenario`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stats })
+      });
+      return handleResponse(response);
+    } catch (error: any) {
+      console.error('Mirror scenario error:', error);
+      throw error;
+    }
+  },
+
+  async evaluateMirrorChoice(situation: string, choice: string) {
+    try {
+      const response = await fetch(`${API_URL}/ai/mirror/evaluate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ situation, choice })
+      });
+      return handleResponse(response);
+    } catch (error: any) {
+      console.error('Mirror evaluation error:', error);
+      throw error;
+    }
+  },
+
+  async generateArtifactImage(name: string, description: string) {
+    try {
+      const response = await fetch(`${API_URL}/ai/image/artifact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, description })
+      });
+      return handleResponse(response);
+    } catch (error: any) {
+      console.error('Artifact image error:', error);
       throw error;
     }
   }

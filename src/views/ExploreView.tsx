@@ -16,15 +16,15 @@ export const ExploreView: React.FC = () => {
     if (!query.trim()) return;
     setSearching(true);
     const dbResults: SearchResult[] = [];
-    // Mocking search results since we migrated from supabase
+    // Searching logic placeholder after migration
     dbResults.push({ type: 'USER', title: query, subtitle: 'Seeker', content: 'Searching the void...', id: '1' });
     setResults(dbResults);
     setSearching(false);
   };
 
   const fetchLeaderboard = async () => {
-    const { data } = await supabase.from('profiles').select('*').order('stats->level', { ascending: false }).limit(20);
-    if (data) setLeaderboard(data);
+    // Leaderboard logic placeholder
+    setLeaderboard([]);
   };
 
   useEffect(() => { 

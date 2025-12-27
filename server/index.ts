@@ -166,12 +166,31 @@ app.post('/api/profile/:id/update', async (req: Request, res: Response) => {
   }
 });
 
-// AI Proxy
+// AI Proxy - Mysterious Name
 app.post('/api/ai/mysterious-name', async (req: Request, res: Response) => {
   try {
-    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent("Generate a single mysterious RPG-style name. Just the name, nothing else."));
-    const name = await response.text() || "Initiate";
-    res.json({ name: name.trim() });
+    const prompt = "Generate a single mysterious RPG-style name (e.g., Kaelen, Vyr, Sylas). Just the name.";
+    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt));
+    const name = await response.text();
+    res.json({ name: name.trim().split('\n')[0].replace(/[^a-zA-Z]/g, '') });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// AI Identity Creation
+app.post('/api/ai/identity', async (req: Request, res: Response) => {
+  try {
+    const { manifesto } = req.body;
+    const prompt = `Analyze this manifesto: "${manifesto}". Assign level 1 stats and a class. Be poetic. Response must be JSON: {"initialStats": {"intelligence": number, "physical": number, "spiritual": number, "social": number, "wealth": number, "class": "string"}, "reason": "poetic string"}`;
+    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
+    const text = await response.text();
+    const jsonMatch = text.match(/\{.*\}/s);
+    if (jsonMatch) {
+      res.json(JSON.parse(jsonMatch[0]));
+    } else {
+      res.json({ initialStats: { intelligence: 5, physical: 5, spiritual: 5, social: 5, wealth: 5, class: "Seeker" }, reason: "The void accepts your manifesto." });
+    }
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -180,15 +199,12 @@ app.post('/api/ai/mysterious-name', async (req: Request, res: Response) => {
 // AI Quest
 app.post('/api/ai/quest', async (req: Request, res: Response) => {
   try {
-    const { prompt } = req.body;
-    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt + " Response must be in JSON format like {\"text\": \"quest description\", \"difficulty\": \"B\"}"));
+    const { stats } = req.body;
+    const prompt = `Quest for ${stats.class} lvl ${stats.level}. Response must be JSON: {"text": "quest description", "difficulty": "B"}`;
+    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
     const text = await response.text();
     const jsonMatch = text.match(/\{.*\}/s);
-    if (jsonMatch) {
-      res.json(JSON.parse(jsonMatch[0]));
-    } else {
-      res.json({ text: "Master the void's silence", difficulty: "B" });
-    }
+    res.json(jsonMatch ? JSON.parse(jsonMatch[0]) : { text: "Master the void's silence", difficulty: "B" });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -197,16 +213,79 @@ app.post('/api/ai/quest', async (req: Request, res: Response) => {
 // AI Feat Analysis
 app.post('/api/ai/feat', async (req: Request, res: Response) => {
   try {
-    const { feat, stats } = req.body;
-    const prompt = `User achieved: "${feat}". Based on their stats ${JSON.stringify(stats)}, determine XP gained and stat increases. Return JSON only: {"xpGained": number, "statsIncreased": {"physical": number, ...}, "systemMessage": "mystical message"}`;
-    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt));
+    const { feat } = req.body;
+    const prompt = `Feat: ${feat}. Analyze this RPG achievement. Return JSON: {"xpGained": number, "statsIncreased": {"physical": number, "intelligence": number, "spiritual": number, "social": number, "wealth": number}, "systemMessage": "mystical response"}`;
+    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
     const text = await response.text();
     const jsonMatch = text.match(/\{.*\}/s);
-    if (jsonMatch) {
-      res.json(JSON.parse(jsonMatch[0]));
-    } else {
-      res.json({ xpGained: 50, statsIncreased: {}, systemMessage: "The void acknowledges your effort." });
-    }
+    res.json(jsonMatch ? JSON.parse(jsonMatch[0]) : { xpGained: 50, statsIncreased: {}, systemMessage: "The void acknowledges your effort." });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// AI Mirror Scenario
+app.post('/api/ai/mirror/scenario', async (req: Request, res: Response) => {
+  try {
+    const { stats } = req.body;
+    const prompt = `Create a psychological dilemma for a user with these stats: ${JSON.stringify(stats)}. Return JSON: {"situation": "string", "choiceA": "string", "choiceB": "string", "context": "string", "testedStat": "intelligence|physical|spiritual|social|wealth"}`;
+    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
+    const text = await response.text();
+    const jsonMatch = text.match(/\{.*\}/s);
+    res.json(jsonMatch ? JSON.parse(jsonMatch[0]) : { situation: "The void beckons.", choiceA: "Step in", choiceB: "Step back", context: "A Choice", testedStat: "spiritual" });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// AI Mirror Evaluation
+app.post('/api/ai/mirror/evaluate', async (req: Request, res: Response) => {
+  try {
+    const { situation, choice } = req.body;
+    const prompt = `Scenario: ${situation}. Choice: ${choice}. Evaluator result. Return JSON: {"outcome": "string", "statChange": {"statName": number}, "reward": {"name": "string", "description": "string", "rarity": "COMMON|RARE|LEGENDARY|MYTHIC", "effect": "string", "icon": "string"}}`;
+    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
+    const text = await response.text();
+    const jsonMatch = text.match(/\{.*\}/s);
+    res.json(jsonMatch ? JSON.parse(jsonMatch[0]) : { outcome: "Fate is sealed.", statChange: {} });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// AI Advisor Chat
+app.post('/api/ai/advisor', async (req: Request, res: Response) => {
+  try {
+    const { type, message } = req.body;
+    const system = `You are a ${type} advisor. Keep it short, mystical, and practical.`;
+    const prompt = `${system}\nUser: ${message}`;
+    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt));
+    const text = await response.text();
+    res.json({ text });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// AI Daily Wisdom
+app.get('/api/ai/wisdom', async (req: Request, res: Response) => {
+  try {
+    const prompt = "Generate a profound short philosophical quote. Return JSON: {\"text\": \"string\", \"author\": \"string\"}";
+    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
+    const text = await response.text();
+    const jsonMatch = text.match(/\{.*\}/s);
+    res.json(jsonMatch ? JSON.parse(jsonMatch[0]) : { text: "Silence is the void's whisper.", author: "The Council" });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// AI Image Generation (Artifacts)
+app.post('/api/ai/image/artifact', async (req: Request, res: Response) => {
+  try {
+    const { name, description } = req.body;
+    const prompt = `Mystical pixel art RPG item, 32-bit style, sharp edges, vivid colors, solid black background, no transparency. Subject: ${name}. Context: ${description}. High contrast fantasy item.`;
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=512&height=512&model=flux&nologo=true`;
+    res.json({ imageUrl });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

@@ -29,8 +29,14 @@ export const SanctumView: React.FC = () => {
 
   useEffect(() => {
     fetchPosts();
-    // Default quote since we moved logic
-    setDailyQuote({ text: "Silence is the void's most eloquent whisper.", author: "The Council", date: new Date().toISOString() });
+    apiClient.getDailyWisdom().then(q => {
+      if (q && q.text) {
+        setDailyQuote({ ...q, date: new Date().toISOString() });
+      }
+    }).catch(err => {
+      console.warn("Daily wisdom fetch failed:", err);
+      setDailyQuote({ text: "Silence is the void's most eloquent whisper.", author: "The Council", date: new Date().toISOString() });
+    });
   }, []);
 
   const handleCreatePost = async (content: string) => {

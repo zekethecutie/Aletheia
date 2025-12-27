@@ -117,7 +117,7 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
   const submitFeat = async () => {
     setCalculating(true);
     try {
-      const res = await apiClient.calculateFeat(featInput, user.stats);
+      const res = await apiClient.calculateFeat(featInput);
       
       let newXp = user.stats.xp + res.xpGained;
       let newLevel = user.stats.level;

@@ -189,10 +189,10 @@ export const CreateIdentityView: React.FC<{ onComplete: (u: User) => void; onBac
       let originStory = "Accepted into the void.";
       
       try {
-         const analysis = await apiClient.calculateFeat(manifesto, stats);
+         const analysis = await apiClient.analyzeIdentity(manifesto);
          if (analysis) {
              if (analysis.initialStats) stats = { ...stats, ...analysis.initialStats };
-             if (analysis.systemMessage) originStory = analysis.systemMessage;
+             if (analysis.reason) originStory = analysis.reason;
          }
       } catch (aiError) {
          console.warn("AI skipped.");

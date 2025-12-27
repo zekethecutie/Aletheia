@@ -290,9 +290,15 @@ export const CreateIdentityView: React.FC<{ onComplete: (u: User) => void; onBac
 
   return (
     <div className="min-h-screen bg-void flex flex-col animate-fade-in relative overflow-y-auto">
+      <div className="absolute inset-0 z-0">
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-900/40 via-black to-black opacity-80"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-gold/10 via-transparent to-transparent"></div>
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
+      </div>
+      
       <button onClick={onBack} className="absolute top-6 left-6 text-slate-500 uppercase text-[10px] font-bold tracking-widest hover:text-white z-20">Back</button>
       
-      <div className="flex-1 flex flex-col justify-center px-8 py-20 max-w-md mx-auto w-full space-y-8">
+      <div className="flex-1 flex flex-col justify-center px-8 py-20 max-w-md mx-auto w-full space-y-8 relative z-10">
          <div className="space-y-2">
             <h2 className="text-3xl font-black text-white uppercase tracking-tight">Identify</h2>
             <p className="text-slate-500 text-xs font-serif italic">Who are you in the dark?</p>

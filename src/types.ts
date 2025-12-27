@@ -22,6 +22,10 @@ export interface UserStats {
   spiritual: number;
   wealth: number;   
   social: number;
+  resonance: number;
+  maxResonance: number;
+  health: number;
+  maxHealth: number;
   class: string;
 }
 

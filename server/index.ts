@@ -168,14 +168,10 @@ app.post('/api/profile/:id/update', async (req: Request, res: Response) => {
 
 // AI Proxy
 app.post('/api/ai/mysterious-name', async (req: Request, res: Response) => {
-  if (!genAI) {
-    return res.status(500).json({ error: 'AI not configured' });
-  }
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    const result = await model.generateContent("Generate a single mysterious RPG-style name. Just the name, nothing else.");
-    const name = result.response.text()?.trim() || "Initiate";
-    res.json({ name });
+    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent("Generate a single mysterious RPG-style name. Just the name, nothing else."));
+    const name = await response.text() || "Initiate";
+    res.json({ name: name.trim() });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -183,17 +179,33 @@ app.post('/api/ai/mysterious-name', async (req: Request, res: Response) => {
 
 // AI Quest
 app.post('/api/ai/quest', async (req: Request, res: Response) => {
-  if (!genAI) return res.status(500).json({ error: 'AI not configured' });
   try {
     const { prompt } = req.body;
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    const result = await model.generateContent(prompt);
-    const text = result.response.text() || "";
+    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt + " Response must be in JSON format like {\"text\": \"quest description\", \"difficulty\": \"B\"}"));
+    const text = await response.text();
     const jsonMatch = text.match(/\{.*\}/s);
     if (jsonMatch) {
       res.json(JSON.parse(jsonMatch[0]));
     } else {
       res.json({ text: "Master the void's silence", difficulty: "B" });
+    }
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// AI Feat Analysis
+app.post('/api/ai/feat', async (req: Request, res: Response) => {
+  try {
+    const { feat, stats } = req.body;
+    const prompt = `User achieved: "${feat}". Based on their stats ${JSON.stringify(stats)}, determine XP gained and stat increases. Return JSON only: {"xpGained": number, "statsIncreased": {"physical": number, ...}, "systemMessage": "mystical message"}`;
+    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt));
+    const text = await response.text();
+    const jsonMatch = text.match(/\{.*\}/s);
+    if (jsonMatch) {
+      res.json(JSON.parse(jsonMatch[0]));
+    } else {
+      res.json({ xpGained: 50, statsIncreased: {}, systemMessage: "The void acknowledges your effort." });
     }
   } catch (error: any) {
     res.status(500).json({ error: error.message });

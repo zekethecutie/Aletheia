@@ -77,5 +77,33 @@ export const apiClient = {
       console.error('Generate name error:', error);
       throw error;
     }
+  },
+
+  async generateQuest(prompt: string) {
+    try {
+      const response = await fetch(`${API_URL}/ai/quest`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+      return handleResponse(response);
+    } catch (error: any) {
+      console.error('Generate quest error:', error);
+      throw error;
+    }
+  },
+
+  async calculateFeat(feat: string, stats: any) {
+    try {
+      const response = await fetch(`${API_URL}/ai/feat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ feat, stats })
+      });
+      return handleResponse(response);
+    } catch (error: any) {
+      console.error('Calculate feat error:', error);
+      throw error;
+    }
   }
 };

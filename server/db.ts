@@ -33,7 +33,7 @@ export const initializeDatabase = async () => {
         cover_url VARCHAR(512),
         manifesto TEXT,
         origin_story TEXT,
-        stats JSONB DEFAULT '{"level": 1, "xp": 0, "xpToNextLevel": 100, "intelligence": 5, "physical": 5, "spiritual": 5, "social": 5, "wealth": 5, "class": "Seeker"}',
+        stats JSONB DEFAULT '{"level": 1, "xp": 0, "xpToNextLevel": 100, "intelligence": 5, "physical": 5, "spiritual": 5, "social": 5, "wealth": 5, "resonance": 100, "maxResonance": 100, "health": 100, "maxHealth": 100, "class": "Seeker"}',
         tasks JSONB DEFAULT '[]',
         inventory JSONB DEFAULT '[]',
         entropy INTEGER DEFAULT 0,

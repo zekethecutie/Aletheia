@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Post, DailyQuote } from '../types';
-import { generateMysteriousName, generateMirrorScenario, generateArtifactImage, getDailyWisdom, submitApplication, evaluateMirrorChoice, createAdvisorSession, askAdvisor, generateQuest, calculateFeat } from '../services/geminiService';
+import { apiClient } from '../services/apiClient';
 import { Header } from '../components/Header';
 import { ProfileView } from './ProfileView';
 import { CreatePostModal } from '../components/modals/CreatePostModal';
@@ -22,37 +22,15 @@ export const SanctumView: React.FC = () => {
 
   const fetchPosts = async () => {
     setLoading(true);
-    const { data } = await supabase.from('posts').select(`*, profiles(username, avatar_url, cover_url, stats)`).order('created_at', { ascending: false });
-    if (data) {
-      setPosts(data.map((p: any) => ({
-        id: p.id,
-        authorId: p.author_id,
-        authorName: p.profiles?.username || 'The Council',
-        authorAvatar: p.profiles?.avatar_url,
-        authorClass: p.profiles?.stats?.class || 'System',
-        content: p.content,
-        resonance: p.resonance || 0,
-        likedBy: p.liked_by || [],
-        timestamp: new Date(p.created_at).getTime(),
-        tags: [],
-        comments: [],
-        commentCount: 0,
-        isSystemPost: !p.profiles
-      })));
-    }
+    // Placeholder for fetch logic after migration
+    setPosts([]);
     setLoading(false);
   };
 
   useEffect(() => {
     fetchPosts();
-    getDailyWisdom().then(q => {
-      if (q && q.text) {
-        setDailyQuote({ ...q, date: new Date().toISOString() });
-      }
-    }).catch(err => {
-      console.warn("Daily wisdom fetch failed:", err);
-      setDailyQuote({ text: "Silence is the void's most eloquent whisper.", author: "The Council", date: new Date().toISOString() });
-    });
+    // Default quote since we moved logic
+    setDailyQuote({ text: "Silence is the void's most eloquent whisper.", author: "The Council", date: new Date().toISOString() });
   }, []);
 
   const handleCreatePost = async (content: string) => {

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { User, DailyTask, Artifact } from '../types';
-import { calculateFeat, generateQuest } from '../services/geminiService';
+import { apiClient } from '../services/apiClient';
 import { IconSettings, IconPlus, IconEye, IconLock, IconTrash, IconMirror } from '../components/Icons';
 import { SettingsModal } from '../components/modals/SettingsModal';
 import { getRank, getRankColor } from '../utils/helpers';
@@ -116,24 +116,31 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
 
   const submitFeat = async () => {
     setCalculating(true);
-    const res = await calculateFeat(featInput, user.stats);
-    
-    let newXp = user.stats.xp + res.xpGained;
-    let newLevel = user.stats.level;
-    let nextXp = user.stats.xpToNextLevel;
-    if (newXp >= nextXp) { newLevel += 1; newXp -= nextXp; nextXp = Math.floor(nextXp * 1.2); }
+    try {
+      const res = await apiClient.calculateFeat(featInput, user.stats);
+      
+      let newXp = user.stats.xp + res.xpGained;
+      let newLevel = user.stats.level;
+      let nextXp = user.stats.xpToNextLevel;
+      if (newXp >= nextXp) { newLevel += 1; newXp -= nextXp; nextXp = Math.floor(nextXp * 1.2); }
 
-    const newStats = { ...user.stats, xp: newXp, level: newLevel, xpToNextLevel: nextXp };
-    if (res.statsIncreased.wealth) newStats.wealth = (newStats.wealth || 0) + res.statsIncreased.wealth;
-    if (res.statsIncreased.physical) newStats.physical = (newStats.physical || 0) + res.statsIncreased.physical;
-    if (res.statsIncreased.spiritual) newStats.spiritual = (newStats.spiritual || 0) + res.statsIncreased.spiritual;
-    if (res.statsIncreased.intelligence) newStats.intelligence = (newStats.intelligence || 0) + res.statsIncreased.intelligence;
-    if (res.statsIncreased.social) newStats.social = (newStats.social || 0) + res.statsIncreased.social;
+      const newStats = { ...user.stats, xp: newXp, level: newLevel, xpToNextLevel: nextXp };
+      if (res.statsIncreased) {
+        if (res.statsIncreased.wealth) newStats.wealth = (newStats.wealth || 0) + res.statsIncreased.wealth;
+        if (res.statsIncreased.physical) newStats.physical = (newStats.physical || 0) + res.statsIncreased.physical;
+        if (res.statsIncreased.spiritual) newStats.spiritual = (newStats.spiritual || 0) + res.statsIncreased.spiritual;
+        if (res.statsIncreased.intelligence) newStats.intelligence = (newStats.intelligence || 0) + res.statsIncreased.intelligence;
+        if (res.statsIncreased.social) newStats.social = (newStats.social || 0) + res.statsIncreased.social;
+      }
 
-    onUpdateUser({ ...user, stats: newStats });
-    setFeatInput('');
-    setCalculating(false);
-    alert(`SYSTEM ALERT:\n${res.systemMessage}`);
+      onUpdateUser({ ...user, stats: newStats });
+      setFeatInput('');
+      alert(`SYSTEM ALERT:\n${res.systemMessage}`);
+    } catch (error) {
+      console.error('Feat analysis failed:', error);
+    } finally {
+      setCalculating(false);
+    }
   };
 
   return (
@@ -196,20 +203,20 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                 <div>
                     <div className="flex justify-between text-[10px] uppercase font-bold tracking-widest mb-2">
                         <span className="text-slate-500">Health Point</span>
-                        <span className="text-slate-300">85 / 100</span>
+                        <span className="text-slate-300">{user.stats.health || 85} / {user.stats.maxHealth || 100}</span>
                     </div>
                     <div className="stats-bar">
-                        <div className="stats-bar-fill bg-red-500/80" style={{ width: '85%' }}></div>
+                        <div className="stats-bar-fill bg-red-500/80" style={{ width: `${((user.stats.health || 85) / (user.stats.maxHealth || 100)) * 100}%` }}></div>
                     </div>
                 </div>
 
                 <div>
                     <div className="flex justify-between text-[10px] uppercase font-bold tracking-widest mb-2">
-                        <span className="text-slate-500">Mana Point</span>
-                        <span className="text-slate-300">120 / 150</span>
+                        <span className="text-slate-500">Resonance</span>
+                        <span className="text-slate-300">{user.stats.resonance || 120} / {user.stats.maxResonance || 150}</span>
                     </div>
                     <div className="stats-bar">
-                        <div className="stats-bar-fill bg-blue-500/80" style={{ width: '80%' }}></div>
+                        <div className="stats-bar-fill bg-blue-500/80" style={{ width: `${((user.stats.resonance || 120) / (user.stats.maxResonance || 150)) * 100}%` }}></div>
                     </div>
                 </div>
 

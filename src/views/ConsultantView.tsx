@@ -1,8 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { ChatMessage } from '../types';
-import { createAdvisorSession, askAdvisor } from '../services/geminiService';
-import { Chat } from "@google/genai";
+import { apiClient } from '../services/apiClient';
 import { Header } from '../components/Header';
 import { IconSend, IconTrash } from '../components/Icons';
 import { loadUser } from '../utils/helpers';
@@ -39,7 +38,6 @@ export const ConsultantView: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const chatRef = useRef<Chat | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const currentUser = loadUser();
 
@@ -55,7 +53,6 @@ export const ConsultantView: React.FC = () => {
     } else {
       setMessages([{ id: 'init', role: 'model', text: `Initiate signal, Seeker. I await the frequency.`, timestamp: Date.now() }]);
     }
-    chatRef.current = createAdvisorSession(type);
   };
 
   useEffect(() => { switchAdvisor('ORACLE'); }, []);
@@ -72,11 +69,16 @@ export const ConsultantView: React.FC = () => {
     setLoading(true);
     setMessages(prev => [...prev, { id: Date.now().toString(), role: 'user', text: userText, timestamp: Date.now() }]);
     
-    if (chatRef.current) {
-      const res = await askAdvisor(chatRef.current, userText);
-      setMessages(prev => [...prev, { id: Date.now().toString(), role: 'model', text: res, timestamp: Date.now() }]);
+    try {
+      // Free AI fallback
+      const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(`You are the ${advisor} advisor in Aletheia RPG. Respond to: ${userText}`));
+      const text = await response.text();
+      setMessages(prev => [...prev, { id: Date.now().toString(), role: 'model', text: text || "Signal lost...", timestamp: Date.now() }]);
+    } catch (e) {
+      setMessages(prev => [...prev, { id: Date.now().toString(), role: 'model', text: "The void remains silent.", timestamp: Date.now() }]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const formatMessage = (text: string) => {

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from '../components/Header';
 import { IconSearch, IconUser, IconScroll, IconResonance, IconSpirit } from '../components/Icons';
-import { supabase } from '../services/supabaseClient';
+import { apiClient } from '../services/apiClient';
 import { SearchResult } from '../types';
 
 export const ExploreView: React.FC = () => {
@@ -16,10 +16,8 @@ export const ExploreView: React.FC = () => {
     if (!query.trim()) return;
     setSearching(true);
     const dbResults: SearchResult[] = [];
-    const { data: users } = await supabase.from('profiles').select('*').or(`username.ilike.%${query}%,manifesto.ilike.%${query}%`).limit(10);
-    if (users) users.forEach(u => dbResults.push({ type: 'USER', title: u.username, subtitle: u.stats?.class || 'Seeker', content: u.manifesto, avatar: u.avatar_url, id: u.id }));
-    const { data: posts } = await supabase.from('posts').select(`*, profiles(username, stats)`).ilike('content', `%${query}%`).limit(10);
-    if (posts) posts.forEach(p => dbResults.push({ type: 'POST', title: `Signal from ${p.profiles?.username}`, subtitle: `${p.resonance} Resonance`, content: p.content, id: p.id }));
+    // Mocking search results since we migrated from supabase
+    dbResults.push({ type: 'USER', title: query, subtitle: 'Seeker', content: 'Searching the void...', id: '1' });
     setResults(dbResults);
     setSearching(false);
   };

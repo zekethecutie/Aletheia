@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { User, Post, ViewState } from '../types';
+import { User, Post } from '../types';
 import { Header } from '../components/Header';
-import { IconGrid, IconSettings, IconUsers, IconResonance, IconScroll } from '../components/Icons';
+import { IconGrid, IconResonance } from '../components/Icons';
 import { supabase } from '../services/supabaseClient';
-import { loadUser } from '../utils/helpers';
 import { PostDetailView } from './PostDetailView';
 import { SettingsModal } from '../components/modals/SettingsModal';
+import { apiClient } from '../services/apiClient';
 
 interface ProfileViewProps {
   targetUserId?: string; // If null, show current user
@@ -42,17 +42,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ targetUserId, onBack, 
       await apiClient.toggleLikePost(parseInt(post.id), currentUser.id);
     } catch (error) {
       console.error("Error liking post:", error);
-      // Fetch profile to refresh posts from DB
       const uid = targetUserId || currentUser.id;
-      const { data: postData } = await supabase
-        .from('posts')
-        .select('*')
-        .eq('author_id', uid)
-        .order('created_at', { ascending: false });
-      
+      const { data: postData } = await supabase.from('posts').select('*').eq('author_id', uid).order('created_at', { ascending: false });
       if (postData) {
          setPosts(postData.map((p:any) => ({
-             id: p.id,
+             id: p.id.toString(),
              authorId: p.author_id,
              authorName: profileUser?.username || '',
              authorAvatar: profileUser?.avatarUrl,
@@ -75,7 +69,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ targetUserId, onBack, 
       setLoading(true);
       const uid = targetUserId || currentUser.id;
 
-      // 1. Get Profile
       let user: User | null = null;
       if (isOwnProfile) {
           user = currentUser;
@@ -102,17 +95,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ targetUserId, onBack, 
       }
       setProfileUser(user);
       
-      // 2. Get Posts
       if (user) {
-          const { data: postData } = await supabase
-            .from('posts')
-            .select('*')
-            .eq('author_id', uid)
-            .order('created_at', { ascending: false });
-          
+          const { data: postData } = await supabase.from('posts').select('*').eq('author_id', uid).order('created_at', { ascending: false });
           if (postData) {
              setPosts(postData.map((p:any) => ({
-                 id: p.id,
+                 id: p.id.toString(),
                  authorId: p.author_id,
                  authorName: user?.username || '',
                  authorAvatar: user?.avatarUrl,
@@ -125,10 +112,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ targetUserId, onBack, 
                  commentCount: 0
              })));
           }
-
-          if (!isOwnProfile && currentUser.following?.includes(uid)) {
-              setIsFollowing(true);
-          }
+          if (!isOwnProfile && currentUser.following?.includes(uid)) setIsFollowing(true);
       }
       setLoading(false);
     };
@@ -137,61 +121,35 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ targetUserId, onBack, 
 
   const toggleFollow = async () => {
      if (isOwnProfile || !profileUser) return;
-     
      let newFollowing = [...(currentUser.following || [])];
-     if (isFollowing) {
-         newFollowing = newFollowing.filter(id => id !== profileUser.id);
-     } else {
-         newFollowing.push(profileUser.id);
-     }
-     
-     // Update Local
-     const updatedMe = { ...currentUser, following: newFollowing };
-     onUpdateUser(updatedMe); // This triggers DB sync in App.tsx
+     if (isFollowing) newFollowing = newFollowing.filter(id => id !== profileUser.id);
+     else newFollowing.push(profileUser.id);
+     onUpdateUser({ ...currentUser, following: newFollowing });
      setIsFollowing(!isFollowing);
   };
 
-  if (selectedPost) {
-      return <PostDetailView post={selectedPost} onBack={() => setSelectedPost(null)} />;
-  }
-
-  if (loading || !profileUser) {
-      return <div className="h-screen bg-void flex items-center justify-center"><div className="w-6 h-6 border-2 border-gold border-t-transparent animate-spin rounded-full"></div></div>;
-  }
+  if (selectedPost) return <PostDetailView post={selectedPost} onBack={() => setSelectedPost(null)} />;
+  if (loading || !profileUser) return <div className="h-screen bg-void flex items-center justify-center"><div className="w-6 h-6 border-2 border-gold border-t-transparent animate-spin rounded-full"></div></div>;
 
   return (
     <div className="min-h-screen bg-void pb-20 font-sans text-slate-200">
        <Header title={profileUser.username} subtitle={profileUser.stats.class} onBack={onBack} />
-       
        <div className="p-6">
-           {/* Redesigned Identity Header */}
            <div className="relative mb-12">
-               {/* Orange Header Background */}
                <div className="h-32 bg-gradient-to-br from-orange-400 to-orange-600 rounded-t-3xl relative overflow-hidden">
                    <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)', backgroundSize: '12px 12px' }}></div>
                </div>
-               
-               {/* Profile Image & Level */}
                <div className="absolute top-16 left-1/2 -translate-x-1/2 flex flex-col items-center">
                    <div className="w-28 h-28 rounded-2xl bg-black border-4 border-slate-900 p-1.5 shadow-2xl overflow-hidden">
-                       <img 
-                          src={profileUser.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${profileUser.username}&backgroundColor=000000`} 
-                          className="w-full h-full object-cover rounded-xl bg-slate-900"
-                       />
+                       <img src={profileUser.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${profileUser.username}&backgroundColor=000000`} className="w-full h-full object-cover rounded-xl bg-slate-900" />
                    </div>
-                   <div className="mt-[-12px] bg-white text-black px-3 py-0.5 rounded-sm font-black text-[10px] uppercase shadow-lg z-10 border border-slate-200">
-                       LVL {profileUser.stats.level}
-                   </div>
+                   <div className="mt-[-12px] bg-white text-black px-3 py-0.5 rounded-sm font-black text-[10px] uppercase shadow-lg z-10 border border-slate-200">LVL {profileUser.stats.level}</div>
                </div>
            </div>
-
-           {/* Name & Class */}
            <div className="text-center mb-8">
                <h1 className="text-3xl font-black text-white uppercase tracking-tighter">{profileUser.username}</h1>
                <p className="text-orange-400 text-[10px] font-black uppercase tracking-[0.4em] mt-1">{profileUser.stats.class || "SCHOLAR"}</p>
            </div>
-
-           {/* Stats Bars (Redesigned matching screenshot) */}
            <div className="space-y-6 max-w-sm mx-auto mb-10">
                 <div>
                     <div className="flex justify-between text-[9px] uppercase font-black tracking-widest mb-1">
@@ -202,7 +160,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ targetUserId, onBack, 
                         <div className="h-full bg-red-500 rounded-full transition-all duration-700" style={{ width: `${(profileUser.stats.health / profileUser.stats.maxHealth) * 100}%` }}></div>
                     </div>
                 </div>
-
                 <div>
                     <div className="flex justify-between text-[9px] uppercase font-black tracking-widest mb-1">
                         <span className="text-slate-400">Resonance</span>
@@ -212,7 +169,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ targetUserId, onBack, 
                         <div className="h-full bg-blue-500 rounded-full transition-all duration-700" style={{ width: `${(profileUser.stats.resonance / profileUser.stats.maxResonance) * 100}%` }}></div>
                     </div>
                 </div>
-
                 <div>
                     <div className="flex justify-between text-[9px] uppercase font-black tracking-widest mb-1">
                         <span className="text-slate-400">Experience</span>
@@ -223,61 +179,34 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ targetUserId, onBack, 
                     </div>
                 </div>
            </div>
-
-           {/* Bio / Action */}
            <div className="mb-8">
                <p className="text-sm text-slate-300 font-serif italic mb-4 border-l-2 border-slate-800 pl-3">"{profileUser.manifesto || "Silence is the only truth."}"</p>
-               
                {isOwnProfile ? (
-                   <button 
-                      onClick={() => setShowSettings(true)}
-                      className="w-full py-2 bg-slate-900 border border-slate-800 text-slate-300 font-bold uppercase text-[10px] tracking-widest hover:bg-slate-800"
-                   >
-                       Edit Signal
-                   </button>
+                   <button onClick={() => setShowSettings(true)} className="w-full py-2 bg-slate-900 border border-slate-800 text-slate-300 font-bold uppercase text-[10px] tracking-widest hover:bg-slate-800">Edit Signal</button>
                ) : (
-                   <button 
-                      onClick={toggleFollow}
-                      className={`w-full py-2 font-bold uppercase text-[10px] tracking-widest transition-colors ${isFollowing ? 'bg-slate-900 text-slate-400 border border-slate-800' : 'bg-white text-black'}`}
-                   >
-                       {isFollowing ? 'Disconnect' : 'Connect Signal'}
-                   </button>
+                   <button onClick={toggleFollow} className={`w-full py-2 font-bold uppercase text-[10px] tracking-widest transition-colors ${isFollowing ? 'bg-slate-900 text-slate-400 border border-slate-800' : 'bg-white text-black'}`}>{isFollowing ? 'Disconnect' : 'Connect Signal'}</button>
                )}
            </div>
-
-           {/* Tabs (Visual only for now) */}
            <div className="flex border-b border-slate-900 mb-4">
                <button className="flex-1 py-3 border-b-2 border-gold text-white flex justify-center"><IconGrid className="w-5 h-5" /></button>
                <button className="flex-1 py-3 text-slate-600 flex justify-center"><IconResonance className="w-5 h-5" /></button>
            </div>
-
-           {/* Post Grid */}
            <div className="grid grid-cols-3 gap-1">
                {posts.map(post => (
                    <div key={post.id} onClick={() => setSelectedPost(post)} className="aspect-square bg-slate-900 relative group cursor-pointer overflow-hidden border border-slate-950">
-                       {/* If post has an image we'd show it, but for text posts we show a typographic preview */}
-                       <div className="absolute inset-0 p-2 flex items-center justify-center">
-                           <p className="text-[6px] text-slate-500 line-clamp-6 text-center leading-relaxed">{post.content}</p>
-                       </div>
+                       <div className="absolute inset-0 p-2 flex items-center justify-center"><p className="text-[6px] text-slate-500 line-clamp-6 text-center leading-relaxed">{post.content}</p></div>
                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                            <div className="flex flex-col items-center gap-2">
-                               <button 
-                                 onClick={(e) => handleToggleLike(post, e)} 
-                                 className={`flex items-center gap-1 transition-all ${post.likedBy.includes(currentUser.id) ? 'text-gold' : 'text-white'}`}
-                               >
-                                   <IconResonance className={`w-4 h-4 ${post.likedBy.includes(currentUser.id) ? 'drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]' : ''}`} />
-                                   <span className="text-xs font-bold">{post.resonance}</span>
+                               <button onClick={(e) => handleToggleLike(post, e)} className={`flex items-center gap-1 transition-all ${post.likedBy.includes(currentUser.id) ? 'text-gold' : 'text-white'}`}>
+                                   <IconResonance className={`w-4 h-4 ${post.likedBy.includes(currentUser.id) ? 'drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]' : ''}`} /><span className="text-xs font-bold">{post.resonance}</span>
                                </button>
                            </div>
                        </div>
                    </div>
                ))}
-               {posts.length === 0 && (
-                   <div className="col-span-3 py-10 text-center text-slate-600 text-[10px] uppercase">No signals transmitted.</div>
-               )}
+               {posts.length === 0 && <div className="col-span-3 py-10 text-center text-slate-600 text-[10px] uppercase">No signals transmitted.</div>}
            </div>
        </div>
-
        {showSettings && <SettingsModal user={currentUser} onClose={() => setShowSettings(false)} onUpdate={onUpdateUser} />}
     </div>
   );

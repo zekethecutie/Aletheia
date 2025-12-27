@@ -78,6 +78,60 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
   const [analyzeMode, setAnalyzeMode] = useState(false);
   const [generatingQuest, setGeneratingQuest] = useState(false);
 
+    const fetchQuests = async () => {
+      try {
+        const data = await apiClient.getQuests(user.id);
+        setQuests(data);
+      } catch (error) {
+        console.error('Failed to fetch quests:', error);
+      }
+    };
+    if (tab === 'QUESTS') fetchQuests();
+  }, [tab, user.id]);
+
+  const handleGenerateQuests = async () => {
+    setGeneratingQuest(true);
+    try {
+      await apiClient.generateQuests(user.id, user.stats);
+      const data = await apiClient.getQuests(user.id);
+      setQuests(data);
+    } catch (error) {
+      console.error('Failed to generate quests:', error);
+    } finally {
+      setGeneratingQuest(false);
+    }
+  };
+
+  const handleCompleteQuest = async (quest: any) => {
+    if (quest.completed) return;
+    try {
+      const res = await apiClient.completeQuest(quest.id);
+      if (res.success) {
+        // Apply rewards
+        let newXp = user.stats.xp + (res.reward.xp || 100);
+        let newLevel = user.stats.level;
+        let nextXp = user.stats.xpToNextLevel;
+        if (newXp >= nextXp) { newLevel += 1; newXp -= nextXp; nextXp = Math.floor(nextXp * 1.2); }
+
+        const newStats = { ...user.stats, xp: newXp, level: newLevel, xpToNextLevel: nextXp };
+        if (res.reward.stats) {
+          Object.keys(res.reward.stats).forEach(k => {
+            newStats[k] = (newStats[k] || 0) + res.reward.stats[k];
+          });
+        }
+        onUpdateUser({ ...user, stats: newStats });
+        
+        // Refresh quests
+        const data = await apiClient.getQuests(user.id);
+        setQuests(data);
+      }
+    } catch (error) {
+      console.error('Failed to complete quest:', error);
+    }
+  };
+
+  const [quests, setQuests] = useState<any[]>([]);
+
   const rank = getRank(user.stats.level);
   const xpPercent = (user.stats.xp / user.stats.xpToNextLevel) * 100;
 
@@ -187,34 +241,34 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                 </div>
             </div>
 
-            <div className="flex-1 space-y-6 max-w-md pt-4">
+            <div className="flex-1 space-y-4 max-w-md pt-4">
                 <div>
-                    <div className="flex justify-between text-[10px] uppercase font-bold tracking-widest mb-2">
+                    <div className="flex justify-between text-[10px] uppercase font-bold tracking-widest mb-1">
                         <span className="text-slate-500">Health Point</span>
-                        <span className="text-slate-300">{user.stats.health || 85} / {user.stats.maxHealth || 100}</span>
+                        <span className="text-slate-300">{(user.stats.health || 0).toFixed(0)} / {user.stats.maxHealth || 100}</span>
                     </div>
-                    <div className="stats-bar">
-                        <div className="stats-bar-fill bg-red-500/80" style={{ width: `${((user.stats.health || 85) / (user.stats.maxHealth || 100)) * 100}%` }}></div>
+                    <div className="h-1.5 bg-slate-900 overflow-hidden">
+                        <div className="h-full bg-red-500/80 transition-all duration-500" style={{ width: `${Math.min(100, ((user.stats.health || 0) / (user.stats.maxHealth || 100)) * 100)}%` }}></div>
                     </div>
                 </div>
 
                 <div>
-                    <div className="flex justify-between text-[10px] uppercase font-bold tracking-widest mb-2">
+                    <div className="flex justify-between text-[10px] uppercase font-bold tracking-widest mb-1">
                         <span className="text-slate-500">Resonance</span>
-                        <span className="text-slate-300">{user.stats.resonance || 120} / {user.stats.maxResonance || 150}</span>
+                        <span className="text-slate-300">{(user.stats.resonance || 0).toFixed(0)} / {user.stats.maxResonance || 100}</span>
                     </div>
-                    <div className="stats-bar">
-                        <div className="stats-bar-fill bg-blue-500/80" style={{ width: `${((user.stats.resonance || 120) / (user.stats.maxResonance || 150)) * 100}%` }}></div>
+                    <div className="h-1.5 bg-slate-900 overflow-hidden">
+                        <div className="h-full bg-blue-500/80 transition-all duration-500" style={{ width: `${Math.min(100, ((user.stats.resonance || 0) / (user.stats.maxResonance || 100)) * 100)}%` }}></div>
                     </div>
                 </div>
 
                 <div>
-                    <div className="flex justify-between text-[10px] uppercase font-bold tracking-widest mb-2">
+                    <div className="flex justify-between text-[10px] uppercase font-bold tracking-widest mb-1">
                         <span className="text-slate-500">Experience</span>
                         <span className="text-slate-300">{user.stats.xp} / {user.stats.xpToNextLevel}</span>
                     </div>
-                    <div className="stats-bar">
-                        <div className="stats-bar-fill bg-gold/80" style={{ width: `${xpPercent}%` }}></div>
+                    <div className="h-1.5 bg-slate-900 overflow-hidden">
+                        <div className="h-full bg-gold/80 transition-all duration-500" style={{ width: `${Math.min(100, (user.stats.xp / user.stats.xpToNextLevel) * 100)}%` }}></div>
                     </div>
                 </div>
             </div>
@@ -222,11 +276,11 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
       </div>
 
       <div className="flex px-4 gap-2 mb-8">
-         {['SYSTEM', 'ACHIEVEMENTS', 'STATS'].map(t => (
+         {['QUESTS', 'ACHIEVEMENTS', 'STATS'].map(t => (
              <button 
                 key={t}
-                onClick={() => setTab(t === 'STATS' ? 'STATUS' : (t === 'SYSTEM' ? 'QUESTS' : 'INVENTORY'))} 
-                className={`flex-1 py-2 rounded-full text-[10px] font-display font-black uppercase tracking-[0.2em] transition-all border ${tab === (t === 'STATS' ? 'STATUS' : (t === 'SYSTEM' ? 'QUESTS' : 'INVENTORY')) ? 'bg-slate-800 text-white border-white/20' : 'bg-transparent text-slate-600 border-transparent hover:text-slate-400'}`}
+                onClick={() => setTab(t === 'STATS' ? 'STATUS' : (t === 'QUESTS' ? 'QUESTS' : 'INVENTORY'))} 
+                className={`flex-1 py-2 rounded-full text-[10px] font-display font-black uppercase tracking-[0.2em] transition-all border ${tab === (t === 'STATS' ? 'STATUS' : (t === 'QUESTS' ? 'QUESTS' : 'INVENTORY')) ? 'bg-slate-800 text-white border-white/20' : 'bg-transparent text-slate-600 border-transparent hover:text-slate-400'}`}
              >
                 {t}
              </button>
@@ -235,8 +289,8 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
 
       <div className="p-6 pt-6">
           {tab === 'STATUS' && (
-              <div className="animate-fade-in space-y-8">
-                  <div className="grid grid-cols-2 gap-4">
+              <div className="animate-fade-in space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
                       <div className="glass-card p-4 rounded-xl border-white/5 flex justify-between items-center group hover:border-gold/30 transition-all">
                         <div>
                             <div className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
@@ -244,10 +298,6 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                                 Intelligence
                             </div>
                             <div className="text-2xl font-display font-black text-white">{user.stats.intelligence}</div>
-                            <p className="text-[8px] text-slate-600 uppercase mt-1">Analytical depth & knowledge</p>
-                        </div>
-                        <div className="w-6 h-6 opacity-20 group-hover:opacity-100 transition-opacity">
-                            <IconEye className="text-blue-400" />
                         </div>
                       </div>
                       <div className="glass-card p-4 rounded-xl border-white/5 flex justify-between items-center group hover:border-gold/30 transition-all">
@@ -257,12 +307,6 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                                 Physical
                             </div>
                             <div className="text-2xl font-display font-black text-white">{user.stats.physical}</div>
-                            <p className="text-[8px] text-slate-600 uppercase mt-1">Discipline & real-world vitality</p>
-                        </div>
-                        <div className="w-6 h-6 opacity-20 group-hover:opacity-100 transition-opacity">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-red-500">
-                                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-                            </svg>
                         </div>
                       </div>
                       <div className="glass-card p-4 rounded-xl border-white/5 flex justify-between items-center group hover:border-gold/30 transition-all">
@@ -272,12 +316,6 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                                 Spiritual
                             </div>
                             <div className="text-2xl font-display font-black text-white">{user.stats.spiritual}</div>
-                            <p className="text-[8px] text-slate-600 uppercase mt-1">Connection to the unseen</p>
-                        </div>
-                        <div className="w-6 h-6 opacity-20 group-hover:opacity-100 transition-opacity">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-purple-400">
-                                <path d="M12 15l-2 5L3 9l18-6-5 18-4-6z" />
-                            </svg>
                         </div>
                       </div>
                       <div className="glass-card p-4 rounded-xl border-white/5 flex justify-between items-center group hover:border-gold/30 transition-all">
@@ -287,11 +325,19 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                                 Social
                             </div>
                             <div className="text-2xl font-display font-black text-white">{user.stats.social}</div>
-                            <p className="text-[8px] text-slate-600 uppercase mt-1">Influence & frequency</p>
+                        </div>
+                      </div>
+                      <div className="glass-card p-4 rounded-xl border-white/5 flex justify-between items-center group hover:border-gold/30 transition-all col-span-2">
+                        <div>
+                            <div className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
+                                <div className="w-1 h-1 bg-emerald-400 rounded-full"></div>
+                                Wealth
+                            </div>
+                            <div className="text-2xl font-display font-black text-white">{user.stats.wealth || 0}</div>
                         </div>
                         <div className="w-6 h-6 opacity-20 group-hover:opacity-100 transition-opacity">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-amber-400">
-                                <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-emerald-400">
+                                <path d="M12 1v22m5-18H8a3 3 0 000 6h9a3 3 0 010 6H7" />
                             </svg>
                         </div>
                       </div>
@@ -324,50 +370,53 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
               <div className="animate-fade-in space-y-6">
                   <div className="flex justify-between items-center mb-4">
                       <h2 className="text-2xl font-display font-black text-white uppercase tracking-widest">Active Quests</h2>
-                      <div className="text-[10px] text-slate-500 font-mono uppercase tracking-widest">Cycle 4 // Day 12</div>
+                      <button 
+                        onClick={handleGenerateQuests} 
+                        disabled={generatingQuest}
+                        className="text-[10px] bg-gold/10 text-gold border border-gold/20 px-3 py-1 rounded-full uppercase font-black hover:bg-gold/20 transition-all disabled:opacity-50"
+                      >
+                        {generatingQuest ? 'Scanning...' : 'Seek New Directives'}
+                      </button>
                   </div>
 
                   <div className="space-y-4">
-                      {user.tasks.map(t => (
+                      {quests.map(t => (
                           <div 
                             key={t.id} 
-                            onClick={() => toggleTask(t.id)}
-                            className={`glass-card p-6 rounded-xl flex items-center justify-between cursor-pointer transition-all relative overflow-hidden group ${t.completed ? 'opacity-40' : 'hover:border-gold/50'}`}
+                            onClick={() => handleCompleteQuest(t)}
+                            className={`glass-card p-6 rounded-xl flex items-center justify-between cursor-pointer transition-all relative overflow-hidden group ${t.completed ? 'opacity-40 border-green-500/30' : 'hover:border-gold/50'}`}
                           >
                               <div className="flex items-center gap-6">
-                                  <div className="w-10 h-10 glass-card rounded-lg flex items-center justify-center border-white/10 group-hover:border-gold/30">
-                                      <div className="w-4 h-4 border border-slate-500 rounded-full flex items-center justify-center">
-                                          <div className="w-1.5 h-1.5 border border-slate-500 rounded-full"></div>
-                                      </div>
+                                  <div className={`w-10 h-10 glass-card rounded-lg flex items-center justify-center border-white/10 ${t.completed ? 'bg-green-500/10 border-green-500/30' : 'group-hover:border-gold/30'}`}>
+                                      {t.completed ? (
+                                        <div className="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
+                                      ) : (
+                                        <div className="w-4 h-4 border border-slate-500 rounded-full flex items-center justify-center">
+                                            <div className="w-1.5 h-1.5 border border-slate-500 rounded-full"></div>
+                                        </div>
+                                      )}
                                   </div>
                                   <div>
-                                     <p className="text-[10px] font-display font-black text-gold uppercase tracking-[0.2em] mb-1">{t.type === 'HABIT' ? 'Stamina Boost' : 'Skill Upgrade'}</p>
+                                     <p className="text-[10px] font-display font-black text-gold uppercase tracking-[0.2em] mb-1">{t.difficulty} Tier Directive</p>
                                      <p className="text-sm font-bold text-white tracking-wide">{t.text}</p>
                                   </div>
                               </div>
                               <div className="flex items-center gap-4">
                                   <div className="text-right">
-                                      <p className="text-[10px] font-mono text-slate-400 uppercase">+{t.difficulty === 'S' ? '1000' : '450'} EXP</p>
+                                      <p className="text-[10px] font-mono text-slate-400 uppercase">+{t.xp_reward} EXP</p>
                                       <div className="w-16 h-[2px] bg-white/10 mt-1">
-                                          <div className="h-full bg-white/40" style={{ width: t.completed ? '100%' : '30%' }}></div>
+                                          <div className={`h-full ${t.completed ? 'bg-green-500' : 'bg-white/40'}`} style={{ width: t.completed ? '100%' : '30%' }}></div>
                                       </div>
                                   </div>
-                                  <button onClick={(e) => removeTask(t.id, e)} className="text-slate-700 hover:text-red-500 p-2"><IconTrash className="w-4 h-4" /></button>
                               </div>
                           </div>
                       ))}
                       
-                      <div className="flex gap-2 mt-8">
-                        <input 
-                            value={taskInput} 
-                            onChange={e => setTaskInput(e.target.value)} 
-                            className="flex-1 bg-slate-900 border border-slate-800 p-4 text-white text-sm outline-none focus:border-gold transition-colors placeholder-slate-600 rounded-lg font-mono" 
-                            placeholder="State new directive..." 
-                        />
-                        <button onClick={() => addTask('DAILY')} className="px-6 bg-white text-black font-black uppercase text-xs tracking-widest hover:bg-slate-200 transition-colors rounded-lg">
-                            Deploy
-                        </button>
-                      </div>
+                      {quests.length === 0 && !generatingQuest && (
+                        <div className="py-12 text-center text-slate-600 text-[10px] uppercase border border-dashed border-slate-800 rounded-xl">
+                            No active directives. Seek the void for purpose.
+                        </div>
+                      )}
                   </div>
               </div>
           )}

@@ -70,7 +70,7 @@ export const ConsultantView: React.FC = () => {
     setMessages(prev => [...prev, { id: Date.now().toString(), role: 'user', text: userText, timestamp: Date.now() }]);
     
     try {
-      const res = await apiClient.askAdvisor(advisor, userText);
+      const res = await apiClient.askAdvisor(advisor, userText, currentUser?.id || '');
       setMessages(prev => [...prev, { id: Date.now().toString(), role: 'model', text: res.text || "Signal lost...", timestamp: Date.now() }]);
     } catch (e) {
       setMessages(prev => [...prev, { id: Date.now().toString(), role: 'model', text: "The void remains silent.", timestamp: Date.now() }]);

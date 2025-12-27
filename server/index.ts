@@ -178,14 +178,78 @@ app.post('/api/ai/mysterious-name', async (req: Request, res: Response) => {
   }
 });
 
-// AI Identity Creation
+// AI Quest Generation
+app.post('/api/ai/quest/generate', async (req: Request, res: Response) => {
+  try {
+    const { userId, stats, recentAchievements } = req.body;
+    const prompt = `SYSTEM PROTOCOL: Generate 3 unique quests for a ${stats.class} lvl ${stats.level}. 
+    User context: ${recentAchievements || 'Beginning their journey'}.
+    Attributes: ${JSON.stringify(stats)}.
+    Quests should be actionable, mystical, and challenging.
+    Return JSON ONLY: 
+    {
+      "quests": [
+        {
+          "text": "quest description",
+          "difficulty": "E|D|C|B|A|S",
+          "xp_reward": number,
+          "stat_reward": {"physical": number, "intelligence": number, "spiritual": number, "social": number, "wealth": number}
+        }
+      ]
+    }`;
+    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
+    const text = await response.text();
+    const jsonMatch = text.match(/\{.*\}/s);
+    if (jsonMatch) {
+      const { quests } = JSON.parse(jsonMatch[0]);
+      for (const q of quests) {
+        await query(
+          'INSERT INTO quests (user_id, text, difficulty, xp_reward, stat_reward) VALUES ($1, $2, $3, $4, $5)',
+          [userId, q.text, q.difficulty, q.xp_reward, JSON.stringify(q.stat_reward)]
+        );
+      }
+      res.json({ success: true });
+    } else {
+      res.status(500).json({ error: 'Failed to generate quests' });
+    }
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/quests/:userId', async (req: Request, res: Response) => {
+  try {
+    const result = await query('SELECT * FROM quests WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
+    res.json(result.rows);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/quests/:id/complete', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const questResult = await query('SELECT * FROM quests WHERE id = $1', [id]);
+    if (questResult.rows.length === 0) return res.status(404).json({ error: 'Quest not found' });
+    const quest = questResult.rows[0];
+
+    await query('UPDATE quests SET completed = true WHERE id = $1', [id]);
+    
+    // Reward logic would happen here, usually client calls updateProfile after
+    res.json({ success: true, reward: { xp: quest.xp_reward, stats: quest.stat_reward } });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update Identity Logic to include wealth
 app.post('/api/ai/identity', async (req: Request, res: Response) => {
   try {
     const { manifesto } = req.body;
     const prompt = `CRITICAL SYSTEM PROTOCOL: You are a meticulous and slightly cold AI evaluator for the Aletheia RPG. 
     Analyze this user's manifesto: "${manifesto}". 
     Assign a character class based on their underlying personality traits revealed.
-    Assign starting attributes (stats) from 1 to 10. BE METICULOUS AND UNFORGIVING. Do not give high stats (8-10) unless the manifesto is truly exceptional. 
+    Assign starting attributes (stats) from 1 to 10. BE METICULOUS AND UNFORGIVING.
     Most users should start with 1-3 in most stats.
     Attributes meaning:
     - Intelligence: Analytical depth and knowledge.
@@ -193,7 +257,6 @@ app.post('/api/ai/identity', async (req: Request, res: Response) => {
     - Spiritual: Connection to the unseen and inner peace.
     - Social: Influence and frequency within the collective.
     - Wealth: Manifestation of value and resources.
-    - Health/Resonance: Set both to 10 + (Physical/Spiritual * 2) respectively.
     
     Response must be JSON ONLY: 
     {
@@ -217,136 +280,26 @@ app.post('/api/ai/identity', async (req: Request, res: Response) => {
     if (jsonMatch) {
       res.json(JSON.parse(jsonMatch[0]));
     } else {
-      res.json({ initialStats: { intelligence: 1, physical: 1, spiritual: 1, social: 1, wealth: 1, class: "Initiate", health: 10, maxHealth: 100, resonance: 10, maxResonance: 100 }, reason: "The void finds you lacking in definition. Begin as an Initiate." });
+      res.json({ initialStats: { intelligence: 1, physical: 1, spiritual: 1, social: 1, wealth: 1, class: "Initiate", health: 10, maxHealth: 100, resonance: 10, maxResonance: 100 }, reason: "The void finds you lacking in definition." });
     }
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// AI Quest
-app.post('/api/ai/quest', async (req: Request, res: Response) => {
-  try {
-    const { stats } = req.body;
-    const prompt = `Quest for ${stats.class} lvl ${stats.level}. Response must be JSON: {"text": "quest description", "difficulty": "B"}`;
-    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
-    const text = await response.text();
-    const jsonMatch = text.match(/\{.*\}/s);
-    res.json(jsonMatch ? JSON.parse(jsonMatch[0]) : { text: "Master the void's silence", difficulty: "B" });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// AI Feat Analysis
-app.post('/api/ai/feat', async (req: Request, res: Response) => {
-  try {
-    const { feat } = req.body;
-    const prompt = `SYSTEM ALERT: Achievement logged. Analyzing feat: "${feat}". 
-    Determine XP reward (10-500) and minor attribute increases (0-1) based on real-world impact.
-    If the feat is low effort, give minimal XP and 0 stat increases.
-    If the feat violates system safety (harmful, toxic), set "safetyTriggered": true and give 0 rewards.
-    Return JSON ONLY: 
-    {
-      "xpGained": number, 
-      "statsIncreased": {"physical": number, "intelligence": number, "spiritual": number, "social": number, "wealth": number}, 
-      "systemMessage": "mystical and slightly authoritative response",
-      "safetyTriggered": boolean
-    }`;
-    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
-    const text = await response.text();
-    const jsonMatch = text.match(/\{.*\}/s);
-    res.json(jsonMatch ? JSON.parse(jsonMatch[0]) : { xpGained: 10, statsIncreased: {}, systemMessage: "The achievement is recorded.", safetyTriggered: false });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Posts API
-app.get('/api/posts', async (req: Request, res: Response) => {
-  try {
-    const result = await query(`
-      SELECT p.*, pr.username, pr.avatar_url, (pr.stats->>'class') as author_class 
-      FROM posts p 
-      LEFT JOIN profiles pr ON p.author_id = pr.id 
-      ORDER BY p.created_at DESC LIMIT 50
-    `);
-    res.json(result.rows);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post('/api/posts', async (req: Request, res: Response) => {
-  try {
-    const { author_id, content } = req.body;
-    const result = await query(
-      'INSERT INTO posts (author_id, content) VALUES ($1, $2) RETURNING *',
-      [author_id, content]
-    );
-    res.json(result.rows[0]);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post('/api/posts/like', async (req: Request, res: Response) => {
-  try {
-    const { post_id, user_id } = req.body;
-    const post = await query('SELECT liked_by FROM posts WHERE id = $1', [post_id]);
-    if (post.rows.length === 0) return res.status(404).json({ error: 'Post not found' });
-    
-    let likedBy = post.rows[0].liked_by || [];
-    const index = likedBy.indexOf(user_id);
-    if (index > -1) {
-      likedBy.splice(index, 1);
-    } else {
-      likedBy.push(user_id);
-    }
-    
-    const result = await query(
-      'UPDATE posts SET liked_by = $1, resonance = $2 WHERE id = $3 RETURNING *',
-      [likedBy, likedBy.length, post_id]
-    );
-    res.json(result.rows[0]);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// AI Mirror Scenario
-app.post('/api/ai/mirror/scenario', async (req: Request, res: Response) => {
-  try {
-    const { stats } = req.body;
-    const prompt = `Create a psychological dilemma for a user with these stats: ${JSON.stringify(stats)}. Return JSON: {"situation": "string", "choiceA": "string", "choiceB": "string", "context": "string", "testedStat": "intelligence|physical|spiritual|social|wealth"}`;
-    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
-    const text = await response.text();
-    const jsonMatch = text.match(/\{.*\}/s);
-    res.json(jsonMatch ? JSON.parse(jsonMatch[0]) : { situation: "The void beckons.", choiceA: "Step in", choiceB: "Step back", context: "A Choice", testedStat: "spiritual" });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// AI Mirror Evaluation
-app.post('/api/ai/mirror/evaluate', async (req: Request, res: Response) => {
-  try {
-    const { situation, choice } = req.body;
-    const prompt = `Scenario: ${situation}. Choice: ${choice}. Evaluator result. Return JSON: {"outcome": "string", "statChange": {"statName": number}, "reward": {"name": "string", "description": "string", "rarity": "COMMON|RARE|LEGENDARY|MYTHIC", "effect": "string", "icon": "string"}}`;
-    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
-    const text = await response.text();
-    const jsonMatch = text.match(/\{.*\}/s);
-    res.json(jsonMatch ? JSON.parse(jsonMatch[0]) : { outcome: "Fate is sealed.", statChange: {} });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// AI Advisor Chat
+// AI Advisor aware of quests
 app.post('/api/ai/advisor', async (req: Request, res: Response) => {
   try {
-    const { type, message } = req.body;
-    const system = `You are a ${type} advisor. Keep it short, mystical, and practical.`;
+    const { type, message, userId } = req.body;
+    
+    // Fetch active quests
+    const questsResult = await query('SELECT text FROM quests WHERE user_id = $1 AND completed = false', [userId]);
+    const activeQuests = questsResult.rows.map(q => q.text).join(', ');
+
+    const system = `You are a ${type} advisor. Keep it short, mystical, and practical. 
+    The user's active quests are: ${activeQuests || 'None'}.
+    Always be aware of these objectives when providing guidance.`;
+    
     const prompt = `${system}\nUser: ${message}`;
     const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt));
     const text = await response.text();

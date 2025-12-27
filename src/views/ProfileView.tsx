@@ -119,29 +119,64 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ targetUserId, onBack, 
        <Header title={profileUser.username} subtitle={profileUser.stats.class} onBack={onBack} />
        
        <div className="p-6">
-           {/* Header Stats */}
-           <div className="flex items-start gap-6 mb-8">
-               <div className="w-20 h-20 rounded-full border-2 border-gold p-1 flex-shrink-0">
-                   <img 
-                      src={profileUser.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${profileUser.username}&backgroundColor=000000`} 
-                      className="w-full h-full object-cover rounded-full bg-slate-900"
-                   />
+           {/* Redesigned Identity Header */}
+           <div className="relative mb-12">
+               {/* Orange Header Background */}
+               <div className="h-32 bg-gradient-to-br from-orange-400 to-orange-600 rounded-t-3xl relative overflow-hidden">
+                   <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)', backgroundSize: '12px 12px' }}></div>
                </div>
                
-               <div className="flex-1 flex justify-around items-center h-20">
-                   <div className="text-center">
-                       <div className="text-lg font-black text-white">{posts.length}</div>
-                       <div className="text-[9px] uppercase font-bold text-slate-500 tracking-widest">Signals</div>
+               {/* Profile Image & Level */}
+               <div className="absolute top-16 left-1/2 -translate-x-1/2 flex flex-col items-center">
+                   <div className="w-28 h-28 rounded-2xl bg-black border-4 border-slate-900 p-1.5 shadow-2xl overflow-hidden">
+                       <img 
+                          src={profileUser.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${profileUser.username}&backgroundColor=000000`} 
+                          className="w-full h-full object-cover rounded-xl bg-slate-900"
+                       />
                    </div>
-                   <div className="text-center">
-                       <div className="text-lg font-black text-white">{profileUser.stats.level}</div>
-                       <div className="text-[9px] uppercase font-bold text-slate-500 tracking-widest">Level</div>
-                   </div>
-                   <div className="text-center">
-                       <div className="text-lg font-black text-white">{profileUser.following?.length || 0}</div>
-                       <div className="text-[9px] uppercase font-bold text-slate-500 tracking-widest">Following</div>
+                   <div className="mt-[-12px] bg-white text-black px-3 py-0.5 rounded-sm font-black text-[10px] uppercase shadow-lg z-10 border border-slate-200">
+                       LVL {profileUser.stats.level}
                    </div>
                </div>
+           </div>
+
+           {/* Name & Class */}
+           <div className="text-center mb-8">
+               <h1 className="text-3xl font-black text-white uppercase tracking-tighter">{profileUser.username}</h1>
+               <p className="text-orange-400 text-[10px] font-black uppercase tracking-[0.4em] mt-1">{profileUser.stats.class || "SCHOLAR"}</p>
+           </div>
+
+           {/* Stats Bars (Redesigned matching screenshot) */}
+           <div className="space-y-6 max-w-sm mx-auto mb-10">
+                <div>
+                    <div className="flex justify-between text-[9px] uppercase font-black tracking-widest mb-1">
+                        <span className="text-slate-400">Health Point</span>
+                        <span className="text-slate-200">{profileUser.stats.health} / {profileUser.stats.maxHealth}</span>
+                    </div>
+                    <div className="h-1 bg-slate-900 rounded-full overflow-hidden">
+                        <div className="h-full bg-red-500 rounded-full transition-all duration-700" style={{ width: `${(profileUser.stats.health / profileUser.stats.maxHealth) * 100}%` }}></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div className="flex justify-between text-[9px] uppercase font-black tracking-widest mb-1">
+                        <span className="text-slate-400">Resonance</span>
+                        <span className="text-slate-200">{profileUser.stats.resonance} / {profileUser.stats.maxResonance}</span>
+                    </div>
+                    <div className="h-1 bg-slate-900 rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-500 rounded-full transition-all duration-700" style={{ width: `${(profileUser.stats.resonance / profileUser.stats.maxResonance) * 100}%` }}></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div className="flex justify-between text-[9px] uppercase font-black tracking-widest mb-1">
+                        <span className="text-slate-400">Experience</span>
+                        <span className="text-slate-200">{profileUser.stats.xp} / {profileUser.stats.xpToNextLevel}</span>
+                    </div>
+                    <div className="h-1 bg-slate-900 rounded-full overflow-hidden">
+                        <div className="h-full bg-orange-400 rounded-full transition-all duration-700" style={{ width: `${(profileUser.stats.xp / profileUser.stats.xpToNextLevel) * 100}%` }}></div>
+                    </div>
+                </div>
            </div>
 
            {/* Bio / Action */}

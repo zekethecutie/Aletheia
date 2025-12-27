@@ -2,7 +2,7 @@ import { Pool, PoolClient } from 'pg';
 import crypto from 'crypto';
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.SUPABASE_DATABASE_URL || process.env.DATABASE_URL,
   max: 10,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
@@ -41,6 +41,16 @@ export const initializeDatabase = async () => {
         is_verified BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS quests (
+        id SERIAL PRIMARY KEY,
+        user_id TEXT REFERENCES profiles(id) ON DELETE CASCADE,
+        text TEXT NOT NULL,
+        difficulty VARCHAR(1) DEFAULT 'E',
+        completed BOOLEAN DEFAULT FALSE,
+        xp_reward INTEGER DEFAULT 100,
+        stat_reward JSONB DEFAULT '{}',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
       CREATE TABLE IF NOT EXISTS posts (
         id SERIAL PRIMARY KEY,

@@ -131,16 +131,53 @@ export const apiClient = {
     }
   },
 
-  async askAdvisor(type: string, message: string) {
+  async askAdvisor(type: string, message: string, userId: string) {
     try {
       const response = await fetch(`${API_URL}/ai/advisor`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, message })
+        body: JSON.stringify({ type, message, userId })
       });
       return handleResponse(response);
     } catch (error: any) {
       console.error('Advisor error:', error);
+      throw error;
+    }
+  },
+
+  async getQuests(userId: string) {
+    try {
+      const response = await fetch(`${API_URL}/quests/${userId}`);
+      return handleResponse(response);
+    } catch (error: any) {
+      console.error('Get quests error:', error);
+      throw error;
+    }
+  },
+
+  async generateQuests(userId: string, stats: any, recentAchievements?: string) {
+    try {
+      const response = await fetch(`${API_URL}/ai/quest/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, stats, recentAchievements })
+      });
+      return handleResponse(response);
+    } catch (error: any) {
+      console.error('Generate quests error:', error);
+      throw error;
+    }
+  },
+
+  async completeQuest(id: number) {
+    try {
+      const response = await fetch(`${API_URL}/quests/${id}/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      return handleResponse(response);
+    } catch (error: any) {
+      console.error('Complete quest error:', error);
       throw error;
     }
   },

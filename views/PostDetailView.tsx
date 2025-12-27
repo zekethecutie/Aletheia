@@ -47,13 +47,30 @@ const RecursiveComment: React.FC<{ comment: Comment; depth?: number; onReply: (i
   );
 };
 
-export const PostDetailView: React.FC<{ post: Post; onBack: () => void }> = ({ post, onBack }) => {
+export const PostDetailView: React.FC<{ post: Post; onBack: () => void; onUpdate?: () => void }> = ({ post, onBack, onUpdate }) => {
   const [comments, setComments] = useState<Comment[]>(post.comments || []);
   const [newComment, setNewComment] = useState('');
   const [replyingTo, setReplyingTo] = useState<{ id: string, author: string } | null>(null);
   const [resonance, setResonance] = useState(post.resonance);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(post.content);
   const currentUser = loadUser();
   const isLiked = currentUser && post.likedBy?.includes(currentUser.id);
+
+  const handleUpdate = async () => {
+    if (!editContent.trim()) return;
+    await supabase.from('posts').update({ content: editContent }).eq('id', post.id);
+    setIsEditing(false);
+    if (onUpdate) onUpdate();
+    onBack();
+  };
+
+  const handleDelete = async () => {
+    if (!confirm("Extinguish this signal?")) return;
+    await supabase.from('posts').delete().eq('id', post.id);
+    if (onUpdate) onUpdate();
+    onBack();
+  };
 
   const addCommentToTree = (list: Comment[], parentId: string, newComm: Comment): Comment[] => {
     return list.map(c => {
@@ -87,7 +104,6 @@ export const PostDetailView: React.FC<{ post: Post; onBack: () => void }> = ({ p
      if (!currentUser) return;
      const newRes = isLiked ? resonance - 1 : resonance + 1;
      setResonance(newRes);
-     // Update DB logic here
      await supabase.from('posts').update({ resonance: newRes }).eq('id', post.id);
   };
 
@@ -100,12 +116,38 @@ export const PostDetailView: React.FC<{ post: Post; onBack: () => void }> = ({ p
             <div className="w-10 h-10 rounded-full bg-slate-900 border border-slate-700 overflow-hidden">
                <img src={post.authorAvatar || `https://api.dicebear.com/7.x/initials/svg?seed=${post.authorName}&backgroundColor=000000`} className="w-full h-full object-cover" />
             </div>
-            <div>
+            <div className="flex-1">
                <h3 className="text-white font-black uppercase text-sm tracking-wide">{post.authorName}</h3>
                <p className="text-gold text-[9px] uppercase font-bold tracking-widest">{post.authorClass}</p>
             </div>
+            {currentUser?.id === post.authorId && (
+              <div className="flex gap-2">
+                <button onClick={() => setIsEditing(!isEditing)} className="text-slate-500 hover:text-white p-2">
+                  <IconEdit className="w-4 h-4" />
+                </button>
+                <button onClick={handleDelete} className="text-slate-500 hover:text-red-500 p-2">
+                  <IconTrash className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
-          <p className="text-white text-xl font-serif leading-relaxed opacity-90 mb-6">{post.content}</p>
+          
+          {isEditing ? (
+            <div className="space-y-4 mb-6">
+              <textarea 
+                value={editContent} 
+                onChange={e => setEditContent(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-800 p-4 text-white font-serif outline-none focus:border-gold rounded-sm h-32"
+              />
+              <div className="flex gap-2">
+                <button onClick={handleUpdate} className="flex-1 bg-white text-black font-black uppercase text-[10px] py-2">Update</button>
+                <button onClick={() => setIsEditing(false)} className="flex-1 bg-slate-800 text-white font-black uppercase text-[10px] py-2">Cancel</button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-white text-xl font-serif leading-relaxed opacity-90 mb-6">{post.content}</p>
+          )}
+
           <div className="flex items-center gap-6">
              <button onClick={handleToggleLike} className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest transition-colors ${isLiked ? 'text-gold' : 'text-slate-600'}`}>
                 <IconResonance className="w-5 h-5" />

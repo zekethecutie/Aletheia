@@ -5,7 +5,7 @@ import { getDailyWisdom } from '../services/geminiService';
 import { Header } from '../components/Header';
 import { ProfileView } from './ProfileView';
 import { CreatePostModal } from '../components/modals/CreatePostModal';
-import { IconResonance, IconPlus, IconUsers, IconGlobe, IconTrash, IconFeather } from '../components/Icons';
+import { IconResonance, IconPlus, IconUsers, IconGlobe, IconTrash, IconFeather, IconEdit } from '../components/Icons';
 import { formatTime, loadUser } from '../utils/helpers';
 import { PostDetailView } from './PostDetailView';
 import { supabase } from '../services/supabaseClient';

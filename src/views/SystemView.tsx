@@ -125,10 +125,10 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
 
     const newStats = { ...user.stats, xp: newXp, level: newLevel, xpToNextLevel: nextXp };
     if (res.statsIncreased.wealth) newStats.wealth = (newStats.wealth || 0) + res.statsIncreased.wealth;
-    if (res.statsIncreased.strength) newStats.strength = (newStats.strength || 0) + res.statsIncreased.strength;
-    if (res.statsIncreased.spirit) newStats.spirit = (newStats.spirit || 0) + res.statsIncreased.spirit;
-    if (res.statsIncreased.intellect) newStats.intellect = (newStats.intellect || 0) + res.statsIncreased.intellect;
-    if (res.statsIncreased.discipline) newStats.discipline = (newStats.discipline || 0) + res.statsIncreased.discipline;
+    if (res.statsIncreased.physical) newStats.physical = (newStats.physical || 0) + res.statsIncreased.physical;
+    if (res.statsIncreased.spiritual) newStats.spiritual = (newStats.spiritual || 0) + res.statsIncreased.spiritual;
+    if (res.statsIncreased.intelligence) newStats.intelligence = (newStats.intelligence || 0) + res.statsIncreased.intelligence;
+    if (res.statsIncreased.social) newStats.social = (newStats.social || 0) + res.statsIncreased.social;
 
     onUpdateUser({ ...user, stats: newStats });
     setFeatInput('');
@@ -227,7 +227,7 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
       </div>
 
       <div className="flex px-4 gap-2 mb-8">
-         {['SYSTEM', 'VERIFY', 'STATS'].map(t => (
+         {['SYSTEM', 'ACHIEVEMENTS', 'STATS'].map(t => (
              <button 
                 key={t}
                 onClick={() => setTab(t === 'STATS' ? 'STATUS' : (t === 'SYSTEM' ? 'QUESTS' : 'INVENTORY'))} 
@@ -246,9 +246,9 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                         <div>
                             <div className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
                                 <div className="w-1 h-1 bg-gold rounded-full"></div>
-                                Strength
+                                Physical
                             </div>
-                            <div className="text-2xl font-display font-black text-white">{user.stats.strength}</div>
+                            <div className="text-2xl font-display font-black text-white">{user.stats.physical}</div>
                         </div>
                         <div className="w-6 h-6 opacity-20 group-hover:opacity-100 transition-opacity">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gold">
@@ -262,7 +262,7 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                                 <div className="w-1 h-1 bg-gold rounded-full"></div>
                                 Intelligence
                             </div>
-                            <div className="text-2xl font-display font-black text-white">{user.stats.intellect}</div>
+                            <div className="text-2xl font-display font-black text-white">{user.stats.intelligence}</div>
                         </div>
                         <div className="w-6 h-6 opacity-20 group-hover:opacity-100 transition-opacity">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gold">
@@ -274,7 +274,7 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                         <div>
                             <div className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
                                 <div className="w-1 h-1 bg-gold rounded-full"></div>
-                                Agility
+                                Social
                             </div>
                             <div className="text-2xl font-display font-black text-white">{user.stats.social}</div>
                         </div>
@@ -288,9 +288,9 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                         <div>
                             <div className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
                                 <div className="w-1 h-1 bg-gold rounded-full"></div>
-                                Luck
+                                Spiritual
                             </div>
-                            <div className="text-2xl font-display font-black text-white">7</div>
+                            <div className="text-2xl font-display font-black text-white">{user.stats.spiritual}</div>
                         </div>
                         <div className="w-6 h-6 opacity-20 group-hover:opacity-100 transition-opacity">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gold">

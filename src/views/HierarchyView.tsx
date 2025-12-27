@@ -8,10 +8,10 @@ interface RankedUser {
   level: number;
   class: string;
   xp: number;
-  intellect: number;
-  discipline: number;
-  spirit: number;
-  strength: number;
+  intelligence: number;
+  physical: number;
+  spiritual: number;
+  social: number;
   wealth: number;
   avatar_url?: string;
   rank?: number;
@@ -20,7 +20,7 @@ interface RankedUser {
 export const HierarchyView: React.FC = () => {
   const [leaderboard, setLeaderboard] = useState<RankedUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState<'level' | 'intellect' | 'discipline' | 'spirit' | 'strength' | 'wealth'>('level');
+  const [sortBy, setSortBy] = useState<'level' | 'intelligence' | 'physical' | 'spiritual' | 'social' | 'wealth'>('level');
 
   useEffect(() => {
     fetchLeaderboard();
@@ -42,10 +42,10 @@ export const HierarchyView: React.FC = () => {
           level: user.stats?.level || 1,
           class: user.stats?.class || 'Seeker',
           xp: user.stats?.xp || 0,
-          intellect: user.stats?.intellect || 0,
-          discipline: user.stats?.discipline || 0,
-          spirit: user.stats?.spirit || 0,
-          strength: user.stats?.strength || 0,
+          intelligence: user.stats?.intelligence || 0,
+          physical: user.stats?.physical || 0,
+          spiritual: user.stats?.spiritual || 0,
+          social: user.stats?.social || 0,
           wealth: user.stats?.wealth || 0,
           avatar_url: user.avatar_url,
           rank: index + 1
@@ -86,10 +86,10 @@ export const HierarchyView: React.FC = () => {
 
   const statColors: Record<string, string> = {
     level: 'text-white',
-    intellect: 'text-blue-400',
-    discipline: 'text-cyan-400',
-    spirit: 'text-purple-400',
-    strength: 'text-red-400',
+    intelligence: 'text-blue-400',
+    physical: 'text-red-400',
+    spiritual: 'text-purple-400',
+    social: 'text-cyan-400',
     wealth: 'text-yellow-500'
   };
 
@@ -102,7 +102,7 @@ export const HierarchyView: React.FC = () => {
       <div className="p-6 relative z-10 max-w-4xl mx-auto">
         {/* Stat Filter Buttons */}
         <div className="flex gap-3 mb-10 flex-wrap justify-center">
-          {(['level', 'intellect', 'discipline', 'spirit', 'strength', 'wealth'] as const).map((stat) => (
+          {(['level', 'intelligence', 'physical', 'spiritual', 'social', 'wealth'] as const).map((stat) => (
             <button
               key={stat}
               onClick={() => setSortBy(stat)}
@@ -176,20 +176,20 @@ export const HierarchyView: React.FC = () => {
                 {/* Stats Bar */}
                 <div className="mt-4 grid grid-cols-5 gap-3 text-center text-[8px]">
                   <div className="bg-slate-900/50 p-2 rounded-lg border border-white/5 group-hover:border-blue-500/20 transition-all">
-                    <div className="text-blue-400 font-display font-black uppercase tracking-widest mb-1">{user.intellect}</div>
+                    <div className="text-blue-400 font-display font-black uppercase tracking-widest mb-1">{user.intelligence}</div>
                     <div className="text-slate-600 font-bold uppercase tracking-widest">INT</div>
                   </div>
-                  <div className="bg-slate-900/50 p-2 rounded-lg border border-white/5 group-hover:border-cyan-500/20 transition-all">
-                    <div className="text-cyan-400 font-display font-black uppercase tracking-widest mb-1">{user.discipline}</div>
-                    <div className="text-slate-600 font-bold uppercase tracking-widest">DIS</div>
+                  <div className="bg-slate-900/50 p-2 rounded-lg border border-white/5 group-hover:border-red-500/20 transition-all">
+                    <div className="text-red-400 font-display font-black uppercase tracking-widest mb-1">{user.physical}</div>
+                    <div className="text-slate-600 font-bold uppercase tracking-widest">PHY</div>
                   </div>
                   <div className="bg-slate-900/50 p-2 rounded-lg border border-white/5 group-hover:border-purple-500/20 transition-all">
-                    <div className="text-purple-400 font-display font-black uppercase tracking-widest mb-1">{user.spirit}</div>
+                    <div className="text-purple-400 font-display font-black uppercase tracking-widest mb-1">{user.spiritual}</div>
                     <div className="text-slate-600 font-bold uppercase tracking-widest">SPI</div>
                   </div>
-                  <div className="bg-slate-900/50 p-2 rounded-lg border border-white/5 group-hover:border-red-500/20 transition-all">
-                    <div className="text-red-400 font-display font-black uppercase tracking-widest mb-1">{user.strength}</div>
-                    <div className="text-slate-600 font-bold uppercase tracking-widest">STR</div>
+                  <div className="bg-slate-900/50 p-2 rounded-lg border border-white/5 group-hover:border-cyan-500/20 transition-all">
+                    <div className="text-cyan-400 font-display font-black uppercase tracking-widest mb-1">{user.social}</div>
+                    <div className="text-slate-600 font-bold uppercase tracking-widest">SOC</div>
                   </div>
                   <div className="bg-slate-900/50 p-2 rounded-lg border border-white/5 group-hover:border-yellow-500/20 transition-all">
                     <div className="text-yellow-500 font-display font-black uppercase tracking-widest mb-1">{user.wealth}</div>

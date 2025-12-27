@@ -97,23 +97,23 @@ const AcceptanceCard: React.FC<{ user: User, onEnter: () => void }> = ({ user, o
                     <div className="grid grid-cols-5 gap-3">
                          <div className="text-center">
                             <IconUser className="w-5 h-5 mx-auto mb-2 text-blue-400" />
-                            <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Intellect</p>
-                            <span className="text-white font-black text-lg">{user.stats.intellect}</span>
+                            <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Intelligence</p>
+                            <span className="text-white font-black text-lg">{user.stats.intelligence}</span>
                          </div>
                          <div className="text-center">
                             <IconDumbbell className="w-5 h-5 mx-auto mb-2 text-red-400" />
-                            <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Strength</p>
-                            <span className="text-white font-black text-lg">{user.stats.strength}</span>
+                            <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Physical</p>
+                            <span className="text-white font-black text-lg">{user.stats.physical}</span>
                          </div>
                          <div className="text-center">
                             <IconSpirit className="w-5 h-5 mx-auto mb-2 text-purple-400" />
-                            <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Spirit</p>
-                            <span className="text-white font-black text-lg">{user.stats.spirit}</span>
+                            <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Spiritual</p>
+                            <span className="text-white font-black text-lg">{user.stats.spiritual}</span>
                          </div>
                          <div className="text-center">
                             <IconLock className="w-5 h-5 mx-auto mb-2 text-amber-400" />
-                            <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Discipline</p>
-                            <span className="text-white font-black text-lg">{user.stats.discipline}</span>
+                            <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Social</p>
+                            <span className="text-white font-black text-lg">{user.stats.social}</span>
                          </div>
                          <div className="text-center">
                             <IconCoin className="w-5 h-5 mx-auto mb-2 text-yellow-400" />
@@ -185,7 +185,7 @@ export const CreateIdentityView: React.FC<{ onComplete: (u: User) => void; onBac
       
       setStatusMsg("The Council is judging your intent...");
       
-      let stats = { level: 1, xp: 0, xpToNextLevel: 100, intellect: 1, discipline: 1, spirit: 1, strength: 1, wealth: 1, social: 1, class: "Initiate" };
+      let stats = { level: 1, xp: 0, xpToNextLevel: 100, intelligence: 1, physical: 1, spiritual: 1, wealth: 1, social: 1, class: "Initiate" };
       let originStory = "Accepted into the void.";
       
       try {

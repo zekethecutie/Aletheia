@@ -59,7 +59,7 @@ export const generateMirrorScenario = async (stats: UserStats): Promise<MirrorSc
     });
     return JSON.parse(response.text || '{}');
   } catch (e) {
-    return { situation: "A fork in the road.", choiceA: "Left", choiceB: "Right", context: "Void", testedStat: "spirit" };
+    return { situation: "A fork in the road.", choiceA: "Left", choiceB: "Right", context: "Void", testedStat: "spiritual" };
   }
 };
 
@@ -105,7 +105,7 @@ export const getDailyWisdom = async (): Promise<{ text: string; author: string }
 };
 
 export const submitApplication = async (manifesto: string): Promise<{ approved: boolean; reason: string; initialStats: UserStats }> => {
-  const prompt = `Analyze this manifesto: "${manifesto}". Assign level 1 stats and a class. Be poetic.`;
+  const prompt = `Analyze this manifesto: "${manifesto}". Assign level 1 stats and a class. Be poetic. Use these stat categories: intelligence, physical, spiritual, social, wealth.`;
   try {
     const aiInstance = getAI();
     const response = await aiInstance.models.generateContent({
@@ -124,14 +124,14 @@ export const submitApplication = async (manifesto: string): Promise<{ approved: 
                 level: { type: Type.NUMBER },
                 xp: { type: Type.NUMBER },
                 xpToNextLevel: { type: Type.NUMBER },
-                intellect: { type: Type.NUMBER },
-                discipline: { type: Type.NUMBER },
-                spirit: { type: Type.NUMBER },
-                strength: { type: Type.NUMBER },
+                intelligence: { type: Type.NUMBER },
+                physical: { type: Type.NUMBER },
+                spiritual: { type: Type.NUMBER },
+                social: { type: Type.NUMBER },
                 wealth: { type: Type.NUMBER },
                 class: { type: Type.STRING }
               },
-              required: ["level", "xp", "xpToNextLevel", "intellect", "discipline", "spirit", "strength", "wealth", "class"]
+              required: ["level", "xp", "xpToNextLevel", "intelligence", "physical", "spiritual", "social", "wealth", "class"]
             }
           },
           required: ["approved", "reason", "initialStats"]
@@ -140,7 +140,7 @@ export const submitApplication = async (manifesto: string): Promise<{ approved: 
     });
     return JSON.parse(response.text || '{}');
   } catch (e) {
-    return { approved: true, reason: "The void accepts your silence.", initialStats: { level: 1, xp: 0, xpToNextLevel: 100, intellect: 5, discipline: 5, spirit: 5, strength: 5, wealth: 5, social: 5, class: "Seeker" } };
+    return { approved: true, reason: "The void accepts your silence.", initialStats: { level: 1, xp: 0, xpToNextLevel: 100, intelligence: 5, physical: 5, spiritual: 5, social: 5, wealth: 5, class: "Seeker" } };
   }
 };
 

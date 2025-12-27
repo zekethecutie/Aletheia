@@ -17,10 +17,9 @@ export interface UserStats {
   level: number;
   xp: number;
   xpToNextLevel: number;
-  intellect: number;
-  discipline: number;
-  spirit: number;
-  strength: number; 
+  intelligence: number;
+  physical: number;
+  spiritual: number;
   wealth: number;   
   social: number;
   class: string;

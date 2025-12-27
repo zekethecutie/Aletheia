@@ -1,11 +1,9 @@
-
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ViewState, User } from './types';
 import { NavBar } from './components/NavBar';
 import { loadUser, saveUser } from './utils/helpers';
 import { supabase } from './services/supabaseClient';
 
-// Views
 import { IntroView } from './views/IntroView';
 import { AuthChoiceView, CreateIdentityView, EmbarkView } from './views/AuthView';
 import { SanctumView } from './views/SanctumView';

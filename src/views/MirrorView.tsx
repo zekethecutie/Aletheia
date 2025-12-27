@@ -14,20 +14,27 @@ export const MirrorView: React.FC<MirrorViewProps> = ({ user, onUpdateUser }) =>
   const [gameMode, setGameMode] = useState<'IDLE' | 'SCENARIO' | 'RESULT'>('IDLE');
   const [scenario, setScenario] = useState<MirrorScenario | null>(null);
   const [gameResult, setGameResult] = useState<MirrorResult | null>(null);
-  const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-  const enterMirror = async () => {
-      setLoading(true);
-      try {
-        const sc = await apiClient.generateMirrorScenario(user.stats);
-        setScenario(sc);
-        setGameMode('SCENARIO');
-      } catch (error) {
-        console.error('Failed to generate scenario:', error);
-      } finally {
-        setLoading(false);
-      }
-  };
+    const enterMirror = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+          const sc = await apiClient.generateMirrorScenario(user.stats);
+          if (sc && sc.situation) {
+            setScenario(sc);
+            setGameMode('SCENARIO');
+          } else {
+            throw new Error("The Mirror remains dark. Try again later.");
+          }
+        } catch (error: any) {
+          console.error('Failed to generate scenario:', error);
+          setError(error.message || "Failed to enter the Mirror.");
+        } finally {
+          setLoading(false);
+        }
+    };
 
   const chooseMirrorOption = async (choice: 'A' | 'B') => {
       if (!scenario) return;

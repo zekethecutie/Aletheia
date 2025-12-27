@@ -36,6 +36,7 @@ export const initializeDatabase = async () => {
         stats JSONB DEFAULT '{"level": 1, "xp": 0, "xpToNextLevel": 100, "intelligence": 1, "physical": 1, "spiritual": 1, "social": 1, "wealth": 1, "resonance": 10, "maxResonance": 100, "health": 10, "maxHealth": 100, "class": "Initiate"}',
         tasks JSONB DEFAULT '[]',
         inventory JSONB DEFAULT '[]',
+        goals JSONB DEFAULT '[]',
         entropy INTEGER DEFAULT 0,
         following TEXT[] DEFAULT '{}',
         is_verified BOOLEAN DEFAULT FALSE,
@@ -50,6 +51,7 @@ export const initializeDatabase = async () => {
         completed BOOLEAN DEFAULT FALSE,
         xp_reward INTEGER DEFAULT 100,
         stat_reward JSONB DEFAULT '{}',
+        expires_at TIMESTAMP WITH TIME ZONE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
       CREATE TABLE IF NOT EXISTS posts (
@@ -60,6 +62,14 @@ export const initializeDatabase = async () => {
         liked_by TEXT[] DEFAULT '{}',
         is_system_post BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS achievements (
+        id SERIAL PRIMARY KEY,
+        user_id TEXT REFERENCES profiles(id) ON DELETE CASCADE,
+        title TEXT NOT NULL,
+        description TEXT,
+        icon TEXT,
+        unlocked_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
       CREATE INDEX IF NOT EXISTS idx_profiles_username ON profiles(username);
       CREATE INDEX IF NOT EXISTS idx_profiles_id ON profiles(id);

@@ -343,20 +343,67 @@ app.post('/api/ai/image/artifact', async (req: Request, res: Response) => {
   }
 });
 
-// System Cron - Auto Posts
-const runSystemCron = async () => {
+// AI Mirror Scenario
+app.post('/api/ai/mirror/scenario', async (req: Request, res: Response) => {
   try {
-    const prompt = "Generate a short, profound mystical system transmission for the global feed. Topic: collective evolution, the void, or the architecture of reality. Return string only.";
-    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt));
-    const content = await response.text();
-    await query('INSERT INTO posts (content, is_system_post) VALUES ($1, $2)', [content.trim(), true]);
-    console.log('System transmission deployed');
-  } catch (e) {
-    console.error('Cron failed:', e);
+    const { stats } = req.body;
+    const prompt = `You are the Mirror of Aletheia. Generate a moral or psychological dilemma for a ${stats.class}. 
+    It must test their ${['intelligence', 'physical', 'spiritual', 'social', 'wealth'][Math.floor(Math.random() * 5)]}.
+    Return JSON ONLY: { "situation": "string", "choiceA": "string", "choiceB": "string", "testedStat": "string" }`;
+    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
+    const text = await response.text();
+    const jsonMatch = text.match(/\{.*\}/s);
+    res.json(jsonMatch ? JSON.parse(jsonMatch[0]) : { situation: "You see a reflection of your potential.", choiceA: "Embrace it", choiceB: "Question it", testedStat: "spiritual" });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
   }
-};
-setInterval(runSystemCron, 1000 * 60 * 60 * 12); // Every 12 hours
-runSystemCron(); // Run once on start
+});
+
+// AI Mirror Evaluation
+app.post('/api/ai/mirror/evaluate', async (req: Request, res: Response) => {
+  try {
+    const { situation, choice } = req.body;
+    const prompt = `Evaluate this choice in the Mirror: 
+    Situation: ${situation}
+    Choice: ${choice}
+    Return JSON ONLY: { "outcome": "poetic description", "statChange": { "statName": number }, "reward": { "name": "string", "description": "string", "icon": "emoji", "rarity": "Common|Rare|Epic|Relic" } }`;
+    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
+    const text = await response.text();
+    const jsonMatch = text.match(/\{.*\}/s);
+    res.json(jsonMatch ? JSON.parse(jsonMatch[0]) : { outcome: "The mirror ripples.", statChange: { spiritual: 1 } });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Fix Post endpoint
+app.post('/api/posts', async (req: Request, res: Response) => {
+  try {
+    const { author_id, content } = req.body;
+    const result = await query(
+      'INSERT INTO posts (author_id, content) VALUES ($1, $2) RETURNING *',
+      [author_id, content]
+    );
+    res.json(result.rows[0]);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/posts', async (req: Request, res: Response) => {
+  try {
+    const result = await query(`
+      SELECT p.*, pr.display_name as username, pr.avatar_url, (pr.stats->>'class') as author_class 
+      FROM posts p 
+      LEFT JOIN profiles pr ON p.author_id = pr.id 
+      ORDER BY p.created_at DESC 
+      LIMIT 50
+    `);
+    res.json(result.rows);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 app.get('/api/leaderboard', async (req: Request, res: Response) => {
   try {

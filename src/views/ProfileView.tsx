@@ -128,7 +128,27 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ targetUserId, onBack, 
      setIsFollowing(!isFollowing);
   };
 
-  if (selectedPost) return <PostDetailView post={selectedPost} onBack={() => setSelectedPost(null)} />;
+  if (selectedPost) return <PostDetailView post={selectedPost} onBack={() => setSelectedPost(null)} onUpdate={() => {
+    // Re-fetch posts if needed, though ProfileView has its own logic
+    const uid = targetUserId || currentUser.id;
+    supabase.from('posts').select('*').eq('author_id', uid).order('created_at', { ascending: false }).then(({ data }) => {
+        if (data) {
+            setPosts(data.map((p:any) => ({
+                id: p.id.toString(),
+                authorId: p.author_id,
+                authorName: profileUser?.username || '',
+                authorAvatar: profileUser?.avatarUrl,
+                content: p.content,
+                resonance: p.resonance || 0,
+                likedBy: p.liked_by || [],
+                timestamp: new Date(p.created_at).getTime(),
+                tags: [],
+                comments: [],
+                commentCount: 0
+            })));
+        }
+    });
+  }} />;
   if (loading || !profileUser) return <div className="h-screen bg-void flex items-center justify-center"><div className="w-6 h-6 border-2 border-gold border-t-transparent animate-spin rounded-full"></div></div>;
 
   return (

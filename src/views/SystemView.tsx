@@ -74,6 +74,9 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
 
   const handleCompleteQuest = async (quest: any) => {
     if (quest.completed) return;
+    const confirmed = confirm("Are you sure you had finished the task? Do not lie to the system, it is not us you are fooling — but instead yourself.");
+    if (!confirmed) return;
+
     try {
       const res = await apiClient.completeQuest(quest.id);
       if (res.success) {
@@ -264,28 +267,60 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                       </button>
                   </div>
                   <div className="space-y-4">
-                      {quests.map(t => (
-                          <div key={t.id} onClick={() => handleCompleteQuest(t)} className={`glass-card p-6 rounded-xl flex items-center justify-between cursor-pointer transition-all relative overflow-hidden group ${t.completed ? 'opacity-40 border-green-500/30' : 'hover:border-gold/50'}`}>
-                              <div className="flex items-center gap-6">
-                                  <div className={`w-10 h-10 glass-card rounded-lg flex items-center justify-center border-white/10 ${t.completed ? 'bg-green-500/10 border-green-500/30' : 'group-hover:border-gold/30'}`}>
-                                      {t.completed ? <div className="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div> : <div className="w-4 h-4 border border-slate-500 rounded-full flex items-center justify-center"><div className="w-1.5 h-1.5 border border-slate-500 rounded-full"></div></div>}
+                      {quests.map(t => {
+                          const expiresAt = t.expires_at ? new Date(t.expires_at).getTime() : 0;
+                          const timeLeft = Math.max(0, expiresAt - Date.now());
+                          const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
+                          const minsLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+
+                          return (
+                              <div key={t.id} onClick={() => handleCompleteQuest(t)} className={`glass-card p-6 rounded-xl flex items-center justify-between cursor-pointer transition-all relative overflow-hidden group ${t.completed ? 'opacity-40 border-green-500/30' : 'hover:border-gold/50'}`}>
+                                  <div className="flex items-center gap-6">
+                                      <div className={`w-10 h-10 glass-card rounded-lg flex items-center justify-center border-white/10 ${t.completed ? 'bg-green-500/10 border-green-500/30' : 'group-hover:border-gold/30'}`}>
+                                          {t.completed ? <div className="w-3 h-3 bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div> : <div className="w-5 h-5 border-2 border-slate-500 rounded-full flex items-center justify-center group-hover:border-gold/50 transition-colors"><div className="w-2 h-2 border border-slate-500 rounded-full group-hover:border-gold/50"></div></div>}
+                                      </div>
+                                      <div>
+                                         <div className="flex items-center gap-3 mb-1">
+                                             <p className="text-[10px] font-display font-black text-gold uppercase tracking-[0.2em]">{t.difficulty} Tier Directive</p>
+                                             {!t.completed && expiresAt > 0 && (
+                                                 <p className="text-[8px] text-red-400 font-mono uppercase animate-pulse">Expires in {hoursLeft}h {minsLeft}m</p>
+                                             )}
+                                         </div>
+                                         <p className="text-sm font-bold text-white tracking-wide leading-tight">{t.text}</p>
+                                      </div>
                                   </div>
-                                  <div>
-                                     <p className="text-[10px] font-display font-black text-gold uppercase tracking-[0.2em] mb-1">{t.difficulty} Tier Directive</p>
-                                     <p className="text-sm font-bold text-white tracking-wide">{t.text}</p>
-                                  </div>
-                              </div>
-                              <div className="flex items-center gap-4">
-                                  <div className="text-right">
-                                      <p className="text-[10px] font-mono text-slate-400 uppercase">+{t.xp_reward} EXP</p>
-                                      <div className="w-16 h-[2px] bg-white/10 mt-1">
-                                          <div className={`h-full ${t.completed ? 'bg-green-500' : 'bg-white/40'}`} style={{ width: t.completed ? '100%' : '30%' }}></div>
+                                  <div className="flex items-center gap-4">
+                                      <div className="text-right">
+                                          <p className="text-[10px] font-mono text-slate-400 uppercase">+{t.xp_reward} EXP</p>
+                                          <div className="w-16 h-[2px] bg-white/10 mt-1">
+                                              <div className={`h-full ${t.completed ? 'bg-green-500' : 'bg-white/40'}`} style={{ width: t.completed ? '100%' : '30%' }}></div>
+                                          </div>
                                       </div>
                                   </div>
                               </div>
-                          </div>
-                      ))}
+                          );
+                      })}
                       {quests.length === 0 && !generatingQuest && <div className="py-12 text-center text-slate-600 text-[10px] uppercase border border-dashed border-slate-800 rounded-xl">No active directives. Seek the void for purpose.</div>}
+                  </div>
+
+                  <div className="mt-12">
+                      <h3 className="text-xs font-black text-white uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
+                          <span className="w-2 h-2 bg-indigo-500 rounded-full"></span>
+                          Sacred Goals
+                      </h3>
+                      <div className="glass-card p-6 rounded-2xl border-indigo-500/20 bg-indigo-500/5">
+                          <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest mb-4 opacity-70">Long-term Trajectory</p>
+                          <div className="space-y-4">
+                              {((user as any).goals || []).length > 0 ? ((user as any).goals as string[]).map((g, i) => (
+                                  <div key={i} className="flex items-center gap-3">
+                                      <div className="w-1 h-4 bg-indigo-500/50"></div>
+                                      <p className="text-sm text-slate-200 font-serif italic">"{g}"</p>
+                                  </div>
+                              )) : (
+                                  <p className="text-slate-500 text-[10px] uppercase italic">No goals defined in soul-architecture.</p>
+                              )}
+                          </div>
+                      </div>
                   </div>
               </div>
           )}

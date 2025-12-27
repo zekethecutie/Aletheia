@@ -85,7 +85,14 @@ export const SanctumView: React.FC = () => {
     ));
 
     try {
-      await apiClient.toggleLikePost(parseInt(post.id), currentUser.id);
+      const res = await apiClient.toggleLikePost(parseInt(post.id), currentUser.id);
+      if (res.success) {
+          setPosts(prev => prev.map(p => 
+            p.id === post.id 
+              ? { ...p, likedBy: res.isLiked ? [...p.likedBy, currentUser.id] : p.likedBy.filter(id => id !== currentUser.id), resonance: res.resonance } 
+              : p
+          ));
+      }
     } catch (error) {
       console.error("Error liking post:", error);
       fetchPosts(); // Rollback on error

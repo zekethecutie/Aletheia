@@ -182,10 +182,10 @@ app.post('/api/ai/mysterious-name', async (req: Request, res: Response) => {
 app.post('/api/ai/quest/generate', async (req: Request, res: Response) => {
   try {
     const { userId, stats, goals } = req.body;
-    const system = `You are the Eye of Aletheia. Construct 3 real-world sacred trials for a ${stats.class}.
+    const system = `You are the Eye of Aletheia. Construct 2-5 real-world sacred trials for a ${stats.class}.
     GOALS: ${JSON.stringify(goals || [])}
     PROTOCOL: 
-    1. Real-world actions only (no roleplay).
+    1. Real-world actions only (no roleplay). This is for bettering the user's lifestyle.
     2. Difficulty must scale with user level (${stats.level}).
     3. Rewards must include a specific stat boost based on the action.
     Return JSON ONLY: { "quests": [{ "text": "string", "difficulty": "E-S", "xp_reward": number, "stat_reward": { "physical": number, ... }, "duration_hours": number }] }`;
@@ -206,6 +206,31 @@ app.post('/api/ai/quest/generate', async (req: Request, res: Response) => {
     } else {
       res.status(500).json({ error: 'Generation failed' });
     }
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Fix Liking logic in posts
+app.post('/api/posts/:id/toggle-like', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req.body;
+
+    const postResult = await query('SELECT liked_by FROM posts WHERE id = $1', [id]);
+    if (postResult.rows.length === 0) return res.status(404).json({ error: 'Post not found' });
+
+    let likedBy = postResult.rows[0].liked_by || [];
+    const isLiked = likedBy.includes(userId);
+
+    if (isLiked) {
+      likedBy = likedBy.filter((uid: string) => uid !== userId);
+    } else {
+      likedBy.push(userId);
+    }
+
+    await query('UPDATE posts SET liked_by = $1, resonance = $2 WHERE id = $3', [likedBy, likedBy.length, id]);
+    res.json({ success: true, resonance: likedBy.length, isLiked: !isLiked });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

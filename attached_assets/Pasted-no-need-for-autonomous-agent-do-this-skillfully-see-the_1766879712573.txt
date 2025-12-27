@@ -1,0 +1,19 @@
+no need for autonomous agent, do this skillfully
+
+see the "unfinished" commit on git? it is not done: this was the prompt used there: (but first set up a database using supabase: postgresql://postgres.yjxqvwyudhvfkzkaixax:[aletheiatheinevitable]@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres
+)
+
+liking is infinite as there is no highlighter if you had liked it and clicking it again and again just keeps adding a new count of like to the post (resonance, make it so that if highlighted it adds one like, and if clicked again it turns unhighlighted and subtracts one like) and also update the post detail page to be more system style design, futuristic or sum that still fits the overall style of the app
+
+and NOOO, the mirror button icon of the tab is a star and on the mirror page, the floating glowing thing is an EYE, and the one who should have the A app icon is the one on the ACCOUNT CReATION pagee, and i am not sure whether you had fixed the cut in half glow of that profile card there yet
+
+add a check icon on quests to finish quests and gains exp, add a pop up "Are you sure you had finished the task? Do not lie to the system, it is not us you are fooling — but instead yourself." reminder when clicking the check as a confirmation, also add an expiration date mechanics the AI sets automatically, that if not finished in the real time(counting down timer on the quest card)
+
+btw, quest generation is auto by AI at the least 2-5 quests per day and its difficulty properly set to the users life style
+
+fix log achievement to work
+
+(also, auto generated quests are supposed to be real life actions, not roleplay stuff, it is to better the user lifestyle, and also, add a receive stat depending on what the quest was about)
+add another section on Quests, section like "active quests", under it add "Goals" which helps the AI give you quests, it works like feat logging that helps the AI automate the tasks for you to slowly step by step achieve that goal
+
+add animations to the post cards too btw, and complete the public profile page viewing of other peoples accounts (by searching their user or clicking their user on post card or post details)

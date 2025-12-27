@@ -78,7 +78,7 @@ export const ExploreView: React.FC = () => {
                          <div className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 overflow-hidden">
                              {res.avatar ? <img src={res.avatar} className="w-full h-full object-cover" /> : res.type === 'USER' ? <IconUser className="w-5 h-5" /> : <IconScroll className="w-5 h-5" />}
                          </div>
-                         <div className="flex-1">
+                         <div className="flex-1" onClick={() => (window as any).setViewProfileId?.(res.id)}>
                              <h3 className="text-white font-black text-sm uppercase group-hover:text-gold transition-colors">{res.title}</h3>
                              <p className="text-gold text-[10px] uppercase font-bold tracking-widest mt-1">{res.subtitle}</p>
                              {res.content && <p className="text-slate-400 text-xs font-serif mt-3 line-clamp-2 italic">"{res.content}"</p>}

@@ -69,6 +69,7 @@ export interface User {
   title?: string; 
   avatarUrl?: string;
   coverUrl?: string;
+  goals?: string[];
 }
 
 export interface Comment {

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { User, MirrorScenario, MirrorResult, Artifact } from '../types';
 import { Header } from '../components/Header';
-import { generateMirrorScenario, evaluateMirrorChoice } from '../services/geminiService';
+import { apiClient } from '../services/apiClient';
 import { IconEye } from '../components/Icons';
 
 interface MirrorViewProps {
@@ -18,31 +18,59 @@ export const MirrorView: React.FC<MirrorViewProps> = ({ user, onUpdateUser }) =>
 
   const enterMirror = async () => {
       setLoading(true);
-      const sc = await generateMirrorScenario(user.stats);
-      setScenario(sc);
-      setGameMode('SCENARIO');
-      setLoading(false);
+      try {
+        const sc = await apiClient.generateMirrorScenario(user.stats);
+        setScenario(sc);
+        setGameMode('SCENARIO');
+      } catch (error) {
+        console.error('Failed to generate scenario:', error);
+      } finally {
+        setLoading(false);
+      }
   };
 
   const chooseMirrorOption = async (choice: 'A' | 'B') => {
       if (!scenario) return;
       setLoading(true);
-      const result = await evaluateMirrorChoice(scenario, choice);
-      setGameResult(result);
-      setGameMode('RESULT');
-      setLoading(false);
+      try {
+        const result = await apiClient.evaluateMirrorChoice(scenario.situation, choice === 'A' ? scenario.choiceA : scenario.choiceB);
+        
+        // If there's a reward, generate an image for it
+        if (result.reward && !result.reward.imageUrl) {
+          try {
+            const imageRes = await apiClient.generateArtifactImage(result.reward.name, result.reward.description);
+            result.reward.imageUrl = imageRes.imageUrl;
+          } catch (e) {
+            console.warn('Image generation failed');
+          }
+        }
 
-      let newStats = { ...user.stats };
-      if (result.statChange) {
-         Object.entries(result.statChange).forEach(([k, v]) => {
-            if (k in newStats) (newStats as any)[k] += v;
-         });
+        setGameResult(result);
+        setGameMode('RESULT');
+
+        let newStats = { ...user.stats };
+        if (result.statChange) {
+           Object.entries(result.statChange).forEach(([k, v]) => {
+              if (k in newStats) (newStats as any)[k] += v;
+           });
+        }
+        
+        let newInventory = user.inventory ? [...user.inventory] : [];
+        if (result.reward) {
+          const artifact: Artifact = {
+            ...result.reward,
+            id: Date.now().toString(),
+            dateAcquired: Date.now()
+          } as Artifact;
+          newInventory.push(artifact);
+        }
+
+        onUpdateUser({ ...user, stats: newStats, inventory: newInventory });
+      } catch (error) {
+        console.error('Failed to evaluate choice:', error);
+      } finally {
+        setLoading(false);
       }
-      
-      let newInventory = user.inventory ? [...user.inventory] : [];
-      if (result.reward) newInventory.push(result.reward);
-
-      onUpdateUser({ ...user, stats: newStats, inventory: newInventory });
   };
 
   return (

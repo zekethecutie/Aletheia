@@ -3,7 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { GoogleGenAI } from '@google/genai';
 import { createUser, getUserByUsername, getUserById, verifyPassword } from './auth';
-import { query } from './db';
+import { query, initializeDatabase } from './db';
 
 dotenv.config();
 
@@ -13,7 +13,12 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-const genAI = (process.env.VITE_API_KEY || process.env.API_KEY) ? new GoogleGenAI({ apiKey: process.env.VITE_API_KEY || process.env.API_KEY || '' }) : null;
+// Initialize database on startup
+initializeDatabase().catch(console.error);
+
+const apiKey = process.env.VITE_API_KEY || process.env.API_KEY || '';
+console.log('API Key configured:', apiKey ? `${apiKey.substring(0, 10)}...` : 'NOT SET');
+const genAI = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
 // Health check
 app.get('/api/health', (req: Request, res: Response) => {

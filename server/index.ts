@@ -1,6 +1,7 @@
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { GoogleGenAI } from '@google/genai';
 
 dotenv.config();
 
@@ -11,9 +12,27 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
+// Initialize AI for backend use if needed
+const genAI = process.env.VITE_API_KEY ? new GoogleGenAI({ apiKey: process.env.VITE_API_KEY }) : null;
+
 // Health check
 app.get('/api/health', (req: Request, res: Response) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// AI Proxy Example (to demonstrate full-stack AI integration)
+app.post('/api/ai/mysterious-name', async (req: Request, res: Response) => {
+  if (!genAI) return res.status(500).json({ error: 'AI not configured' });
+  try {
+    // Correcting to use the models property like in the frontend
+    const response = await genAI.models.generateContent({
+      model: 'gemini-1.5-flash',
+      contents: "Generate a single mysterious RPG-style name.",
+    });
+    res.json({ name: response.text?.trim() || "Initiate" });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Test Supabase connection
@@ -27,11 +46,8 @@ app.get('/api/test-supabase', async (req: Request, res: Response) => {
 });
 
 // Start server
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(Number(PORT), '0.0.0.0', () => {
   console.log(`Server running on http://0.0.0.0:${PORT}`);
-  console.log('API endpoints:');
-  console.log(`  GET /api/health - Health check`);
-  console.log(`  GET /api/test-supabase - Test Supabase connection`);
 });
 
 export default app;

@@ -11,7 +11,7 @@ let cachedAI: GoogleGenAI | null = null;
 const getAI = () => {
   if (cachedAI) return cachedAI;
   
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "dummy";
+  const apiKey = import.meta.env.VITE_API_KEY || import.meta.env.VITE_GEMINI_API_KEY || "dummy";
   
   cachedAI = new GoogleGenAI({ apiKey });
   return cachedAI;

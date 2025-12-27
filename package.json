@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "server": "node server/index.ts",
+    "server": "tsx server/index.ts",
     "start": "npm run server"
   },
   "dependencies": {
@@ -21,6 +21,7 @@
     "p-retry": "^7.1.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "tsx": "^4.21.0",
     "zod": "^4.2.1",
     "zod-validation-error": "^5.0.0"
   },

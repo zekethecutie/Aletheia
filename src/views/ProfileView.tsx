@@ -2,11 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { User, Post } from '../types';
 import { Header } from '../components/Header';
-import { IconGrid, IconResonance } from '../components/Icons';
+import { IconGrid, IconResonance, IconBell } from '../components/Icons';
 import { supabase } from '../services/supabaseClient';
 import { PostDetailView } from './PostDetailView';
 import { SettingsModal } from '../components/modals/SettingsModal';
 import { apiClient } from '../services/apiClient';
+import { NotificationCenter } from '../components/NotificationCenter';
+import { Notification } from '../types';
 
 interface ProfileViewProps {
   targetUserId?: string; // If null, show current user
@@ -22,6 +24,30 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ targetUserId, onBack, 
   const [loading, setLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [activeTab, setActiveTab] = useState<'POSTS' | 'NOTIFS'>('POSTS');
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (!isOwnProfile) return;
+      try {
+        const { data } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', currentUser.id)
+          .order('created_at', { ascending: false });
+        if (data) setNotifications(data);
+      } catch (e) { console.error(e); }
+    };
+    if (activeTab === 'NOTIFS') fetchNotifications();
+  }, [activeTab, currentUser.id]);
+
+  const handleMarkRead = async (id: number) => {
+    try {
+      await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+    } catch (e) { console.error(e); }
+  };
 
   const handleToggleLike = async (post: Post, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -214,25 +240,46 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ targetUserId, onBack, 
            </div>
            {isOwnProfile ? (
                <div className="flex border-b border-slate-900 mb-4">
-                   <button onClick={() => {}} className="flex-1 py-3 border-b-2 border-gold text-white flex justify-center"><IconGrid className="w-5 h-5" /></button>
-                   <button onClick={() => {}} className="flex-1 py-3 text-slate-600 flex justify-center"><IconResonance className="w-5 h-5" /></button>
+                   <button onClick={() => setActiveTab('POSTS')} className={`flex-1 py-3 border-b-2 flex justify-center transition-colors ${activeTab === 'POSTS' ? 'border-gold text-white' : 'border-transparent text-slate-600'}`}><IconGrid className="w-5 h-5" /></button>
+                   <button onClick={() => setActiveTab('NOTIFS')} className={`flex-1 py-3 border-b-2 flex justify-center transition-colors ${activeTab === 'NOTIFS' ? 'border-gold text-white' : 'border-transparent text-slate-600'}`}><IconBell className="w-5 h-5" /></button>
                </div>
            ) : null}
-           <div className="grid grid-cols-3 gap-1">
-               {posts.map(post => (
-                   <div key={post.id} onClick={() => setSelectedPost(post)} className="aspect-square bg-slate-900 relative group cursor-pointer overflow-hidden border border-slate-950">
-                       <div className="absolute inset-0 p-2 flex items-center justify-center"><p className="text-[6px] text-slate-500 line-clamp-6 text-center leading-relaxed">{post.content}</p></div>
-                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                           <div className="flex flex-col items-center gap-2">
-                               <button onClick={(e) => handleToggleLike(post, e)} className={`flex items-center gap-1 transition-all ${post.likedBy.includes(currentUser.id) ? 'text-gold' : 'text-white'}`}>
-                                   <IconResonance className={`w-4 h-4 ${post.likedBy.includes(currentUser.id) ? 'drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]' : ''}`} /><span className="text-xs font-bold">{post.resonance}</span>
-                               </button>
-                           </div>
-                       </div>
-                   </div>
-               ))}
-               {posts.length === 0 && <div className="col-span-3 py-10 text-center text-slate-600 text-[10px] uppercase">No signals transmitted.</div>}
-           </div>
+
+           {activeTab === 'POSTS' ? (
+             <div className="grid grid-cols-3 gap-1">
+                 {posts.map(post => (
+                     <div key={post.id} onClick={() => setSelectedPost(post)} className="aspect-square bg-slate-900 relative group cursor-pointer overflow-hidden border border-slate-950">
+                         <div className="absolute inset-0 p-2 flex items-center justify-center"><p className="text-[6px] text-slate-500 line-clamp-6 text-center leading-relaxed">{post.content}</p></div>
+                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                             <div className="flex flex-col items-center gap-2">
+                                 <button onClick={(e) => handleToggleLike(post, e)} className={`flex items-center gap-1 transition-all ${post.likedBy.includes(currentUser.id) ? 'text-gold' : 'text-white'}`}>
+                                     <IconResonance className={`w-4 h-4 ${post.likedBy.includes(currentUser.id) ? 'drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]' : ''}`} /><span className="text-xs font-bold">{post.resonance}</span>
+                                 </button>
+                             </div>
+                         </div>
+                     </div>
+                 ))}
+                 {posts.length === 0 && <div className="col-span-3 py-10 text-center text-slate-600 text-[10px] uppercase">No signals transmitted.</div>}
+             </div>
+           ) : (
+             <div className="animate-fade-in">
+                {notifications.length === 0 ? (
+                  <div className="py-12 text-center text-slate-600 text-[10px] uppercase border border-dashed border-slate-800 rounded-xl">The void is silent.</div>
+                ) : (
+                  <div className="space-y-2">
+                    {notifications.map(n => (
+                      <div key={n.id} onClick={() => handleMarkRead(n.id)} className={`p-4 bg-slate-900/50 border border-white/5 rounded-xl flex gap-3 items-center ${!n.is_read ? 'border-blue-500/30 bg-blue-500/5' : ''}`}>
+                        <div className="w-2 h-2 rounded-full bg-blue-500 opacity-50"></div>
+                        <div className="flex-1">
+                          <p className="text-[10px] text-slate-300 uppercase font-black tracking-widest mb-0.5">{n.type}</p>
+                          <p className="text-xs text-white">{n.content || (n.type === 'RESONANCE' ? 'Your transmission found resonance.' : 'Frequency connection established.')}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+             </div>
+           )}
        </div>
        {showSettings && <SettingsModal user={currentUser} onClose={() => setShowSettings(false)} onUpdate={onUpdateUser} />}
     </div>

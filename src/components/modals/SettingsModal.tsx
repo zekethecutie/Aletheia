@@ -3,6 +3,7 @@ import { User } from '../../types';
 import { IconX, IconUser } from '../Icons';
 import { readFileAsDataURL } from '../../utils/helpers';
 import { supabase } from '../../services/supabaseClient';
+import { apiClient } from '../../services/apiClient';
 
 interface SettingsModalProps {
   user: User;
@@ -19,10 +20,26 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ user, onClose, onU
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, setter: (s: string) => void) => {
      if (e.target.files && e.target.files[0]) {
         try {
-           const base64 = await readFileAsDataURL(e.target.files[0]);
-           setter(base64);
-           // In a real Supabase implementation, you would upload to Storage bucket here
-        } catch(err) { console.error(err); }
+           const file = e.target.files[0];
+           const base64 = await readFileAsDataURL(file);
+           
+           // Upload to Supabase Storage
+           const fileName = `${user.id}/${Date.now()}-${file.name}`;
+           const { data, error } = await supabase.storage
+             .from('profiles')
+             .upload(fileName, file, { upsert: true });
+             
+           if (error) throw error;
+           
+           const { data: { publicUrl } } = supabase.storage
+             .from('profiles')
+             .getPublicUrl(fileName);
+             
+           setter(publicUrl);
+        } catch(err) { 
+           console.error('File upload error:', err);
+           alert('Failed to upload image to the Spire storage.');
+        }
      }
   };
 

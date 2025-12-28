@@ -48,6 +48,24 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
   const [generatingQuest, setGeneratingQuest] = useState(false);
   const [quests, setQuests] = useState<any[]>([]);
   const [timer, setTimer] = useState(Date.now());
+  const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (tab === 'GOALS' && user.goals?.length > 0) {
+        try {
+          const res = await fetch('/api/ai/advisor', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'Scholar', message: `Analyze these goals and suggest 3 focus areas for development: ${user.goals.join(', ')}`, userId: user.id })
+          });
+          const data = await res.json();
+          setAiSuggestions(data.text.split('\n').filter((s: string) => s.trim()));
+        } catch (e) { console.error(e); }
+      }
+    };
+    fetchSuggestions();
+  }, [tab, user.goals]);
 
   useEffect(() => {
     const interval = setInterval(() => setTimer(Date.now()), 1000);
@@ -230,11 +248,11 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
          </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-2 px-4 mb-8">
+      <div className="flex gap-1 px-4 mb-8">
          {['QUESTS', 'GOALS', 'ACHIEVEMENTS', 'STATS'].map(t => {
              const tabValue = t === 'STATS' ? 'STATUS' : (t === 'QUESTS' ? 'QUESTS' : (t === 'GOALS' ? 'GOALS' : 'INVENTORY'));
              return (
-               <button key={t} onClick={() => setTab(tabValue as any)} className={`py-2 px-2 rounded-lg text-[9px] font-display font-black uppercase tracking-[0.1em] transition-all border ${tab === tabValue ? 'bg-slate-800 text-white border-white/20' : 'bg-transparent text-slate-600 border-transparent hover:text-slate-400'}`}>
+               <button key={t} onClick={() => setTab(tabValue as any)} className={`flex-1 py-2 px-1 rounded-lg text-[9px] font-display font-black uppercase tracking-[0.1em] transition-all border ${tab === tabValue ? 'bg-slate-800 text-white border-white/20' : 'bg-transparent text-slate-600 border-transparent hover:text-slate-400'}`}>
                   {t}
                </button>
              );
@@ -373,10 +391,24 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                           </div>
                           <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest mb-4 opacity-70">Long-term Trajectory</p>
                           <div className="space-y-4">
-                              {((user as any).goals || []).length > 0 ? ((user as any).goals as string[]).map((g, i) => (
+                          {((user as any).goals || []).length > 0 ? ((user as any).goals as string[]).map((g, i) => (
                                   <div key={i} className="flex items-center gap-3 group">
                                       <div className="w-1 h-4 bg-indigo-500/50"></div>
-                                      <p className="text-sm text-slate-200 italic flex-1">"{g}"</p>
+                                      <div className="flex-1 flex items-center gap-2">
+                                        <input 
+                                          className="text-sm text-slate-200 italic bg-transparent border-none outline-none flex-1 focus:ring-0"
+                                          defaultValue={g}
+                                          onBlur={async (e) => {
+                                            const newVal = e.target.value.trim();
+                                            if (newVal && newVal !== g) {
+                                              const newGoals = [...(user.goals || [])];
+                                              newGoals[i] = newVal;
+                                              await apiClient.updateProfile(user.id, { goals: newGoals });
+                                              onUpdateUser({ ...user, goals: newGoals });
+                                            }
+                                          }}
+                                        />
+                                      </div>
                                       <button onClick={async () => {
                                         const newGoals = ((user as any).goals || []).filter((_: string, idx: number) => idx !== i);
                                         await apiClient.updateProfile(user.id, { goals: newGoals });

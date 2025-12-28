@@ -200,6 +200,7 @@ app.post('/api/ai/quest/generate', async (req: Request, res: Response) => {
     2. UTILITY: Each quest must directly contribute to the user's evolution path or lifestyle betterment.
     3. DIFFICULTY: E (Easy), D, C, B, A, S (Supreme). Scale with level.
     4. REWARDS: XP and stat boosts must reflect the effort.
+    5. VARIETY: Ensure a mix of physical, intellectual, and spiritual tasks.
     
     Return JSON ONLY: { "quests": [{ "text": "string", "difficulty": "E-S", "xp_reward": number, "stat_reward": { "physical": number, "intelligence": number, "spiritual": number, "social": number, "wealth": number }, "duration_hours": number }] }`;
     

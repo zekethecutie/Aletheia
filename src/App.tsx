@@ -111,19 +111,7 @@ export default function App() {
       return (
         <div className="font-sans text-slate-200 bg-void min-h-screen selection:bg-gold selection:text-black safe-pb">
           <div className="fixed top-6 right-6 z-50">
-            <button 
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-3 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl hover:border-blue-500/50 transition-all group"
-            >
-              <svg className="w-5 h-5 text-slate-400 group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[8px] font-black flex items-center justify-center rounded-full border-2 border-void">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
+            {/* Notification button removed, moved to Identity page tab */}
           </div>
 
           {showNotifications && (

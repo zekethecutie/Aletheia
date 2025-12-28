@@ -28,8 +28,6 @@ export const IntroView: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
       className="h-screen w-full bg-void flex flex-col items-center justify-center p-8 text-center cursor-pointer relative overflow-hidden" 
       onClick={onFinish}
     >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-900/20 via-black to-black opacity-50 animate-pulse-slow"></div>
-
       {phase === 0 && (
         <h1 className="text-2xl md:text-4xl font-serif text-slate-300 animate-blur-in leading-relaxed">
           The world is <span className="text-white font-bold">deafening</span>.

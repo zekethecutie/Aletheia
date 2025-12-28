@@ -93,12 +93,12 @@ export const apiClient = {
     }
   },
 
-  async calculateFeat(feat: string) {
+  async calculateFeat(text: string, userId: string, stats: any) {
     try {
-      const response = await fetch(`${API_URL}/ai/feat`, {
+      const response = await fetch(`${API_URL}/achievements/calculate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ feat })
+        body: JSON.stringify({ text, userId, stats })
       });
       return handleResponse(response);
     } catch (error: any) {
@@ -155,12 +155,12 @@ export const apiClient = {
     }
   },
 
-  async generateQuests(userId: string, stats: any, recentAchievements?: string) {
+  async generateQuests(userId: string, stats: any, goals: string[] = []) {
     try {
       const response = await fetch(`${API_URL}/ai/quest/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, stats, recentAchievements })
+        body: JSON.stringify({ userId, stats, goals })
       });
       return handleResponse(response);
     } catch (error: any) {

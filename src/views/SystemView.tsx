@@ -415,25 +415,3 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
     </div>
   );
 };
-
-          {tab === 'INVENTORY' && (
-              <div className="animate-fade-in space-y-6">
-                  <div>
-                    <h3 className="text-xs font-bold text-slate-500 uppercase mb-4 tracking-widest flex items-center gap-2"><IconLock className="w-3 h-3" /> Mental Artifacts</h3>
-                    <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                        {user.inventory && user.inventory.length > 0 ? (
-                            user.inventory.map((item, i) => <ArtifactCard key={item.id || i} artifact={item} />)
-                        ) : (
-                            <div className="col-span-3 flex flex-col items-center justify-center py-12 border border-dashed border-slate-800 text-slate-600 text-[10px] uppercase rounded-lg">
-                                <IconMirror className="w-6 h-6 mb-2 text-slate-700" /><span className="mt-1">The void is empty. Enter Mirror to manifest self.</span>
-                            </div>
-                        )}
-                    </div>
-                  </div>
-              </div>
-          )}
-      </div>
-      {showSettings && <SettingsModal user={user} onClose={() => setShowSettings(false)} onUpdate={onUpdateUser} />}
-    </div>
-  );
-};

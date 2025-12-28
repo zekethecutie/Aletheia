@@ -607,14 +607,18 @@ app.post('/api/achievements/calculate', async (req: Request, res: Response) => {
 app.post('/api/ai/mirror/evaluate', async (req: Request, res: Response) => {
   try {
     const { situation, choice } = req.body;
+    const rewardType = Math.random() < 0.6 ? 'ARTIFACT' : 'STAT_ONLY';
+    const rewardPrompt = rewardType === 'ARTIFACT' 
+      ? '"reward": { "name": "string", "description": "string", "icon": "emoji", "rarity": "Common|Rare|Epic|Relic" }' 
+      : '"reward": null';
     const prompt = `Evaluate this choice in the Mirror: 
     Situation: ${situation}
     Choice: ${choice}
-    Return JSON ONLY: { "outcome": "poetic description", "statChange": { "statName": number }, "reward": { "name": "string", "description": "string", "icon": "emoji", "rarity": "Common|Rare|Epic|Relic" } }`;
+    Return JSON ONLY: { "outcome": "poetic description", "statChange": { "statName": number }, "rewardType": "${rewardType}", ${rewardPrompt} }`;
     const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
     const text = await response.text();
     const jsonMatch = text.match(/\{.*\}/s);
-    res.json(jsonMatch ? JSON.parse(jsonMatch[0]) : { outcome: "The mirror ripples.", statChange: { spiritual: 1 } });
+    res.json(jsonMatch ? JSON.parse(jsonMatch[0]) : { outcome: "The mirror ripples.", statChange: { spiritual: 1 }, rewardType: 'STAT_ONLY', reward: null });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

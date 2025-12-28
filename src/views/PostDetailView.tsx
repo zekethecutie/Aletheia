@@ -158,15 +158,15 @@ export const PostDetailView: React.FC<{ post: Post; onBack: () => void; onUpdate
           </p>
 
           <div className="flex items-center gap-8 border-t border-white/10 pt-6">
-            <div onClick={handleToggleLike} className={`flex items-center gap-3 transition-all cursor-pointer group/stat ${isLiked ? 'text-blue-400' : 'text-slate-500 hover:text-white'}`}>
-              <div className={`p-2 rounded-xl border border-white/10 ${isLiked ? 'bg-blue-500/10 border-blue-500/30' : 'bg-white/5'}`}>
+            <button onClick={handleToggleLike} className={`flex items-center gap-3 transition-all cursor-pointer group/stat ${isLiked ? 'text-blue-400' : 'text-slate-500 hover:text-white'} hover:scale-105`}>
+              <div className={`p-2 rounded-xl border border-white/10 ${isLiked ? 'bg-blue-500/10 border-blue-500/30' : 'bg-white/5'} group-hover/stat:border-blue-400 transition-all`}>
                 <IconResonance className={`w-5 h-5 ${isLiked ? 'drop-shadow-[0_0_15px_rgba(96,165,250,0.8)]' : ''}`} />
               </div>
               <div>
                 <span className="text-xs font-black block">{post.resonance}</span>
                 <span className="text-[7px] uppercase font-black tracking-widest opacity-50">Resonance</span>
               </div>
-            </div>
+            </button>
             <div className="flex items-center gap-3 text-slate-500 group/stat">
               <div className="p-2 rounded-xl border border-white/10 bg-white/5">
                 <IconMessage className="w-5 h-5" />

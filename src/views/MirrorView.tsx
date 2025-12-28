@@ -63,7 +63,8 @@ export const MirrorView: React.FC<MirrorViewProps> = ({ user, onUpdateUser }) =>
         }
         
         let newInventory = user.inventory ? [...user.inventory] : [];
-        if (result.reward) {
+        // Reward type: either artifact OR stat gains
+        if (result.reward && result.rewardType !== 'STAT_ONLY') {
           const artifact: Artifact = {
             ...result.reward,
             id: Date.now().toString(),
@@ -137,7 +138,19 @@ export const MirrorView: React.FC<MirrorViewProps> = ({ user, onUpdateUser }) =>
                 <div className="w-full max-w-md animate-fade-in text-center">
                     <p className="text-white font-serif text-lg leading-relaxed border-l-2 border-indigo-500 pl-6 text-left italic bg-indigo-900/10 py-4 mb-8">{gameResult.outcome}</p>
                     
-                    {gameResult.reward && (
+                    {gameResult.rewardType === 'STAT_ONLY' ? (
+                        <div className="mb-8 animate-slide-up">
+                            <p className="text-xs text-purple-400 uppercase font-bold tracking-widest mb-4">Stat Gain Manifested</p>
+                            <div className="w-64 mx-auto bg-purple-950/20 border-2 border-purple-500 shadow-[0_0_30px_rgba(168,85,247,0.5)] p-6 rounded-lg">
+                                <p className="text-white font-serif italic mb-4">Your essence evolved through experience</p>
+                                {gameResult.statChange && Object.entries(gameResult.statChange).map(([stat, value]) => (
+                                    <div key={stat} className="text-purple-300 text-xs uppercase tracking-widest mb-2">
+                                        +{value} {stat.charAt(0).toUpperCase() + stat.slice(1)}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ) : gameResult.reward && (
                         <div className="mb-8 animate-slide-up">
                             <p className="text-xs text-indigo-400 uppercase font-bold tracking-widest mb-4">Artifact Materialized</p>
                             <div className="w-64 h-64 mx-auto bg-black border-2 border-indigo-500 shadow-[0_0_30px_rgba(99,102,241,0.5)] relative overflow-hidden">

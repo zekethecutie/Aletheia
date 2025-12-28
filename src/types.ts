@@ -145,12 +145,12 @@ export interface MirrorScenario {
   situation: string;
   choiceA: string;
   choiceB: string;
-  context: string;
-  testedStat: keyof UserStats;
+  testedStat: string;
 }
 
 export interface MirrorResult {
   outcome: string;
-  statChange: Partial<UserStats>;
+  statChange?: Record<string, number>;
+  rewardType?: 'ARTIFACT' | 'STAT_ONLY';
   reward?: Artifact;
 }

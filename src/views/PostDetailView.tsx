@@ -11,8 +11,28 @@ export const PostDetailView: React.FC<{ post: Post; onBack: () => void; onUpdate
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(false);
   const currentUser = loadUser();
-
   const isLiked = currentUser && post.likedBy?.includes(currentUser.id);
+
+  const handleAddComment = async () => {
+    if (!newComment.trim() || loading) return;
+    setLoading(true);
+    try {
+      const res = await apiClient.createComment(post.id, currentUser!.id, newComment);
+      if (res) {
+        setNewComment('');
+        onUpdate();
+      }
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
+  };
+
+  const handleToggleLike = async () => {
+    if (!currentUser) return;
+    try {
+      await apiClient.toggleLikePost(parseInt(post.id), currentUser.id);
+      onUpdate();
+    } catch (e) { console.error(e); }
+  };
 
   return (
     <div className="min-h-screen bg-void pb-24 animate-fade-in relative overflow-hidden font-sans">
@@ -47,7 +67,7 @@ export const PostDetailView: React.FC<{ post: Post; onBack: () => void; onUpdate
           </p>
 
           <div className="flex items-center gap-12 border-t border-white/10 pt-10">
-            <div className={`flex items-center gap-4 transition-all cursor-pointer group/stat ${isLiked ? 'text-indigo-400' : 'text-slate-500 hover:text-white'}`}>
+            <div onClick={handleToggleLike} className={`flex items-center gap-4 transition-all cursor-pointer group/stat ${isLiked ? 'text-indigo-400' : 'text-slate-500 hover:text-white'}`}>
               <div className={`p-3 rounded-xl border border-white/10 ${isLiked ? 'bg-indigo-500/10 border-indigo-500/30' : 'bg-white/5'}`}>
                 <IconResonance className={`w-7 h-7 ${isLiked ? 'drop-shadow-[0_0_15px_rgba(99,102,241,0.8)]' : ''}`} />
               </div>
@@ -78,6 +98,7 @@ export const PostDetailView: React.FC<{ post: Post; onBack: () => void; onUpdate
                placeholder="Transmit your resonance fragment..."
              />
              <button 
+               onClick={handleAddComment}
                disabled={!newComment.trim() || loading}
                className="absolute bottom-4 right-4 bg-white text-black px-6 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-indigo-500 hover:text-white transition-all disabled:opacity-30 flex items-center gap-2"
              >

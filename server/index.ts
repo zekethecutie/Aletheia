@@ -359,13 +359,40 @@ app.post('/api/ai/image/artifact', async (req: Request, res: Response) => {
 app.post('/api/ai/mirror/scenario', async (req: Request, res: Response) => {
   try {
     const { stats } = req.body;
-    const prompt = `You are the Mirror of Aletheia. Generate a moral or psychological dilemma for a ${stats.class}. 
-    It must test their ${['intelligence', 'physical', 'spiritual', 'social', 'wealth'][Math.floor(Math.random() * 5)]}.
+    const prompt = `You are the Mirror of Aletheia. Generate a profound, wise moral dilemma representing real-world circumstances and compromises for a ${stats.class}. 
+    PROTOCOL:
+    1. No fantasy roleplay. Scenarios must be realistic, grounded in modern life, ethics, and career/social dynamics.
+    2. Focus on true compromises and professional or personal integrity.
+    3. It must test their ${['intelligence', 'physical', 'spiritual', 'social', 'wealth'][Math.floor(Math.random() * 5)]}.
     Return JSON ONLY: { "situation": "string", "choiceA": "string", "choiceB": "string", "testedStat": "string" }`;
     const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
     const text = await response.text();
     const jsonMatch = text.match(/\{.*\}/s);
-    res.json(jsonMatch ? JSON.parse(jsonMatch[0]) : { situation: "You see a reflection of your potential.", choiceA: "Embrace it", choiceB: "Question it", testedStat: "spiritual" });
+    res.json(jsonMatch ? JSON.parse(jsonMatch[0]) : { situation: "You are offered a promotion that requires compromising your mentor's legacy.", choiceA: "Accept for the greater influence", choiceB: "Decline to honor the principle", testedStat: "social" });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update achievement log logic
+app.post('/api/achievements/calculate', async (req: Request, res: Response) => {
+  try {
+    const { text, userId } = req.body;
+    const prompt = `Analyze this real-world feat: "${text}". 
+    Evaluate its difficulty and impact on character stats.
+    Return JSON: { "xpGained": number, "statsIncreased": { "physical": number, ... }, "systemMessage": "string" }`;
+    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
+    const resText = await response.text();
+    const jsonMatch = resText.match(/\{.*\}/s);
+    if (jsonMatch) {
+      const result = JSON.parse(jsonMatch[0]);
+      // Save achievement to DB
+      await query('INSERT INTO achievements (user_id, title, description, icon) VALUES ($1, $2, $3, $4)', 
+        [userId, "Feat Manifested", text, "🔥"]);
+      res.json(result);
+    } else {
+      res.status(500).json({ error: 'Failed to evaluate' });
+    }
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

@@ -25,9 +25,10 @@ const generateBackendID = (username: string) => {
 };
 
 export const AuthChoiceView: React.FC<{ onChoice: (c: 'CREATE' | 'EMBARK') => void }> = ({ onChoice }) => (
-  <div className="h-screen w-full bg-void flex flex-col items-center justify-center p-8 animate-fade-in relative overflow-hidden">
-    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-gold/5 via-black to-black opacity-40"></div>
-    <div className="z-10 w-full max-w-sm flex flex-col items-center">
+    <div className="h-screen w-full bg-void flex flex-col items-center justify-center p-8 animate-fade-in relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-gold/10 via-black to-black"></div>
+        <div className="absolute inset-0 bg-black/40"></div>
+        <div className="z-10 w-full max-w-sm flex flex-col items-center">
       <div className="text-center mb-16 animate-blur-in">
          <h1 className="text-7xl font-black text-white tracking-tighter uppercase mb-2 drop-shadow-[0_0_30px_rgba(255,255,255,0.1)] font-sans">Aletheia</h1>
          <div className="flex items-center justify-center gap-3">
@@ -256,7 +257,7 @@ export const CreateIdentityView: React.FC<{ onComplete: (u: User) => void; onBac
          <div className="flex gap-8 items-end mb-4">
             <div className="relative group p-4">
                 <div className="absolute inset-0 bg-gold/30 blur-[60px] rounded-full animate-pulse"></div>
-                <div className="w-32 h-36 bg-gradient-to-br from-gold/40 via-gold/10 to-transparent rounded-xl p-0.5 shadow-[0_10px_40px_rgba(255,149,0,0.3)] relative z-10">
+                <div className="w-32 h-36 bg-gradient-to-br from-gold/40 via-gold/10 to-transparent rounded-xl p-0.5 shadow-[0_10px_40px_rgba(255,149,0,0.3)] relative z-10 overflow-visible">
                     <div className="w-full h-full bg-black rounded-xl relative">
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-gold/10 via-transparent to-transparent opacity-50"></div>
                         <div className="absolute inset-0 flex items-center justify-center p-2">

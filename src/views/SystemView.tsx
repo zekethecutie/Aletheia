@@ -44,8 +44,17 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
   const [featInput, setFeatInput] = useState('');
   const [calculating, setCalculating] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [generatingQuest, setGeneratingQuest] = useState(false);
-  const [quests, setQuests] = useState<any[]>([]);
+  const [goalInput, setGoalInput] = useState('');
+
+  const handleAddGoal = async () => {
+    if (!goalInput.trim()) return;
+    const newGoals = [...(user.goals || []), goalInput];
+    try {
+      await apiClient.updateProfile(user.id, { goals: newGoals });
+      onUpdateUser({ ...user, goals: newGoals });
+      setGoalInput('');
+    } catch (e) { console.error(e); }
+  };
 
   useEffect(() => {
     const fetchQuests = async () => {
@@ -274,7 +283,7 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                           const minsLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
 
                           return (
-                              <div key={t.id} onClick={() => handleCompleteQuest(t)} className={`glass-card p-6 rounded-xl flex items-center justify-between cursor-pointer transition-all relative overflow-hidden group ${t.completed ? 'opacity-40 border-green-500/30' : 'hover:border-gold/50'}`}>
+                              <div key={t.id} className={`glass-card p-6 rounded-xl flex items-center justify-between transition-all relative overflow-hidden group ${t.completed ? 'opacity-40 border-green-500/30' : 'hover:border-gold/50'}`}>
                                   <div className="flex items-center gap-6">
                                       <div className={`w-10 h-10 glass-card rounded-lg flex items-center justify-center border-white/10 ${t.completed ? 'bg-green-500/10 border-green-500/30' : 'group-hover:border-gold/30'}`}>
                                           {t.completed ? <div className="w-3 h-3 bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div> : <div className="w-5 h-5 border-2 border-slate-500 rounded-full flex items-center justify-center group-hover:border-gold/50 transition-colors"><div className="w-2 h-2 border border-slate-500 rounded-full group-hover:border-gold/50"></div></div>}
@@ -290,6 +299,14 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                                       </div>
                                   </div>
                                   <div className="flex items-center gap-4">
+                                      {!t.completed && (
+                                          <button 
+                                            onClick={() => handleCompleteQuest(t)}
+                                            className="px-4 py-2 bg-white text-black font-black text-[10px] uppercase tracking-widest hover:bg-gold transition-colors rounded-lg shadow-[0_0_15px_rgba(255,255,255,0.1)]"
+                                          >
+                                            Check
+                                          </button>
+                                      )}
                                       <div className="text-right">
                                           <p className="text-[10px] font-mono text-slate-400 uppercase">+{t.xp_reward} EXP</p>
                                           <div className="w-16 h-[2px] bg-white/10 mt-1">
@@ -308,7 +325,16 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                           <span className="w-2 h-2 bg-indigo-500 rounded-full"></span>
                           Sacred Goals
                       </h3>
-                      <div className="glass-card p-6 rounded-2xl border-indigo-500/20 bg-indigo-500/5">
+                      <div className="glass-card p-6 rounded-2xl border-indigo-500/20 bg-indigo-500/5 mb-6">
+                          <div className="flex gap-2 mb-4">
+                              <input 
+                                value={goalInput}
+                                onChange={e => setGoalInput(e.target.value)}
+                                className="flex-1 bg-black/40 border border-white/10 p-3 text-white text-[10px] outline-none focus:border-indigo-500 transition-all uppercase tracking-widest"
+                                placeholder="Define your trajectory..."
+                              />
+                              <button onClick={handleAddGoal} className="px-4 bg-indigo-500 text-white font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-colors">Add</button>
+                          </div>
                           <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest mb-4 opacity-70">Long-term Trajectory</p>
                           <div className="space-y-4">
                               {((user as any).goals || []).length > 0 ? ((user as any).goals as string[]).map((g, i) => (
@@ -321,6 +347,13 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                               )}
                           </div>
                       </div>
+                      
+                      <button 
+                        onClick={onLogout}
+                        className="w-full py-4 border border-red-900/30 text-red-500/70 text-[10px] font-black uppercase tracking-[0.4em] hover:bg-red-950/20 hover:text-red-400 transition-all rounded-xl"
+                      >
+                        Disconnect Signal
+                      </button>
                   </div>
               </div>
           )}

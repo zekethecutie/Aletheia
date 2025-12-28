@@ -272,16 +272,66 @@ export const apiClient = {
     }
   },
 
-  async createComment(post_id: string, author_id: string, content: string) {
+  async createComment(post_id: string, author_id: string, content: string, parent_id?: number) {
     try {
       const response = await fetch(`${API_URL}/posts/${post_id}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ author_id, content })
+        body: JSON.stringify({ author_id, content, parent_id })
       });
       return handleResponse(response);
     } catch (error: any) {
       console.error('Create comment error:', error);
+      throw error;
+    }
+  },
+
+  async getNotifications(userId: string) {
+    try {
+      const response = await fetch(`${API_URL}/notifications/${userId}`);
+      return handleResponse(response);
+    } catch (error: any) {
+      console.error('Get notifications error:', error);
+      throw error;
+    }
+  },
+
+  async markNotificationRead(id: number) {
+    try {
+      const response = await fetch(`${API_URL}/notifications/${id}/read`, {
+        method: 'POST'
+      });
+      return handleResponse(response);
+    } catch (error: any) {
+      console.error('Mark notification read error:', error);
+      throw error;
+    }
+  },
+
+  async reportPost(reporterId: string, targetUserId: string, targetPostId: number, reason: string) {
+    try {
+      const response = await fetch(`${API_URL}/reports`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reporterId, targetUserId, targetPostId, reason })
+      });
+      return handleResponse(response);
+    } catch (error: any) {
+      console.error('Report post error:', error);
+      throw error;
+    }
+  },
+
+  async followUser(followerId: string, targetId: string) {
+    try {
+      const response = await fetch(`${API_URL}/profile/${targetId}/follow`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ followerId })
+      });
+      return handleResponse(response);
+    } catch (error: any) {
+      console.error('Follow user error:', error);
       throw error;
     }
   }

@@ -64,41 +64,50 @@ app.post('/api/auth/register', async (req: Request, res: Response) => {
 });
 
 // Login
+// Profile detail with reports/follow count
+app.get('/api/profile/:id/detail', async (req: Request, res: Response) => {
+  try {
+    const profile = await getUserById(req.params.id);
+    if (!profile) return res.status(404).json({ error: 'Profile not found' });
+    
+    const followers = await query('SELECT COUNT(*) FROM profiles WHERE $1 = ANY(following)', [req.params.id]);
+    res.json({ ...profile, followersCount: parseInt(followers.rows[0].count) });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/auth/login', async (req: Request, res: Response) => {
   try {
     const { username, password } = req.body;
-
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Username and password required' });
-    }
+    if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
 
     const user = await getUserByUsername(username);
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
+    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
 
     const valid = await verifyPassword(password, user.password_hash);
-    if (!valid) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
+    if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
     const profile = await getUserById(user.id);
+    
+    // Check moderation status
+    if (profile.is_deactivated && profile.deactivated_until && new Date() < new Date(profile.deactivated_until)) {
+      return res.status(403).json({ error: `Signal suppressed. Deactivated until ${new Date(profile.deactivated_until).toLocaleString()}` });
+    }
+    if (profile.pending_deletion_at && new Date() < new Date(profile.pending_deletion_at)) {
+      return res.status(403).json({ error: `Identity scheduled for eradication. Final sunset at ${new Date(profile.pending_deletion_at).toLocaleString()}` });
+    }
+
     res.json({
       id: user.id,
       username: user.username,
       displayName: profile.display_name || user.username,
       avatarUrl: profile.avatar_url,
       coverUrl: profile.cover_url,
-      manifesto: profile.manifesto,
-      originStory: profile.origin_story,
       stats: profile.stats,
-      tasks: profile.tasks,
-      inventory: profile.inventory,
-      entropy: profile.entropy,
-      following: profile.following
+      following: profile.following || []
     });
   } catch (error: any) {
-    console.error('Login error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -453,7 +462,7 @@ app.post('/api/reports', async (req: Request, res: Response) => {
     Return JSON: { "action": "WARN|BAN|DELETE|NONE", "verdict": "Poetic explanation" }`;
 
     const aiRes = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
-    const aiData = await aiRes.json();
+    const aiData = await aiRes.json() as any;
     const action = aiData.action || 'NONE';
     const verdict = aiData.verdict || "The void found no shadow here.";
 

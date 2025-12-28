@@ -47,7 +47,7 @@ export const getUserByUsername = async (username: string) => {
 
 export const getUserById = async (id: string) => {
   const result = await query(
-    'SELECT id, username, display_name, avatar_url, cover_url, manifesto, origin_story, stats, tasks, inventory, entropy, following FROM profiles WHERE id = $1',
+    'SELECT id, username, display_name, avatar_url, cover_url, manifesto, origin_story, stats, tasks, inventory, entropy, following, is_deactivated, deactivated_until, pending_deletion_at FROM profiles WHERE id = $1',
     [id]
   );
   return result.rows[0];

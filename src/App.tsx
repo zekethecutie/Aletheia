@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { ViewState, User } from './types';
+import { ViewState, User, Notification } from './types';
 import { NavBar } from './components/NavBar';
 import { loadUser, saveUser, clearUser } from './utils/helpers';
 import { apiClient } from './services/apiClient';
+import { NotificationCenter } from './components/NotificationCenter';
 
 import { IntroView } from './views/IntroView';
 import { AuthChoiceView, CreateIdentityView, EmbarkView } from './views/AuthView';
@@ -17,6 +18,8 @@ import { ProfileView } from './views/ProfileView';
 export default function App() {
   const [view, setView] = useState<ViewState>(ViewState.INTRO);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const initSession = async () => {
     try {
@@ -50,6 +53,20 @@ export default function App() {
 
   useEffect(() => { initSession(); }, []);
 
+  useEffect(() => {
+    if (currentUser) {
+      const fetchNotifs = async () => {
+        try {
+          const data = await apiClient.getNotifications(currentUser.id);
+          setNotifications(data);
+        } catch (e) { console.error(e); }
+      };
+      fetchNotifs();
+      const interval = setInterval(fetchNotifs, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [currentUser]);
+
   const handleUpdateUser = async (updatedUser: User) => {
     setCurrentUser(updatedUser);
     saveUser(updatedUser);
@@ -81,6 +98,8 @@ export default function App() {
     setView(ViewState.AUTH_CHOICE);
   };
 
+  const unreadCount = notifications.filter(n => !n.is_read).length;
+
   switch (view) {
     case ViewState.INTRO: return <IntroView onFinish={() => setView(ViewState.AUTH_CHOICE)} />;
     case ViewState.AUTH_CHOICE: return <AuthChoiceView onChoice={c => setView(c === 'CREATE' ? ViewState.CREATE_IDENTITY : ViewState.EMBARK)} />;
@@ -91,6 +110,33 @@ export default function App() {
       if (!currentUser) return <div className="h-screen bg-void flex items-center justify-center animate-pulse text-gold uppercase font-black">Syncing...</div>;
       return (
         <div className="font-sans text-slate-200 bg-void min-h-screen selection:bg-gold selection:text-black safe-pb">
+          <div className="fixed top-6 right-6 z-50">
+            <button 
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="relative p-3 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl hover:border-blue-500/50 transition-all group"
+            >
+              <svg className="w-5 h-5 text-slate-400 group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[8px] font-black flex items-center justify-center rounded-full border-2 border-void">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+          </div>
+
+          {showNotifications && (
+            <NotificationCenter 
+              notifications={notifications} 
+              onClose={() => setShowNotifications(false)} 
+              onMarkRead={async (id) => {
+                await apiClient.markNotificationRead(id);
+                setNotifications(notifications.map(n => n.id === id ? { ...n, is_read: true } : n));
+              }}
+            />
+          )}
+
           {view === ViewState.SANCTUM && <SanctumView />}
           {view === ViewState.EXPLORE && <ExploreView />}
           {view === ViewState.HIERARCHY && <HierarchyView />}

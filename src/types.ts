@@ -72,6 +72,19 @@ export interface User {
   goals?: string[];
 }
 
+export interface Notification {
+  id: number;
+  user_id: string;
+  type: 'RESONANCE' | 'FOLLOW' | 'SYSTEM_WARN' | 'SYSTEM_BAN';
+  sender_id?: string;
+  sender_username?: string;
+  sender_avatar?: string;
+  post_id?: number;
+  content?: string;
+  is_read: boolean;
+  created_at: string;
+}
+
 export interface Comment {
   id: string;
   authorId: string;
@@ -79,6 +92,7 @@ export interface Comment {
   authorAvatar?: string;
   content: string;
   timestamp: number;
+  parent_id?: number;
   replies: Comment[];
 }
 

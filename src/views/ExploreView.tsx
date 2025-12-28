@@ -19,18 +19,30 @@ export const ExploreView: React.FC = () => {
     setSearching(true);
     try {
       const allPosts = await apiClient.getPosts();
-      const filtered = allPosts.filter((p: any) => 
+      const postResults = allPosts.filter((p: any) => 
         p.content.toLowerCase().includes(query.toLowerCase()) || 
         p.username?.toLowerCase().includes(query.toLowerCase())
-      );
-      setResults(filtered.map((p: any) => ({
+      ).map((p: any) => ({
         type: 'POST',
         title: p.username || 'The Council',
         subtitle: p.author_class || 'System',
         content: p.content,
-        id: p.id.toString(),
+        id: p.author_id.toString(), // author_id for profile viewing
         avatar: p.avatar_url
-      })));
+      }));
+
+      // Also search for users
+      const usersRes = await fetch(`/api/search/users?q=${encodeURIComponent(query)}`);
+      const usersData = await usersRes.json();
+      const userResults = usersData.map((u: any) => ({
+        type: 'USER',
+        title: u.username,
+        subtitle: u.stats?.class || 'Seeker',
+        id: u.id,
+        avatar: u.avatar_url
+      }));
+
+      setResults([...userResults, ...postResults]);
     } catch (error) {
       console.error("Search failed:", error);
     }
@@ -50,6 +62,10 @@ export const ExploreView: React.FC = () => {
   };
 
   useEffect(() => { 
+    (window as any).onViewProfile = (id: string) => {
+        (window as any).profileToView = id;
+        (window as any).setView?.(ViewState.VIEW_PROFILE);
+    };
     if (tab === 'HIERARCHY') fetchLeaderboard();
   }, [tab]);
 
@@ -78,7 +94,7 @@ export const ExploreView: React.FC = () => {
                          <div className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 overflow-hidden">
                              {res.avatar ? <img src={res.avatar} className="w-full h-full object-cover" /> : res.type === 'USER' ? <IconUser className="w-5 h-5" /> : <IconScroll className="w-5 h-5" />}
                          </div>
-                         <div className="flex-1" onClick={() => (window as any).setViewProfileId?.(res.id)}>
+                         <div className="flex-1" onClick={() => (window as any).onViewProfile?.(res.id)}>
                              <h3 className="text-white font-black text-sm uppercase group-hover:text-gold transition-colors">{res.title}</h3>
                              <p className="text-gold text-[10px] uppercase font-bold tracking-widest mt-1">{res.subtitle}</p>
                              {res.content && <p className="text-slate-400 text-xs font-serif mt-3 line-clamp-2 italic">"{res.content}"</p>}

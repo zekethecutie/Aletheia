@@ -10,7 +10,8 @@ export enum ViewState {
   MIRROR = 'MIRROR',
   ORACLE = 'ORACLE',
   PROFILE = 'PROFILE',
-  SYSTEM = 'SYSTEM'
+  SYSTEM = 'SYSTEM',
+  VIEW_PROFILE = 'VIEW_PROFILE'
 }
 
 export interface UserStats {

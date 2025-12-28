@@ -55,23 +55,28 @@ export const MirrorView: React.FC<MirrorViewProps> = ({ user, onUpdateUser }) =>
         setGameResult(result);
         setGameMode('RESULT');
 
-        let newStats = { ...user.stats };
+        const newStats = { ...user.stats };
         if (result.statChange) {
            Object.entries(result.statChange).forEach(([k, v]) => {
               if (k in newStats) (newStats as any)[k] += v;
            });
         }
         
-        let newInventory = user.inventory ? [...user.inventory] : [];
-        // Reward type: either artifact OR stat gains
-        if (result.reward && result.rewardType !== 'STAT_ONLY') {
-          const artifact: Artifact = {
+        const newInventory = user.inventory ? [...user.inventory] : [];
+        if (result.rewardType === 'ARTIFACT' && result.reward) {
+          const artifact = {
             ...result.reward,
             id: Date.now().toString(),
             dateAcquired: Date.now()
-          } as Artifact;
+          };
           newInventory.push(artifact);
         }
+
+        // Apply changes to actual profile
+        await apiClient.updateProfile(user.id, { 
+          stats: newStats, 
+          inventory: newInventory 
+        });
 
         onUpdateUser({ ...user, stats: newStats, inventory: newInventory });
       } catch (error) {

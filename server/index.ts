@@ -575,7 +575,10 @@ app.post('/api/ai/mirror/scenario', async (req: Request, res: Response) => {
     
     const testedStats = ['intelligence', 'physical', 'spiritual', 'social', 'wealth'];
     const testedStat = testedStats[Math.floor(Math.random() * 5)];
-    const prompt = `Generate a UNIQUE moral dilemma (different each time) for a ${stats.class} testing their ${testedStat}. Real-world scenario, not fantasy. Return JSON: { "situation": "string", "choiceA": "string", "choiceB": "string", "testedStat": "${testedStat}" }`;
+    const prompt = `Generate a UNIQUE and challenging psychological scenario for a ${stats.class} testing their ${testedStat}. 
+    Focus on moral dilemmas, ethical choices, and profound life-changing lessons. 
+    The scenario should be realistic, deep, and intellectually stimulating.
+    Return JSON: { "situation": "string", "choiceA": "string", "choiceB": "string", "testedStat": "${testedStat}" }`;
     const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
     const text = await response.text();
     const jsonMatch = text.match(/\{.*\}/s);

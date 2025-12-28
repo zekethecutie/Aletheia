@@ -51,7 +51,7 @@ export default function App() {
     }
   };
 
-  useEffect(() => { initSession(); }, []);
+  useEffect(() => { initSession(); (window as any).setView = setView; }, []);
 
   useEffect(() => {
     if (currentUser) {
@@ -132,6 +132,7 @@ export default function App() {
           {view === ViewState.MIRROR && <MirrorView user={currentUser} onUpdateUser={handleUpdateUser} />}
           {view === ViewState.SYSTEM && <SystemView user={currentUser} onUpdateUser={handleUpdateUser} onLogout={handleLogout} />}
           {view === ViewState.PROFILE && <ProfileView currentUser={currentUser} onUpdateUser={handleUpdateUser} onBack={() => setView(ViewState.SANCTUM)} />}
+          {view === ViewState.VIEW_PROFILE && (window as any).profileToView && <ProfileView targetUserId={(window as any).profileToView} currentUser={currentUser} onUpdateUser={handleUpdateUser} onBack={() => setView(ViewState.EXPLORE)} />}
           <NavBar current={view} setView={setView} />
         </div>
       );

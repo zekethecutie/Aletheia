@@ -52,12 +52,12 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
 
   useEffect(() => {
     const fetchSuggestions = async () => {
-      if (tab === 'GOALS' && user.goals?.length > 0) {
+      if (tab === 'GOALS' && (user.goals?.length ?? 0) > 0) {
         try {
           const res = await fetch('/api/ai/advisor', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type: 'Scholar', message: `Analyze these goals and suggest 3 focus areas for development: ${user.goals.join(', ')}`, userId: user.id })
+            body: JSON.stringify({ type: 'Scholar', message: `Analyze these goals and suggest 3 focus areas for development: ${user.goals?.join(', ') ?? ''}`, userId: user.id })
           });
           const data = await res.json();
           setAiSuggestions(data.text.split('\n').filter((s: string) => s.trim()));

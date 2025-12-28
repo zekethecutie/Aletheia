@@ -40,9 +40,34 @@ export const initializeDatabase = async () => {
         entropy INTEGER DEFAULT 0,
         following TEXT[] DEFAULT '{}',
         is_verified BOOLEAN DEFAULT FALSE,
+        is_deactivated BOOLEAN DEFAULT FALSE,
+        deactivated_until TIMESTAMP WITH TIME ZONE,
+        pending_deletion_at TIMESTAMP WITH TIME ZONE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+      CREATE TABLE IF NOT EXISTS notifications (
+        id SERIAL PRIMARY KEY,
+        user_id TEXT REFERENCES profiles(id) ON DELETE CASCADE,
+        type VARCHAR(50) NOT NULL, -- 'RESONANCE', 'FOLLOW', 'SYSTEM_WARN', 'SYSTEM_BAN'
+        sender_id TEXT REFERENCES profiles(id) ON DELETE SET NULL,
+        post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+        content TEXT,
+        is_read BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS reports (
+        id SERIAL PRIMARY KEY,
+        reporter_id TEXT REFERENCES profiles(id) ON DELETE CASCADE,
+        target_user_id TEXT REFERENCES profiles(id) ON DELETE CASCADE,
+        target_post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+        reason TEXT,
+        ai_verdict TEXT,
+        action_taken VARCHAR(50), -- 'NONE', 'WARN', 'BAN', 'DELETE'
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+      ALTER TABLE comments ADD COLUMN IF NOT EXISTS parent_id INTEGER REFERENCES comments(id) ON DELETE CASCADE;
+
       CREATE TABLE IF NOT EXISTS quests (
         id SERIAL PRIMARY KEY,
         user_id TEXT REFERENCES profiles(id) ON DELETE CASCADE,

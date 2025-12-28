@@ -235,21 +235,29 @@ app.post('/api/achievements/calculate', async (req: Request, res: Response) => {
   }
 });
 
-// Fix Liking logic in posts
+// Resonance (Like) with notification
 app.post('/api/posts/like', async (req: Request, res: Response) => {
   try {
     const { post_id, user_id } = req.body;
 
-    const postResult = await query('SELECT liked_by FROM posts WHERE id = $1', [post_id]);
+    const postResult = await query('SELECT liked_by, author_id FROM posts WHERE id = $1', [post_id]);
     if (postResult.rows.length === 0) return res.status(404).json({ error: 'Post not found' });
 
-    let likedBy = postResult.rows[0].liked_by || [];
+    const post = postResult.rows[0];
+    let likedBy = post.liked_by || [];
     const isLiked = likedBy.includes(user_id);
 
     if (isLiked) {
       likedBy = likedBy.filter((uid: string) => uid !== user_id);
     } else {
       likedBy.push(user_id);
+      // Create notification for author
+      if (post.author_id !== user_id) {
+        await query(
+          'INSERT INTO notifications (user_id, type, sender_id, post_id) VALUES ($1, $2, $3, $4)',
+          [post.author_id, 'RESONANCE', user_id, post_id]
+        );
+      }
     }
 
     await query('UPDATE posts SET liked_by = $1, resonance = $2 WHERE id = $3', [likedBy, likedBy.length, post_id]);
@@ -259,14 +267,14 @@ app.post('/api/posts/like', async (req: Request, res: Response) => {
   }
 });
 
-// Comment logic
+// Comment logic with threading
 app.post('/api/posts/:id/comments', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { author_id, content } = req.body;
+    const { author_id, content, parent_id } = req.body;
     const result = await query(
-      'INSERT INTO comments (post_id, author_id, content) VALUES ($1, $2, $3) RETURNING *',
-      [id, author_id, content]
+      'INSERT INTO comments (post_id, author_id, content, parent_id) VALUES ($1, $2, $3, $4) RETURNING *',
+      [id, author_id, content, parent_id]
     );
     res.json(result.rows[0]);
   } catch (error: any) {
@@ -360,18 +368,143 @@ app.post('/api/ai/identity', async (req: Request, res: Response) => {
   }
 });
 
-// AI Advisor aware of quests
+// Notifications
+app.get('/api/notifications/:userId', async (req: Request, res: Response) => {
+  try {
+    const result = await query(`
+      SELECT n.*, p.username as sender_username, p.avatar_url as sender_avatar
+      FROM notifications n
+      LEFT JOIN profiles p ON n.sender_id = p.id
+      WHERE n.user_id = $1
+      ORDER BY n.created_at DESC
+      LIMIT 50
+    `, [req.params.userId]);
+    res.json(result.rows);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/notifications/:id/read', async (req: Request, res: Response) => {
+  try {
+    await query('UPDATE notifications SET is_read = true WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Follow logic with notification
+app.post('/api/profile/:id/follow', async (req: Request, res: Response) => {
+  try {
+    const { followerId } = req.body;
+    const { id: targetId } = req.params;
+
+    const result = await query('SELECT following FROM profiles WHERE id = $1', [followerId]);
+    let following = result.rows[0].following || [];
+    const isFollowing = following.includes(targetId);
+
+    if (isFollowing) {
+      following = following.filter((id: string) => id !== targetId);
+    } else {
+      following.push(targetId);
+      // Create notification
+      await query(
+        'INSERT INTO notifications (user_id, type, sender_id) VALUES ($1, $2, $3)',
+        [targetId, 'FOLLOW', followerId]
+      );
+    }
+
+    await query('UPDATE profiles SET following = $1 WHERE id = $2', [following, followerId]);
+    res.json({ success: true, isFollowing: !isFollowing });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Report and AI Moderation
+app.post('/api/reports', async (req: Request, res: Response) => {
+  try {
+    const { reporterId, targetUserId, targetPostId, reason } = req.body;
+    
+    // 1. Log report
+    const reportRes = await query(
+      'INSERT INTO reports (reporter_id, target_user_id, target_post_id, reason) VALUES ($1, $2, $3, $4) RETURNING id',
+      [reporterId, targetUserId, targetPostId, reason]
+    );
+
+    // 2. AI Investigation
+    let targetContent = "";
+    if (targetPostId) {
+      const post = await query('SELECT content FROM posts WHERE id = $1', [targetPostId]);
+      targetContent = post.rows[0]?.content || "";
+    }
+
+    const prompt = `You are the High Arbiter of Aletheia. Investigate this report:
+    Reason: ${reason}
+    Content: ${targetContent}
+    
+    Determine the severity. 
+    - WARN: Minor violation. Sends a warning.
+    - BAN: Serious violation. Deactivate account for 10 days.
+    - DELETE: Extreme violation. Mark account for deletion in 3 days.
+    - NONE: No violation found.
+
+    Return JSON: { "action": "WARN|BAN|DELETE|NONE", "verdict": "Poetic explanation" }`;
+
+    const aiRes = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
+    const aiData = await aiRes.json();
+    const action = aiData.action || 'NONE';
+    const verdict = aiData.verdict || "The void found no shadow here.";
+
+    // 3. Apply action
+    if (action === 'WARN') {
+      await query(
+        'INSERT INTO notifications (user_id, type, content) VALUES ($1, $2, $3)',
+        [targetUserId, 'SYSTEM_WARN', `VERDICT: ${verdict}`]
+      );
+    } else if (action === 'BAN') {
+      const banDate = new Date();
+      banDate.setDate(banDate.getDate() + 10);
+      await query(
+        'UPDATE profiles SET is_deactivated = true, deactivated_until = $1 WHERE id = $2',
+        [banDate, targetUserId]
+      );
+    } else if (action === 'DELETE') {
+      const delDate = new Date();
+      delDate.setDate(delDate.getDate() + 3);
+      await query(
+        'UPDATE profiles SET pending_deletion_at = $1 WHERE id = $2',
+        [delDate, targetUserId]
+      );
+    }
+
+    await query('UPDATE reports SET ai_verdict = $1, action_taken = $2 WHERE id = $3', [verdict, action, reportRes.rows[0].id]);
+
+    res.json({ success: true, action, verdict });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Personalized Consultants
+const personalities: Record<string, string> = {
+  'Mystic': 'You are the Moon-Eyed Mystic, focusing on emotional intelligence, intuition, and the depth of the subconscious. You speak in fluid, dream-like prose.',
+  'Warrior': 'You are the Iron-Willed Vanguard. You value discipline, physical manifestation, and the courage to act. You speak with sharp, rhythmic intensity.',
+  'Scholar': 'You are the Archivist of the Spire. You value logic, history, and the structure of reality. You speak with clinical, cold precision.'
+};
+
 app.post('/api/ai/advisor', async (req: Request, res: Response) => {
   try {
     const { type, message, userId } = req.body;
+    const persona = personalities[type] || personalities['Scholar'];
     
-    // Fetch active quests
     const questsResult = await query('SELECT text FROM quests WHERE user_id = $1 AND completed = false', [userId]);
     const activeQuests = questsResult.rows.map(q => q.text).join(', ');
 
-    const system = `You are a ${type} advisor. Keep it short, mystical, and practical. 
-    The user's active quests are: ${activeQuests || 'None'}.
-    Always be aware of these objectives when providing guidance.`;
+    const system = `${persona}
+    Active Objectives: ${activeQuests || 'None'}.
+    Keep it short, wise, and aligned with your unique frequency.`;
     
     const prompt = `${system}\nUser: ${message}`;
     const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt));
@@ -381,6 +514,7 @@ app.post('/api/ai/advisor', async (req: Request, res: Response) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 
 // AI Daily Wisdom
 app.get('/api/ai/wisdom', async (req: Request, res: Response) => {

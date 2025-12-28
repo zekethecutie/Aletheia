@@ -212,10 +212,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ targetUserId, onBack, 
                    <button onClick={toggleFollow} className={`w-full py-2 font-bold uppercase text-[10px] tracking-widest transition-colors ${isFollowing ? 'bg-slate-900 text-slate-400 border border-slate-800' : 'bg-white text-black'}`}>{isFollowing ? 'Disconnect' : 'Connect Signal'}</button>
                )}
            </div>
-           <div className="flex border-b border-slate-900 mb-4">
-               <button className="flex-1 py-3 border-b-2 border-gold text-white flex justify-center"><IconGrid className="w-5 h-5" /></button>
-               <button className="flex-1 py-3 text-slate-600 flex justify-center"><IconResonance className="w-5 h-5" /></button>
-           </div>
+           {isOwnProfile ? (
+               <div className="flex border-b border-slate-900 mb-4">
+                   <button onClick={() => {}} className="flex-1 py-3 border-b-2 border-gold text-white flex justify-center"><IconGrid className="w-5 h-5" /></button>
+                   <button onClick={() => {}} className="flex-1 py-3 text-slate-600 flex justify-center"><IconResonance className="w-5 h-5" /></button>
+               </div>
+           ) : null}
            <div className="grid grid-cols-3 gap-1">
                {posts.map(post => (
                    <div key={post.id} onClick={() => setSelectedPost(post)} className="aspect-square bg-slate-900 relative group cursor-pointer overflow-hidden border border-slate-950">

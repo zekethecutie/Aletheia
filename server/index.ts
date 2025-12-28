@@ -560,20 +560,27 @@ app.post('/api/ai/image/artifact', async (req: Request, res: Response) => {
   }
 });
 
-// AI Mirror Scenario
+// Cache to prevent repeat mirror scenarios
+const mirrorScenarioCache: Record<string, any> = {};
+
+// AI Mirror Scenario - with caching
 app.post('/api/ai/mirror/scenario', async (req: Request, res: Response) => {
   try {
     const { stats } = req.body;
-    const prompt = `You are the Mirror of Aletheia. Generate a profound, wise moral dilemma representing real-world circumstances and compromises for a ${stats.class}. 
-    PROTOCOL:
-    1. No fantasy roleplay. Scenarios must be realistic, grounded in modern life, ethics, and career/social dynamics.
-    2. Focus on true compromises and professional or personal integrity.
-    3. It must test their ${['intelligence', 'physical', 'spiritual', 'social', 'wealth'][Math.floor(Math.random() * 5)]}.
-    Return JSON ONLY: { "situation": "string", "choiceA": "string", "choiceB": "string", "testedStat": "string" }`;
+    const cacheKey = `${stats.class}_${new Date().toDateString()}`;
+    if (mirrorScenarioCache[cacheKey]) {
+      return res.json({ ...mirrorScenarioCache[cacheKey], fromCache: true });
+    }
+    
+    const testedStats = ['intelligence', 'physical', 'spiritual', 'social', 'wealth'];
+    const testedStat = testedStats[Math.floor(Math.random() * 5)];
+    const prompt = `Generate a UNIQUE moral dilemma (different each time) for a ${stats.class} testing their ${testedStat}. Real-world scenario, not fantasy. Return JSON: { "situation": "string", "choiceA": "string", "choiceB": "string", "testedStat": "${testedStat}" }`;
     const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
     const text = await response.text();
     const jsonMatch = text.match(/\{.*\}/s);
-    res.json(jsonMatch ? JSON.parse(jsonMatch[0]) : { situation: "You are offered a promotion that requires compromising your mentor's legacy.", choiceA: "Accept for the greater influence", choiceB: "Decline to honor the principle", testedStat: "social" });
+    const result = jsonMatch ? JSON.parse(jsonMatch[0]) : { situation: "A real challenge presents itself.", choiceA: "Path A", choiceB: "Path B", testedStat };
+    mirrorScenarioCache[cacheKey] = result;
+    res.json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -603,22 +610,25 @@ app.post('/api/achievements/calculate', async (req: Request, res: Response) => {
   }
 });
 
-// AI Mirror Evaluation
+// AI Mirror Evaluation with actual stat changes
 app.post('/api/ai/mirror/evaluate', async (req: Request, res: Response) => {
   try {
     const { situation, choice } = req.body;
     const rewardType = Math.random() < 0.6 ? 'ARTIFACT' : 'STAT_ONLY';
+    const statKeys = ['intelligence', 'physical', 'spiritual', 'social', 'wealth'];
     const rewardPrompt = rewardType === 'ARTIFACT' 
       ? '"reward": { "name": "string", "description": "string", "icon": "emoji", "rarity": "Common|Rare|Epic|Relic" }' 
       : '"reward": null';
-    const prompt = `Evaluate this choice in the Mirror: 
+    const prompt = `Evaluate this choice and determine stat changes (add or subtract 1-3 to actual stats, not made-up ones):
     Situation: ${situation}
     Choice: ${choice}
-    Return JSON ONLY: { "outcome": "poetic description", "statChange": { "statName": number }, "rewardType": "${rewardType}", ${rewardPrompt} }`;
+    Valid stats: ${statKeys.join(', ')}
+    Return JSON ONLY: { "outcome": "string", "statChange": { "intelligence": number, "physical": number, "spiritual": number, "social": number, "wealth": number }, "rewardType": "${rewardType}", ${rewardPrompt} }`;
     const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
     const text = await response.text();
     const jsonMatch = text.match(/\{.*\}/s);
-    res.json(jsonMatch ? JSON.parse(jsonMatch[0]) : { outcome: "The mirror ripples.", statChange: { spiritual: 1 }, rewardType: 'STAT_ONLY', reward: null });
+    const result = jsonMatch ? JSON.parse(jsonMatch[0]) : { outcome: "The mirror ripples with subtle change.", statChange: { intelligence: 0, physical: 0, spiritual: 1, social: 0, wealth: 0 }, rewardType: 'STAT_ONLY', reward: null };
+    res.json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

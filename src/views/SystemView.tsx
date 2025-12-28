@@ -230,11 +230,11 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
          </div>
       </div>
 
-      <div className="flex px-4 gap-2 mb-8 overflow-x-auto no-scrollbar">
+      <div className="grid grid-cols-4 gap-2 px-4 mb-8">
          {['QUESTS', 'GOALS', 'ACHIEVEMENTS', 'STATS'].map(t => {
              const tabValue = t === 'STATS' ? 'STATUS' : (t === 'QUESTS' ? 'QUESTS' : (t === 'GOALS' ? 'GOALS' : 'INVENTORY'));
              return (
-               <button key={t} onClick={() => setTab(tabValue as any)} className={`min-w-[100px] py-2 px-4 rounded-full text-[10px] font-display font-black uppercase tracking-[0.2em] transition-all border ${tab === tabValue ? 'bg-slate-800 text-white border-white/20' : 'bg-transparent text-slate-600 border-transparent hover:text-slate-400'}`}>
+               <button key={t} onClick={() => setTab(tabValue as any)} className={`py-2 px-2 rounded-lg text-[9px] font-display font-black uppercase tracking-[0.1em] transition-all border ${tab === tabValue ? 'bg-slate-800 text-white border-white/20' : 'bg-transparent text-slate-600 border-transparent hover:text-slate-400'}`}>
                   {t}
                </button>
              );
@@ -312,13 +312,16 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                                           {t.completed ? <div className="w-3 h-3 bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div> : (isExpired ? <div className="w-3 h-3 bg-red-500 rounded-full"></div> : <div className="w-5 h-5 border-2 border-slate-500 rounded-full flex items-center justify-center group-hover:border-gold/50 transition-colors"><div className="w-2 h-2 border border-slate-500 rounded-full group-hover:border-gold/50"></div></div>)}
                                       </div>
                                       <div>
-                                         <div className="flex items-center gap-3 mb-1">
-                                             <p className="text-[10px] font-display font-black text-gold uppercase tracking-[0.2em]">{t.difficulty} Tier Directive</p>
+                                         <div className="flex items-center gap-3 mb-1 flex-wrap">
+                                             <p className="text-[10px] font-display font-black text-gold uppercase tracking-[0.2em]">{t.difficulty} Tier</p>
+                                             {t.stat_reward && Object.keys(JSON.parse(t.stat_reward || '{}')).length > 0 && (
+                                                <span className="text-[7px] text-purple-400 font-mono">+Stats</span>
+                                             )}
                                              {!t.completed && expiresAt > 0 && !isExpired && (
-                                                 <p className="text-[8px] text-red-400 font-mono uppercase animate-pulse">Expires in {hoursLeft}h {minsLeft}m {secsLeft}s</p>
+                                                 <p className="text-[8px] text-red-400 font-mono uppercase animate-pulse">expires {hoursLeft}h</p>
                                              )}
                                              {isExpired && !t.completed && (
-                                                 <p className="text-[8px] text-red-600 font-mono uppercase">Expired</p>
+                                                 <p className="text-[8px] text-red-600 font-mono uppercase font-bold">EXPIRED</p>
                                              )}
                                          </div>
                                          <p className="text-sm font-bold text-white tracking-wide leading-tight">{t.text}</p>
@@ -371,9 +374,14 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                           <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest mb-4 opacity-70">Long-term Trajectory</p>
                           <div className="space-y-4">
                               {((user as any).goals || []).length > 0 ? ((user as any).goals as string[]).map((g, i) => (
-                                  <div key={i} className="flex items-center gap-3">
+                                  <div key={i} className="flex items-center gap-3 group">
                                       <div className="w-1 h-4 bg-indigo-500/50"></div>
-                                      <p className="text-sm text-slate-200 italic">"{g}"</p>
+                                      <p className="text-sm text-slate-200 italic flex-1">"{g}"</p>
+                                      <button onClick={async () => {
+                                        const newGoals = ((user as any).goals || []).filter((_: string, idx: number) => idx !== i);
+                                        await apiClient.updateProfile(user.id, { goals: newGoals });
+                                        onUpdateUser({ ...user, goals: newGoals });
+                                      }} className="opacity-0 group-hover:opacity-100 text-red-500 text-[9px] uppercase font-bold hover:text-red-400">Remove</button>
                                   </div>
                               )) : (
                                   <p className="text-slate-500 text-[10px] uppercase italic">No goals defined in soul-architecture.</p>

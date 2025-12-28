@@ -191,18 +191,26 @@ app.post('/api/ai/mysterious-name', async (req: Request, res: Response) => {
 app.post('/api/ai/quest/generate', async (req: Request, res: Response) => {
   try {
     const { userId, stats, goals } = req.body;
-    const system = `You are the Eye of Aletheia. Construct 3-5 real-world sacred trials for a ${stats.class} that help better the user's lifestyle.
+    const system = `You are the Eye of Aletheia, a supreme self-development architecture. 
+    Construct 3-5 real-world sacred trials for a ${stats.class} level ${stats.level}.
     GOALS: ${JSON.stringify(goals || [])}
-    PROTOCOL: 
-    1. Real-world actions only (no roleplay). Examples: meditation, physical training, professional skill work, social service.
-    2. Difficulty must scale with user level (${stats.level}).
-    3. Rewards must include a specific stat boost based on the action.
+    
+    CRITICAL PROTOCOLS:
+    1. ACTIONS: ONLY real-world self-improvement actions (e.g., "Complete a 30-min deep work session", "Run 3km", "Meditate for 15 mins"). No fantasy roleplay.
+    2. UTILITY: Each quest must directly contribute to the user's evolution path or lifestyle betterment.
+    3. DIFFICULTY: E (Easy), D, C, B, A, S (Supreme). Scale with level.
+    4. REWARDS: XP and stat boosts must reflect the effort.
+    
     Return JSON ONLY: { "quests": [{ "text": "string", "difficulty": "E-S", "xp_reward": number, "stat_reward": { "physical": number, "intelligence": number, "spiritual": number, "social": number, "wealth": number }, "duration_hours": number }] }`;
+    
     const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(system) + '?json=true');
     const text = await response.text();
     const jsonMatch = text.match(/\{.*\}/s);
     if (jsonMatch) {
       const { quests } = JSON.parse(jsonMatch[0]);
+      // Clear old uncompleted quests to keep it clean
+      await query('DELETE FROM quests WHERE user_id = $1 AND completed = false', [userId]);
+      
       for (const q of quests) {
         const expiresAt = new Date();
         expiresAt.setHours(expiresAt.getHours() + (q.duration_hours || 24));

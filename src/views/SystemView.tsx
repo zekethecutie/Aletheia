@@ -165,7 +165,10 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
              {user.coverUrl ? (
                  <img src={user.coverUrl} className="w-full h-full object-cover opacity-80 transition-transform duration-1000 group-hover:scale-105" />
              ) : (
-                 <div className="w-full h-full bg-gradient-to-b from-slate-900 to-black"></div>
+                 <div className="w-full h-full bg-slate-950 relative">
+                    <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-500 via-transparent to-transparent"></div>
+                    <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle, #3b82f6 1px, transparent 1px)', backgroundSize: '12px 12px' }}></div>
+                 </div>
              ) }
              <div className="absolute inset-0 bg-gradient-to-t from-void via-transparent to-transparent"></div>
           </div>

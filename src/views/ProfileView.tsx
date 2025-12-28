@@ -156,9 +156,14 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ targetUserId, onBack, 
        <Header title={profileUser.username} subtitle={profileUser.stats.class} onBack={onBack} />
        <div className="p-6">
            <div className="relative mb-12">
-               <div className="h-32 bg-gradient-to-br from-orange-400 to-orange-600 rounded-t-3xl relative overflow-hidden">
-                   <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)', backgroundSize: '12px 12px' }}></div>
-               </div>
+               {profileUser.coverUrl ? (
+                   <img src={profileUser.coverUrl} className="h-32 w-full object-cover rounded-t-3xl" />
+               ) : (
+                   <div className="h-32 bg-slate-950 border border-blue-500/20 rounded-t-3xl relative overflow-hidden">
+                       <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-500 via-transparent to-transparent"></div>
+                       <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle, #3b82f6 1px, transparent 1px)', backgroundSize: '12px 12px' }}></div>
+                   </div>
+               )}
                <div className="absolute top-16 left-1/2 -translate-x-1/2 flex flex-col items-center">
                    <div className="w-28 h-28 rounded-2xl bg-black border-4 border-slate-900 p-1.5 shadow-2xl overflow-hidden">
                        <img src={profileUser.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${profileUser.username}&backgroundColor=000000`} className="w-full h-full object-cover rounded-xl bg-slate-900" />
@@ -168,7 +173,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ targetUserId, onBack, 
            </div>
            <div className="text-center mb-8">
                <h1 className="text-3xl font-black text-white uppercase tracking-tighter">{profileUser.username}</h1>
-               <p className="text-orange-400 text-[10px] font-black uppercase tracking-[0.4em] mt-1">{profileUser.stats.class || "SCHOLAR"}</p>
+               <p className="text-blue-400 text-[10px] font-black uppercase tracking-[0.4em] mt-1">{profileUser.stats.class || "SCHOLAR"}</p>
            </div>
            <div className="space-y-6 max-w-sm mx-auto mb-10">
                 <div>
@@ -195,7 +200,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ targetUserId, onBack, 
                         <span className="text-slate-200">{profileUser.stats.xp} / {profileUser.stats.xpToNextLevel}</span>
                     </div>
                     <div className="h-1 bg-slate-900 rounded-full overflow-hidden">
-                        <div className="h-full bg-orange-400 rounded-full transition-all duration-700" style={{ width: `${(profileUser.stats.xp / profileUser.stats.xpToNextLevel) * 100}%` }}></div>
+                        <div className="h-full bg-blue-400 rounded-full transition-all duration-700" style={{ width: `${(profileUser.stats.xp / profileUser.stats.xpToNextLevel) * 100}%` }}></div>
                     </div>
                 </div>
            </div>

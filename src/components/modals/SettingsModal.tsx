@@ -27,16 +27,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ user, onClose, onU
   };
 
   const handleSave = async () => {
-    // Update local state
-    onUpdate({ ...user, avatarUrl: avatar, coverUrl: cover });
-    
-    // Update Profile Metadata via Supabase Table
-    await supabase.from('profiles').update({ 
-        avatar_url: avatar, 
-        cover_url: cover 
-    }).eq('id', user.id);
-
-    onClose();
+    try {
+      // 1. Update Profile via API
+      const updatedProfile = await apiClient.updateProfile(user.id, { 
+          avatarUrl: avatar, 
+          coverUrl: cover 
+      });
+      
+      // 2. Update local state
+      onUpdate({ ...user, avatarUrl: updatedProfile.avatar_url, coverUrl: updatedProfile.cover_url });
+      
+      onClose();
+    } catch (err) {
+      console.error('Save settings error:', err);
+      alert('Failed to synchronize identity with the Spire.');
+    }
   };
 
   return (

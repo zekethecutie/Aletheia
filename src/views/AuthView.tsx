@@ -240,16 +240,11 @@ export const CreateIdentityView: React.FC<{ onComplete: (u: User) => void; onBac
   return (
     <div className="min-h-screen bg-void flex flex-col animate-fade-in relative overflow-y-auto">
       <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-900/40 via-black to-black opacity-80"></div>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-gold/10 via-transparent to-transparent"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-gold/5 via-transparent to-transparent"></div>
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
       </div>
       
-      <div className="relative w-full h-48 bg-slate-950/50 group">
-          <div className="absolute inset-0 z-0 overflow-hidden">
-             <div className="w-full h-full bg-gradient-to-b from-slate-900 to-black"></div>
-             <div className="absolute inset-0 bg-gradient-to-t from-void via-transparent to-transparent"></div>
-          </div>
+      <div className="relative w-full h-48 group">
           <button onClick={onBack} className="absolute top-6 left-6 text-slate-500 uppercase text-[10px] font-bold tracking-widest hover:text-white z-20">Back</button>
       </div>
       

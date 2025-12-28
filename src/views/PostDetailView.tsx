@@ -17,7 +17,7 @@ export const PostDetailView: React.FC<{ post: Post; onBack: () => void; onUpdate
     if (!newComment.trim() || loading) return;
     setLoading(true);
     try {
-      const res = await apiClient.createComment(post.id, currentUser!.id, newComment);
+      const res = await apiClient.createComment(post.id, currentUser.id, newComment);
       if (res) {
         setNewComment('');
         onUpdate();

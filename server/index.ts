@@ -182,13 +182,13 @@ app.post('/api/ai/mysterious-name', async (req: Request, res: Response) => {
 app.post('/api/ai/quest/generate', async (req: Request, res: Response) => {
   try {
     const { userId, stats, goals } = req.body;
-    const system = `You are the Eye of Aletheia. Construct 2-5 real-world sacred trials for a ${stats.class}.
+    const system = `You are the Eye of Aletheia. Construct 3-5 real-world sacred trials for a ${stats.class} that help better the user's lifestyle.
     GOALS: ${JSON.stringify(goals || [])}
     PROTOCOL: 
-    1. Real-world actions only (no roleplay). This is for bettering the user's lifestyle.
+    1. Real-world actions only (no roleplay). Examples: meditation, physical training, professional skill work, social service.
     2. Difficulty must scale with user level (${stats.level}).
     3. Rewards must include a specific stat boost based on the action.
-    Return JSON ONLY: { "quests": [{ "text": "string", "difficulty": "E-S", "xp_reward": number, "stat_reward": { "physical": number, ... }, "duration_hours": number }] }`;
+    Return JSON ONLY: { "quests": [{ "text": "string", "difficulty": "E-S", "xp_reward": number, "stat_reward": { "physical": number, "intelligence": number, "spiritual": number, "social": number, "wealth": number }, "duration_hours": number }] }`;
     const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(system) + '?json=true');
     const text = await response.text();
     const jsonMatch = text.match(/\{.*\}/s);
@@ -205,6 +205,30 @@ app.post('/api/ai/quest/generate', async (req: Request, res: Response) => {
       res.json({ success: true });
     } else {
       res.status(500).json({ error: 'Generation failed' });
+    }
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Fix Achievement analysis
+app.post('/api/achievements/calculate', async (req: Request, res: Response) => {
+  try {
+    const { text, userId, stats } = req.body;
+    const prompt = `You are the Chronicler of Aletheia. Analyze this real-world achievement: "${text}". 
+    Evaluate its impact on a ${stats.class} at level ${stats.level}.
+    Return JSON ONLY: { "xpGained": number, "statsIncreased": { "physical": number, "intelligence": number, "spiritual": number, "social": number, "wealth": number }, "systemMessage": "string" }`;
+    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
+    const resText = await response.text();
+    const jsonMatch = resText.match(/\{.*\}/s);
+    if (jsonMatch) {
+      const result = JSON.parse(jsonMatch[0]);
+      // Save to database
+      await query('INSERT INTO achievements (user_id, title, description, icon) VALUES ($1, $2, $3, $4)', 
+        [userId, "Great Feat Logged", text, "🏆"]);
+      res.json(result);
+    } else {
+      res.status(500).json({ error: 'Evaluation failed' });
     }
   } catch (error: any) {
     res.status(500).json({ error: error.message });

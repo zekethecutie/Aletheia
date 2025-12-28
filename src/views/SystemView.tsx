@@ -45,6 +45,8 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
   const [calculating, setCalculating] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [goalInput, setGoalInput] = useState('');
+  const [generatingQuest, setGeneratingQuest] = useState(false);
+  const [quests, setQuests] = useState<any[]>([]);
 
   const handleAddGoal = async () => {
     if (!goalInput.trim()) return;

@@ -71,6 +71,13 @@ export const initializeDatabase = async () => {
         icon TEXT,
         unlocked_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+      CREATE TABLE IF NOT EXISTS comments (
+        id SERIAL PRIMARY KEY,
+        post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+        author_id TEXT REFERENCES profiles(id) ON DELETE CASCADE,
+        content TEXT NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
       CREATE INDEX IF NOT EXISTS idx_profiles_username ON profiles(username);
       CREATE INDEX IF NOT EXISTS idx_profiles_id ON profiles(id);
       CREATE INDEX IF NOT EXISTS idx_posts_author_id ON posts(author_id);

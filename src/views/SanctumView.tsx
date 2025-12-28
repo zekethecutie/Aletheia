@@ -120,14 +120,14 @@ export const SanctumView: React.FC = () => {
       </div>
 
       {dailyQuote && (
-        <div className="mx-6 mt-8 p-10 glass-card rounded-2xl relative group overflow-hidden animate-blur-in shadow-[0_20px_50px_rgba(0,0,0,0.3)] border-white/5">
+        <div className="mx-6 mt-8 p-6 glass-card rounded-2xl relative group overflow-hidden animate-blur-in shadow-[0_20px_50px_rgba(0,0,0,0.3)] border-white/5">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold/40 to-transparent"></div>
           
-          <div className="flex items-center gap-4 mb-8">
+          <div className="flex items-center gap-4 mb-4">
             <div className="relative">
               <div className="absolute inset-0 bg-gold/20 blur-xl rounded-full animate-pulse"></div>
-              <div className="w-12 h-12 glass-card rounded-xl flex items-center justify-center relative z-10 border-gold/30">
-                <IconMirror className="w-6 h-6 text-gold animate-pulse" />
+              <div className="w-10 h-10 glass-card rounded-xl flex items-center justify-center relative z-10 border-gold/30">
+                <IconMirror className="w-5 h-5 text-gold animate-pulse" />
               </div>
             </div>
             <div>
@@ -136,12 +136,12 @@ export const SanctumView: React.FC = () => {
             </div>
           </div>
 
-          <div className="pl-6 border-l-2 border-gold/40 py-2 mb-8">
-            <p className="text-[9px] text-gold font-display font-black tracking-[0.3em] uppercase mb-4 opacity-50">Sacred Wisdom</p>
-            <p className="text-2xl md:text-3xl font-serif italic text-white leading-relaxed tracking-wide">
+          <div className="pl-4 border-l-2 border-gold/40 py-1 mb-4">
+            <p className="text-[9px] text-gold font-display font-black tracking-[0.3em] uppercase mb-2 opacity-50">Sacred Wisdom</p>
+            <p className="text-xl md:text-2xl font-serif italic text-white leading-relaxed tracking-wide">
               "{dailyQuote.text}"
             </p>
-            <p className="text-gold/60 text-[10px] uppercase font-display font-black tracking-[0.2em] mt-4">— {dailyQuote.author}</p>
+            <p className="text-gold/60 text-[10px] uppercase font-display font-black tracking-[0.2em] mt-2">— {dailyQuote.author}</p>
           </div>
         </div>
       )}
@@ -151,21 +151,21 @@ export const SanctumView: React.FC = () => {
       {loading ? (
         <div className="flex justify-center p-20"><div className="w-8 h-8 border-2 border-gold border-t-transparent animate-spin rounded-full"></div></div>
       ) : (
-        <div className="px-4 space-y-6 mt-8 pb-12">
+        <div className="px-4 space-y-4 mt-6 pb-12">
           {visiblePosts.map((post) => {
             const isLiked = currentUser && post.likedBy?.includes(currentUser.id);
             return (
-              <div key={post.id} onClick={() => setSelectedPost(post)} className={`glass-card p-8 rounded-2xl cursor-pointer hover:border-gold/40 transition-all group relative overflow-hidden animate-fade-in-up shadow-[0_20px_50px_rgba(0,0,0,0.3)] ${post.isSystemPost ? 'border-gold/30' : 'border-white/5'}`}>
+              <div key={post.id} onClick={() => setSelectedPost(post)} className={`glass-card p-6 rounded-2xl cursor-pointer hover:border-gold/40 transition-all group relative overflow-hidden animate-fade-in-up shadow-[0_20px_50px_rgba(0,0,0,0.3)] ${post.isSystemPost ? 'border-gold/30' : 'border-white/5'}`}>
                 <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-transparent via-gold/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <p className="text-white text-xl font-serif italic opacity-90 mb-8 leading-relaxed tracking-wide">"{post.content}"</p>
-                <div className="flex justify-between items-center border-t border-white/5 pt-6">
-                  <div className="flex items-center gap-4">
-                    <div onClick={(e) => { e.stopPropagation(); setViewProfileId(post.authorId); }} className="w-12 h-12 rounded-xl border border-white/10 overflow-hidden bg-black shadow-2xl transition-transform group-hover:scale-105">
+                <p className="text-white text-lg font-serif italic opacity-90 mb-6 leading-relaxed tracking-wide">"{post.content}"</p>
+                <div className="flex justify-between items-center border-t border-white/5 pt-4">
+                  <div className="flex items-center gap-3">
+                    <div onClick={(e) => { e.stopPropagation(); setViewProfileId(post.authorId); }} className="w-10 h-10 rounded-xl border border-white/10 overflow-hidden bg-black shadow-2xl transition-transform group-hover:scale-105">
                       <img src={post.authorAvatar || `https://api.dicebear.com/7.x/initials/svg?seed=${post.authorName}&backgroundColor=000000`} className="w-full h-full object-cover" />
                     </div>
                     <div>
-                      <button onClick={(e) => { e.stopPropagation(); setViewProfileId(post.authorId); }} className="text-white font-display font-black uppercase text-[10px] tracking-[0.2em] hover:text-gold block text-left transition-colors">{post.authorName}</button>
-                      <p className="text-gold/50 text-[8px] uppercase font-display font-black tracking-[0.3em] mt-1">{post.authorClass}</p>
+                      <button onClick={(e) => { e.stopPropagation(); setViewProfileId(post.authorId); }} className="text-white font-display font-black uppercase text-[9px] tracking-[0.2em] hover:text-gold block text-left transition-colors">{post.authorName}</button>
+                      <p className="text-gold/50 text-[7px] uppercase font-display font-black tracking-[0.3em] mt-1">{post.authorClass}</p>
                     </div>
                   </div>
                   <div className="flex gap-6 items-center">

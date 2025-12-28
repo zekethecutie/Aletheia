@@ -260,5 +260,29 @@ export const apiClient = {
       console.error('Like post error:', error);
       throw error;
     }
+  },
+
+  async getComments(post_id: string) {
+    try {
+      const response = await fetch(`${API_URL}/posts/${post_id}/comments`);
+      return handleResponse(response);
+    } catch (error: any) {
+      console.error('Get comments error:', error);
+      throw error;
+    }
+  },
+
+  async createComment(post_id: string, author_id: string, content: string) {
+    try {
+      const response = await fetch(`${API_URL}/posts/${post_id}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ author_id, content })
+      });
+      return handleResponse(response);
+    } catch (error: any) {
+      console.error('Create comment error:', error);
+      throw error;
+    }
   }
 };

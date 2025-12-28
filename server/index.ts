@@ -236,25 +236,55 @@ app.post('/api/achievements/calculate', async (req: Request, res: Response) => {
 });
 
 // Fix Liking logic in posts
-app.post('/api/posts/:id/toggle-like', async (req: Request, res: Response) => {
+app.post('/api/posts/like', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    const { userId } = req.body;
+    const { post_id, user_id } = req.body;
 
-    const postResult = await query('SELECT liked_by FROM posts WHERE id = $1', [id]);
+    const postResult = await query('SELECT liked_by FROM posts WHERE id = $1', [post_id]);
     if (postResult.rows.length === 0) return res.status(404).json({ error: 'Post not found' });
 
     let likedBy = postResult.rows[0].liked_by || [];
-    const isLiked = likedBy.includes(userId);
+    const isLiked = likedBy.includes(user_id);
 
     if (isLiked) {
-      likedBy = likedBy.filter((uid: string) => uid !== userId);
+      likedBy = likedBy.filter((uid: string) => uid !== user_id);
     } else {
-      likedBy.push(userId);
+      likedBy.push(user_id);
     }
 
-    await query('UPDATE posts SET liked_by = $1, resonance = $2 WHERE id = $3', [likedBy, likedBy.length, id]);
+    await query('UPDATE posts SET liked_by = $1, resonance = $2 WHERE id = $3', [likedBy, likedBy.length, post_id]);
     res.json({ success: true, resonance: likedBy.length, isLiked: !isLiked });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Comment logic
+app.post('/api/posts/:id/comments', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { author_id, content } = req.body;
+    const result = await query(
+      'INSERT INTO comments (post_id, author_id, content) VALUES ($1, $2, $3) RETURNING *',
+      [id, author_id, content]
+    );
+    res.json(result.rows[0]);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/posts/:id/comments', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const result = await query(`
+      SELECT c.*, p.display_name as username, p.avatar_url 
+      FROM comments c
+      LEFT JOIN profiles p ON c.author_id = p.id
+      WHERE c.post_id = $1
+      ORDER BY c.created_at ASC
+    `, [id]);
+    res.json(result.rows);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

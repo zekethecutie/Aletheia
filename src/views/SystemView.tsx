@@ -40,13 +40,19 @@ const ArtifactCard: React.FC<{ artifact: Artifact }> = ({ artifact }) => {
 };
 
 export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void; onLogout: () => void }> = ({ user, onUpdateUser, onLogout }) => {
-  const [tab, setTab] = useState<'STATUS' | 'QUESTS' | 'INVENTORY'>('QUESTS');
+  const [tab, setTab] = useState<'STATUS' | 'QUESTS' | 'GOALS' | 'INVENTORY'>('QUESTS');
   const [featInput, setFeatInput] = useState('');
   const [calculating, setCalculating] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [goalInput, setGoalInput] = useState('');
   const [generatingQuest, setGeneratingQuest] = useState(false);
   const [quests, setQuests] = useState<any[]>([]);
+  const [timer, setTimer] = useState(Date.now());
+
+  useEffect(() => {
+    const interval = setInterval(() => setTimer(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleAddGoal = async () => {
     if (!goalInput.trim()) return;
@@ -73,7 +79,7 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
   const handleGenerateQuests = async () => {
     setGeneratingQuest(true);
     try {
-      await apiClient.generateQuests(user.id, user.stats);
+      await apiClient.generateQuests(user.id, user.stats, user.goals);
       const data = await apiClient.getQuests(user.id);
       setQuests(data);
     } catch (error) {
@@ -85,6 +91,13 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
 
   const handleCompleteQuest = async (quest: any) => {
     if (quest.completed) return;
+    
+    const expiresAt = quest.expires_at ? new Date(quest.expires_at).getTime() : 0;
+    if (expiresAt > 0 && Date.now() > expiresAt) {
+      alert("This quest has expired. You failed to manifest your will in time.");
+      return;
+    }
+
     const confirmed = confirm("Are you sure you had finished the task? Do not lie to the system, it is not us you are fooling — but instead yourself.");
     if (!confirmed) return;
 
@@ -118,7 +131,7 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
     if (!featInput.trim()) return;
     setCalculating(true);
     try {
-      const res = await apiClient.calculateFeat(featInput);
+      const res = await apiClient.calculateFeat(featInput, user.id, user.stats);
       let newXp = user.stats.xp + res.xpGained;
       let newLevel = user.stats.level;
       let nextXp = user.stats.xpToNextLevel;
@@ -214,12 +227,15 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
          </div>
       </div>
 
-      <div className="flex px-4 gap-2 mb-8">
-         {['QUESTS', 'ACHIEVEMENTS', 'STATS'].map(t => (
-             <button key={t} onClick={() => setTab(t === 'STATS' ? 'STATUS' : (t === 'QUESTS' ? 'QUESTS' : 'INVENTORY'))} className={`flex-1 py-2 rounded-full text-[10px] font-display font-black uppercase tracking-[0.2em] transition-all border ${tab === (t === 'STATS' ? 'STATUS' : (t === 'QUESTS' ? 'QUESTS' : 'INVENTORY')) ? 'bg-slate-800 text-white border-white/20' : 'bg-transparent text-slate-600 border-transparent hover:text-slate-400'}`}>
-                {t}
-             </button>
-         ))}
+      <div className="flex px-4 gap-2 mb-8 overflow-x-auto no-scrollbar">
+         {['QUESTS', 'GOALS', 'ACHIEVEMENTS', 'STATS'].map(t => {
+             const tabValue = t === 'STATS' ? 'STATUS' : (t === 'QUESTS' ? 'QUESTS' : (t === 'GOALS' ? 'GOALS' : 'INVENTORY'));
+             return (
+               <button key={t} onClick={() => setTab(tabValue as any)} className={`min-w-[100px] py-2 px-4 rounded-full text-[10px] font-display font-black uppercase tracking-[0.2em] transition-all border ${tab === tabValue ? 'bg-slate-800 text-white border-white/20' : 'bg-transparent text-slate-600 border-transparent hover:text-slate-400'}`}>
+                  {t}
+               </button>
+             );
+         })}
       </div>
 
       <div className="p-6 pt-6">
@@ -281,32 +297,40 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                       {quests.map(t => {
                           const expiresAt = t.expires_at ? new Date(t.expires_at).getTime() : 0;
                           const timeLeft = Math.max(0, expiresAt - Date.now());
+                          const isExpired = timeLeft === 0 && expiresAt > 0;
                           const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
                           const minsLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                          const secsLeft = Math.floor((timeLeft % (1000 * 60)) / 1000);
 
                           return (
-                              <div key={t.id} className={`glass-card p-6 rounded-xl flex items-center justify-between transition-all relative overflow-hidden group ${t.completed ? 'opacity-40 border-green-500/30' : 'hover:border-gold/50'}`}>
+                              <div key={t.id} className={`glass-card p-6 rounded-xl flex items-center justify-between transition-all relative overflow-hidden group ${t.completed ? 'opacity-40 border-green-500/30' : (isExpired ? 'opacity-40 border-red-500/30' : 'hover:border-gold/50')}`}>
                                   <div className="flex items-center gap-6">
                                       <div className={`w-10 h-10 glass-card rounded-lg flex items-center justify-center border-white/10 ${t.completed ? 'bg-green-500/10 border-green-500/30' : 'group-hover:border-gold/30'}`}>
-                                          {t.completed ? <div className="w-3 h-3 bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div> : <div className="w-5 h-5 border-2 border-slate-500 rounded-full flex items-center justify-center group-hover:border-gold/50 transition-colors"><div className="w-2 h-2 border border-slate-500 rounded-full group-hover:border-gold/50"></div></div>}
+                                          {t.completed ? <div className="w-3 h-3 bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div> : (isExpired ? <div className="w-3 h-3 bg-red-500 rounded-full"></div> : <div className="w-5 h-5 border-2 border-slate-500 rounded-full flex items-center justify-center group-hover:border-gold/50 transition-colors"><div className="w-2 h-2 border border-slate-500 rounded-full group-hover:border-gold/50"></div></div>)}
                                       </div>
                                       <div>
                                          <div className="flex items-center gap-3 mb-1">
                                              <p className="text-[10px] font-display font-black text-gold uppercase tracking-[0.2em]">{t.difficulty} Tier Directive</p>
-                                             {!t.completed && expiresAt > 0 && (
-                                                 <p className="text-[8px] text-red-400 font-mono uppercase animate-pulse">Expires in {hoursLeft}h {minsLeft}m</p>
+                                             {!t.completed && expiresAt > 0 && !isExpired && (
+                                                 <p className="text-[8px] text-red-400 font-mono uppercase animate-pulse">Expires in {hoursLeft}h {minsLeft}m {secsLeft}s</p>
+                                             )}
+                                             {isExpired && !t.completed && (
+                                                 <p className="text-[8px] text-red-600 font-mono uppercase">Expired</p>
                                              )}
                                          </div>
                                          <p className="text-sm font-bold text-white tracking-wide leading-tight">{t.text}</p>
                                       </div>
                                   </div>
                                   <div className="flex items-center gap-4">
-                                      {!t.completed && (
+                                      {!t.completed && !isExpired && (
                                           <button 
                                             onClick={() => handleCompleteQuest(t)}
-                                            className="px-4 py-2 bg-white text-black font-black text-[10px] uppercase tracking-widest hover:bg-gold transition-colors rounded-lg shadow-[0_0_15px_rgba(255,255,255,0.1)]"
+                                            className="p-3 bg-white text-black hover:bg-gold transition-colors rounded-full shadow-[0_0_15px_rgba(255,255,255,0.1)] flex items-center justify-center"
+                                            title="Complete Quest"
                                           >
-                                            Check
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                                            </svg>
                                           </button>
                                       )}
                                       <div className="text-right">
@@ -321,8 +345,12 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                       })}
                       {quests.length === 0 && !generatingQuest && <div className="py-12 text-center text-slate-600 text-[10px] uppercase border border-dashed border-slate-800 rounded-xl">No active directives. Seek the void for purpose.</div>}
                   </div>
+              </div>
+          )}
 
-                  <div className="mt-12">
+          {tab === 'GOALS' && (
+              <div className="animate-fade-in space-y-6">
+                  <div>
                       <h3 className="text-xs font-black text-white uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
                           <span className="w-2 h-2 bg-indigo-500 rounded-full"></span>
                           Sacred Goals
@@ -342,23 +370,51 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                               {((user as any).goals || []).length > 0 ? ((user as any).goals as string[]).map((g, i) => (
                                   <div key={i} className="flex items-center gap-3">
                                       <div className="w-1 h-4 bg-indigo-500/50"></div>
-                                      <p className="text-sm text-slate-200 font-serif italic">"{g}"</p>
+                                      <p className="text-sm text-slate-200 italic">"{g}"</p>
                                   </div>
                               )) : (
                                   <p className="text-slate-500 text-[10px] uppercase italic">No goals defined in soul-architecture.</p>
                               )}
                           </div>
                       </div>
-                      
-                      <button 
-                        onClick={onLogout}
-                        className="w-full py-4 border border-red-900/30 text-red-500/70 text-[10px] font-black uppercase tracking-[0.4em] hover:bg-red-950/20 hover:text-red-400 transition-all rounded-xl"
-                      >
-                        Disconnect Signal
-                      </button>
+                      <p className="text-[9px] text-slate-500 uppercase tracking-widest text-center px-4">
+                        Goals help the AI tailor your quests to your desired evolution path.
+                      </p>
                   </div>
               </div>
           )}
+
+          {tab === 'INVENTORY' && (
+              <div className="animate-fade-in space-y-6">
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-500 uppercase mb-4 tracking-widest flex items-center gap-2"><IconLock className="w-3 h-3" /> Mental Artifacts</h3>
+                    <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                        {user.inventory && user.inventory.length > 0 ? (
+                            user.inventory.map((item, i) => <ArtifactCard key={item.id || i} artifact={item} />)
+                        ) : (
+                            <div className="col-span-3 flex flex-col items-center justify-center py-12 border border-dashed border-slate-800 text-slate-600 text-[10px] uppercase rounded-lg">
+                                <IconMirror className="w-6 h-6 mb-2 text-slate-700" /><span className="mt-1">The void is empty. Enter Mirror to manifest self.</span>
+                            </div>
+                        )}
+                    </div>
+                  </div>
+              </div>
+          )}
+      </div>
+      
+      <div className="px-6 mb-8">
+        <button 
+          onClick={onLogout}
+          className="w-full py-4 border border-red-900/30 text-red-500/70 text-[10px] font-black uppercase tracking-[0.4em] hover:bg-red-950/20 hover:text-red-400 transition-all rounded-xl"
+        >
+          Disconnect Signal
+        </button>
+      </div>
+
+      {showSettings && <SettingsModal user={user} onClose={() => setShowSettings(false)} onUpdate={onUpdateUser} />}
+    </div>
+  );
+};
 
           {tab === 'INVENTORY' && (
               <div className="animate-fade-in space-y-6">

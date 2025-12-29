@@ -512,14 +512,45 @@ app.post('/api/reports', async (req: Request, res: Response) => {
 });
 
 // AI Habit Tracking
+app.get('/api/habits/:userId', async (req: Request, res: Response) => {
+  try {
+    const result = await query('SELECT * FROM habits WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
+    res.json(result.rows);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/habits', async (req: Request, res: Response) => {
+  try {
+    const { userId, name } = req.body;
+    const result = await query('INSERT INTO habits (user_id, name) VALUES ($1, $2) RETURNING *', [userId, name]);
+    res.json(result.rows[0]);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/habits/track', async (req: Request, res: Response) => {
   try {
-    const { userId, habit, action } = req.body;
-    const prompt = `You are the Sentinel of Habits. User performed: "${action}" for habit: "${habit}". 
-    Evaluate if this action genuinely fulfills the habit's intent.
-    Return JSON ONLY: { "success": boolean, "xp": number, "feedback": "string" }`;
-    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
-    const data = await response.json();
+    const { userId, habitId, action } = req.body;
+    const habitRes = await query('SELECT * FROM habits WHERE id = $1', [habitId]);
+    if (habitRes.rows.length === 0) return res.status(404).json({ error: 'Habit not found' });
+    const habit = habitRes.rows[0];
+
+    const prompt = `You are the Sentinel of Habits. Seeker performed: "${action}" for their sacred habit: "${habit.name}". 
+    Evaluate if this action genuinely fulfills the habit's intent with absolute honesty.
+    Return JSON ONLY: { "success": boolean, "xp": number, "feedback": "string", "stat_reward": { "physical": number, "intelligence": number, "spiritual": number, "social": number, "wealth": number } }`;
+    
+    const aiRes = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
+    const data = await aiRes.json() as any;
+    
+    if (data.success) {
+      await query('UPDATE habits SET streak = streak + 1, last_logged = NOW() WHERE id = $1', [habitId]);
+    } else {
+      await query('UPDATE habits SET streak = 0 WHERE id = $1', [habitId]);
+    }
+    
     res.json(data);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -572,8 +603,8 @@ app.get('/api/ai/wisdom', async (req: Request, res: Response) => {
 app.post('/api/ai/image/artifact', async (req: Request, res: Response) => {
   try {
     const { name, description } = req.body;
-    const prompt = `Mystical pixel art RPG item, 32-bit style, sharp edges, vivid colors, solid black background, no transparency. Subject: ${name}. Context: ${description}. High contrast fantasy item.`;
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=512&height=512&model=flux&nologo=true`;
+    const prompt = `Hyper-detailed mystical RPG item, 32-bit pixel art style, glowing aura, isolated on black background. Item: ${name}. Context: ${description}. Dark fantasy aesthetic.`;
+    const imageUrl = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=512&height=512&model=flux&nologo=true`;
     res.json({ imageUrl });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

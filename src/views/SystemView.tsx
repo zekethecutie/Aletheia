@@ -39,31 +39,31 @@ const ArtifactCard: React.FC<{ artifact: Artifact }> = ({ artifact }) => {
 };
 
 export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void; onLogout: () => void }> = ({ user, onUpdateUser, onLogout }) => {
-  const [tab, setTab] = useState<'STATUS' | 'QUESTS' | 'GOALS' | 'INVENTORY'>('QUESTS');
+  const [tab, setTab] = useState<'STATUS' | 'QUESTS' | 'GOALS' | 'INVENTORY' | 'HABITS'>('QUESTS');
   const [featInput, setFeatInput] = useState('');
   const [calculating, setCalculating] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [goalInput, setGoalInput] = useState('');
+  const [habitInput, setHabitInput] = useState('');
+  const [habitAction, setHabitAction] = useState<Record<number, string>>({});
+  const [habits, setHabits] = useState<any[]>([]);
+  const [trackingHabit, setTrackingHabit] = useState<number | null>(null);
   const [generatingQuest, setGeneratingQuest] = useState(false);
   const [quests, setQuests] = useState<any[]>([]);
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
 
   useEffect(() => {
-    const fetchSuggestions = async () => {
-      if (tab === 'GOALS' && (user.goals?.length ?? 0) > 0) {
-        try {
-          const res = await fetch('/api/ai/advisor', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type: 'Scholar', message: `Analyze these goals and suggest 3 focus areas for development: ${user.goals?.join(', ') ?? ''}`, userId: user.id })
-          });
-          const data = await res.json();
-          setAiSuggestions(data.text.split('\n').filter((s: string) => s.trim()));
-        } catch (e) { console.error(e); }
+    const fetchData = async () => {
+      if (tab === 'QUESTS') {
+        const data = await apiClient.getQuests(user.id);
+        setQuests(data);
+      } else if (tab === 'HABITS') {
+        const data = await apiClient.getHabits(user.id);
+        setHabits(data);
       }
     };
-    fetchSuggestions();
-  }, [tab, user.goals]);
+    fetchData();
+  }, [tab, user.id]);
 
   const handleAddGoal = async () => {
     if (!goalInput.trim()) return;
@@ -75,17 +75,47 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
     } catch (e) { console.error(e); }
   };
 
-  useEffect(() => {
-    const fetchQuests = async () => {
-      try {
-        const data = await apiClient.getQuests(user.id);
-        setQuests(data);
-      } catch (error) {
-        console.error('Failed to fetch quests:', error);
+  const handleAddHabit = async () => {
+    if (!habitInput.trim()) return;
+    try {
+      const newHabit = await apiClient.createHabit(user.id, habitInput);
+      setHabits([newHabit, ...habits]);
+      setHabitInput('');
+    } catch (e) { console.error(e); }
+  };
+
+  const handleTrackHabit = async (habitId: number) => {
+    const action = habitAction[habitId];
+    if (!action?.trim()) return;
+    setTrackingHabit(habitId);
+    try {
+      const res = await apiClient.trackHabit(user.id, habitId, action);
+      alert(`SENTINEL VERDICT: ${res.feedback}\nXP Gained: ${res.xp}`);
+      
+      if (res.success) {
+        let newXp = user.stats.xp + res.xp;
+        let newLevel = user.stats.level;
+        let nextXp = user.stats.xpToNextLevel;
+        if (newXp >= nextXp) { newLevel += 1; newXp -= nextXp; nextXp = Math.floor(nextXp * 1.2); }
+        
+        const newStats = { ...user.stats, xp: newXp, level: newLevel, xpToNextLevel: nextXp };
+        if (res.stat_reward) {
+          Object.keys(res.stat_reward).forEach(k => {
+            const key = k as keyof typeof newStats;
+            if (typeof newStats[key] === 'number') {
+                (newStats[key] as any) += res.stat_reward[k];
+            }
+          });
+        }
+        onUpdateUser({ ...user, stats: newStats });
       }
-    };
-    if (tab === 'QUESTS') fetchQuests();
-  }, [tab, user.id]);
+      
+      const updatedHabits = await apiClient.getHabits(user.id);
+      setHabits(updatedHabits);
+      setHabitAction(prev => ({ ...prev, [habitId]: '' }));
+    } catch (e) { console.error(e); }
+    finally { setTrackingHabit(null); }
+  };
 
   const handleGenerateQuests = async () => {
     setGeneratingQuest(true);
@@ -240,8 +270,8 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
       </div>
 
       <div className="flex gap-1 px-4 mb-8">
-         {['QUESTS', 'GOALS', 'ACHIEVEMENTS', 'STATS'].map(t => {
-             const tabValue = t === 'STATS' ? 'STATUS' : (t === 'QUESTS' ? 'QUESTS' : (t === 'GOALS' ? 'GOALS' : 'INVENTORY'));
+         {['QUESTS', 'HABITS', 'GOALS', 'ACHIEVEMENTS', 'STATS'].map(t => {
+             const tabValue = t === 'STATS' ? 'STATUS' : (t === 'QUESTS' ? 'QUESTS' : (t === 'GOALS' ? 'GOALS' : (t === 'HABITS' ? 'HABITS' : 'INVENTORY')));
              return (
                <button key={t} onClick={() => setTab(tabValue as any)} className={`flex-1 py-2 px-1 rounded-lg text-[9px] font-display font-black uppercase tracking-[0.1em] transition-all border ${tab === tabValue ? 'bg-slate-800 text-white border-white/20' : 'bg-transparent text-slate-600 border-transparent hover:text-slate-400'}`}>
                   {t}
@@ -251,6 +281,52 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
       </div>
 
       <div className="p-6 pt-6">
+          {tab === 'HABITS' && (
+              <div className="animate-fade-in space-y-6">
+                  <div className="flex justify-between items-center mb-4">
+                      <h2 className="text-2xl font-display font-black text-white uppercase tracking-widest">Sacred Habits</h2>
+                  </div>
+                  <div className="glass-card p-6 rounded-2xl border-white/5 bg-slate-900/20 mb-6">
+                      <div className="flex gap-2 mb-4">
+                          <input 
+                            value={habitInput}
+                            onChange={e => setHabitInput(e.target.value)}
+                            className="flex-1 bg-black/40 border border-white/10 p-3 text-white text-[10px] outline-none focus:border-gold transition-all uppercase tracking-widest"
+                            placeholder="Forge a new habit..."
+                          />
+                          <button onClick={handleAddHabit} className="px-4 bg-white text-black font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-colors">Forge</button>
+                      </div>
+                      <div className="space-y-4">
+                          {habits.map(h => (
+                              <div key={h.id} className="glass-card p-4 rounded-xl border-white/5 space-y-3">
+                                  <div className="flex justify-between items-center">
+                                      <div>
+                                          <p className="text-sm font-bold text-white uppercase tracking-wide">{h.name}</p>
+                                          <p className="text-[9px] text-gold font-black uppercase tracking-widest">Streak: {h.streak} Cycles</p>
+                                      </div>
+                                  </div>
+                                  <div className="flex gap-2">
+                                      <input 
+                                        value={habitAction[h.id] || ''}
+                                        onChange={e => setHabitAction(prev => ({ ...prev, [h.id]: e.target.value }))}
+                                        className="flex-1 bg-black border border-white/5 p-2 text-white text-[10px] outline-none focus:border-gold/30"
+                                        placeholder="What did you do today?"
+                                      />
+                                      <button 
+                                        onClick={() => handleTrackHabit(h.id)}
+                                        disabled={trackingHabit === h.id}
+                                        className="px-4 py-2 bg-slate-800 text-white text-[9px] font-black uppercase tracking-widest hover:bg-slate-700 disabled:opacity-50"
+                                      >
+                                        Log
+                                      </button>
+                                  </div>
+                              </div>
+                          ))}
+                          {habits.length === 0 && <p className="text-center text-slate-600 text-[9px] uppercase">No habits forged in the fire.</p>}
+                      </div>
+                  </div>
+              </div>
+          )}
           {tab === 'STATUS' && (
               <div className="animate-fade-in space-y-4">
                   <div className="grid grid-cols-2 gap-3">
@@ -306,50 +382,50 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                       </button>
                   </div>
                   <div className="space-y-4">
-                      {quests.map(t => {
-                          const expiresAt = t.expires_at ? new Date(t.expires_at).getTime() : 0;
-                          const timeLeft = Math.max(0, expiresAt - Date.now());
-                          const isExpired = timeLeft === 0 && expiresAt > 0;
-                          const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
+                          {quests.map(t => {
+                              const expiresAt = t.expires_at ? new Date(t.expires_at).getTime() : 0;
+                              const timeLeft = Math.max(0, expiresAt - Date.now());
+                              const isExpired = timeLeft === 0 && expiresAt > 0;
+                              const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
 
-                          return (
-                              <div key={t.id} className={`glass-card p-6 rounded-xl flex items-center justify-between transition-all relative overflow-hidden group ${t.completed ? 'opacity-40 border-green-500/30' : (isExpired ? 'opacity-40 border-red-500/30' : 'hover:border-gold/50')}`}>
-                                  <div className="flex items-center gap-6">
-                                      <div className={`w-10 h-10 glass-card rounded-lg flex items-center justify-center border-white/10 ${t.completed ? 'bg-green-500/10 border-green-500/30' : 'group-hover:border-gold/30'}`}>
-                                          {t.completed ? <div className="w-3 h-3 bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div> : (isExpired ? <div className="w-3 h-3 bg-red-500 rounded-full"></div> : <div className="w-5 h-5 border-2 border-slate-500 rounded-full flex items-center justify-center group-hover:border-gold/50 transition-colors"><div className="w-2 h-2 border border-slate-500 rounded-full group-hover:border-gold/50"></div></div>)}
+                              return (
+                                  <div key={t.id} className={`glass-card p-6 rounded-xl flex items-center justify-between transition-all relative overflow-hidden group ${t.completed ? 'opacity-40 border-green-500/30' : (isExpired ? 'opacity-40 border-red-500/30' : 'hover:border-gold/50')}`}>
+                                      <div className="flex items-center gap-6">
+                                          <div className={`w-10 h-10 glass-card rounded-lg flex items-center justify-center border-white/10 ${t.completed ? 'bg-green-500/10 border-green-500/30' : 'group-hover:border-gold/30'}`}>
+                                              {t.completed ? <div className="w-3 h-3 bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div> : (isExpired ? <div className="w-3 h-3 bg-red-500 rounded-full"></div> : <div className="w-5 h-5 border-2 border-slate-500 rounded-full flex items-center justify-center group-hover:border-gold/50 transition-colors"><div className="w-2 h-2 border border-slate-500 rounded-full group-hover:border-gold/50"></div></div>)}
+                                          </div>
+                                          <div>
+                                             <div className="flex items-center gap-3 mb-1 flex-wrap">
+                                                 <p className="text-[10px] font-display font-black text-gold uppercase tracking-[0.2em]">{t.difficulty} Tier</p>
+                                                 {!t.completed && expiresAt > 0 && !isExpired && (
+                                                     <p className="text-[8px] text-red-400 font-mono uppercase animate-pulse">expires {hoursLeft}h</p>
+                                                 )}
+                                                 {isExpired && !t.completed && (
+                                                     <p className="text-[8px] text-red-600 font-mono uppercase font-bold">EXPIRED</p>
+                                                 )}
+                                             </div>
+                                             <p className="text-sm font-bold text-white tracking-wide leading-tight">{t.text}</p>
+                                          </div>
                                       </div>
-                                      <div>
-                                         <div className="flex items-center gap-3 mb-1 flex-wrap">
-                                             <p className="text-[10px] font-display font-black text-gold uppercase tracking-[0.2em]">{t.difficulty} Tier</p>
-                                             {!t.completed && expiresAt > 0 && !isExpired && (
-                                                 <p className="text-[8px] text-red-400 font-mono uppercase animate-pulse">expires {hoursLeft}h</p>
-                                             )}
-                                             {isExpired && !t.completed && (
-                                                 <p className="text-[8px] text-red-600 font-mono uppercase font-bold">EXPIRED</p>
-                                             )}
-                                         </div>
-                                         <p className="text-sm font-bold text-white tracking-wide leading-tight">{t.text}</p>
+                                      <div className="flex items-center gap-4">
+                                          {!t.completed && !isExpired && (
+                                              <button 
+                                                onClick={() => handleCompleteQuest(t)}
+                                                className="p-3 bg-white text-black hover:bg-gold transition-colors rounded-full shadow-[0_0_15px_rgba(255,255,255,0.1)] flex items-center justify-center"
+                                                title="Complete Quest"
+                                              >
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                              </button>
+                                          )}
+                                          <div className="text-right">
+                                              <p className="text-[10px] font-mono text-slate-400 uppercase">+{t.xp_reward} EXP</p>
+                                          </div>
                                       </div>
                                   </div>
-                                  <div className="flex items-center gap-4">
-                                      {!t.completed && !isExpired && (
-                                          <button 
-                                            onClick={() => handleCompleteQuest(t)}
-                                            className="p-3 bg-white text-black hover:bg-gold transition-colors rounded-full shadow-[0_0_15px_rgba(255,255,255,0.1)] flex items-center justify-center"
-                                            title="Complete Quest"
-                                          >
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                                            </svg>
-                                          </button>
-                                      )}
-                                      <div className="text-right">
-                                          <p className="text-[10px] font-mono text-slate-400 uppercase">+{t.xp_reward} EXP</p>
-                                      </div>
-                                  </div>
-                              </div>
-                          );
-                      })}
+                              );
+                          })}
                       {quests.length === 0 && !generatingQuest && <div className="py-12 text-center text-slate-600 text-[10px] uppercase border border-dashed border-slate-800 rounded-xl">No active directives. Seek the void for purpose.</div>}
                   </div>
               </div>

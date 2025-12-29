@@ -334,5 +334,40 @@ export const apiClient = {
       console.error('Follow user error:', error);
       throw error;
     }
+  },
+  async getHabits(userId: string) {
+    try {
+      const response = await fetch(`${API_URL}/habits/${userId}`);
+      return handleResponse(response);
+    } catch (error: any) {
+      console.error('Get habits error:', error);
+      throw error;
+    }
+  },
+  async createHabit(userId: string, name: string) {
+    try {
+      const response = await fetch(`${API_URL}/habits`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, name })
+      });
+      return handleResponse(response);
+    } catch (error: any) {
+      console.error('Create habit error:', error);
+      throw error;
+    }
+  },
+  async trackHabit(userId: string, habitId: number, action: string) {
+    try {
+      const response = await fetch(`${API_URL}/habits/track`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, habitId, action })
+      });
+      return handleResponse(response);
+    } catch (error: any) {
+      console.error('Track habit error:', error);
+      throw error;
+    }
   }
 };

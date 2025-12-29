@@ -88,23 +88,6 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
     } catch (e) { console.error(e); }
   };
 
-  const syncProfileToServer = async (updatedUser: User) => {
-    try {
-      await apiClient.updateProfile(updatedUser.id, {
-        stats: updatedUser.stats,
-        tasks: updatedUser.tasks,
-        inventory: updatedUser.inventory,
-        avatarUrl: updatedUser.avatarUrl,
-        coverUrl: updatedUser.coverUrl,
-        entropy: updatedUser.entropy,
-        following: updatedUser.following,
-        goals: updatedUser.goals
-      });
-    } catch (e) {
-      console.error("Failed to sync profile:", e);
-    }
-  };
-
   const handleTrackHabit = async (habitId: number) => {
     const action = habitAction[habitId];
     if (!action?.trim()) return;
@@ -150,7 +133,9 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
         body: JSON.stringify({
           user_id: user.id,
           text: questTitle,
-          stats: user.stats
+          description: questDesc,
+          difficulty: questDifficulty,
+          xp_reward: questXP
         })
       });
       if (!response.ok) throw new Error('Failed to create quest');
@@ -158,6 +143,8 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
       setQuests(data);
       setQuestTitle('');
       setQuestDesc('');
+      setQuestDifficulty('C');
+      setQuestXP(100);
     } catch (error) {
       console.error('Failed to create quest:', error);
       alert("Failed to manifest directive. Try again.");
@@ -210,9 +197,7 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
             }
           });
         }
-        const updatedUser = { ...user, stats: newStats };
-        onUpdateUser(updatedUser);
-        syncProfileToServer(updatedUser);
+        onUpdateUser({ ...user, stats: newStats });
         // Immediately remove from list since it's completed
         setQuests(prev => prev.filter(q => q.id !== quest.id));
       }
@@ -356,17 +341,6 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                                   <div key={i} className="flex items-center gap-3 group">
                                       <div className="w-1 h-4 bg-indigo-500/50"></div>
                                       <p className="text-sm text-slate-200 italic flex-1">{g}</p>
-                                      <button 
-                                        onClick={async () => {
-                                          const newGoals = user.goals?.filter((_, index) => index !== i);
-                                          const updatedUser = { ...user, goals: newGoals };
-                                          onUpdateUser(updatedUser);
-                                          syncProfileToServer(updatedUser);
-                                        }}
-                                        className="opacity-0 group-hover:opacity-100 text-[8px] text-red-500 uppercase font-black transition-opacity"
-                                      >
-                                        Remove
-                                      </button>
                                   </div>
                               )) : <p className="text-center text-slate-600 text-[9px] uppercase">No trajectory defined.</p>}
                           </div>

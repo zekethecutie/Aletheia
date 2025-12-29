@@ -58,16 +58,40 @@ app.post('/api/auth/register', async (req: Request, res: Response) => {
 
 app.post('/api/auth/login', async (req: Request, res: Response) => {
   try {
-    const { username } = req.body;
-    const result = await query('SELECT id, username FROM profiles WHERE username = $1', [username]);
+    const { username, password } = req.body;
+    const cleanUsername = username.trim().toLowerCase();
+    const result = await query('SELECT * FROM profiles WHERE LOWER(username) = LOWER($1)', [cleanUsername]);
 
     if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Identity not found in the void.' });
     }
 
     const user = result.rows[0];
-    res.json({ success: true, user });
+    
+    // Check if password matches
+    const { verifyPassword } = await import('./auth');
+    const isValid = await verifyPassword(password, user.password_hash);
+    
+    if (!isValid) {
+      return res.status(401).json({ error: 'The key does not match the designation.' });
+    }
+
+    res.json({ 
+      success: true, 
+      user: { 
+        id: user.id, 
+        username: user.username,
+        stats: typeof user.stats === 'string' ? JSON.parse(user.stats) : user.stats,
+        manifesto: user.manifesto,
+        originStory: user.origin_story,
+        avatarUrl: user.avatar_url,
+        coverUrl: user.cover_url,
+        goals: typeof user.goals === 'string' ? JSON.parse(user.goals) : (user.goals || []),
+        following: typeof user.following === 'string' ? JSON.parse(user.following) : (user.following || [])
+      } 
+    });
   } catch (error: any) {
+    console.error('Login error:', error);
     res.status(500).json({ error: error.message });
   }
 });

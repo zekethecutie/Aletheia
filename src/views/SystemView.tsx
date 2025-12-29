@@ -172,8 +172,6 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
     const expiresAt = quest.expires_at ? new Date(quest.expires_at).getTime() : 0;
     if (expiresAt > 0 && Date.now() > expiresAt) {
       alert("This quest has expired. You failed to manifest your will in time.");
-      // Remove expired quest from view
-      setQuests(prev => prev.filter(q => q.id !== quest.id));
       return;
     }
 
@@ -198,8 +196,8 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
           });
         }
         onUpdateUser({ ...user, stats: newStats });
-        // Immediately remove from list since it's completed
-        setQuests(prev => prev.filter(q => q.id !== quest.id));
+        const data = await apiClient.getQuests(user.id);
+        setQuests(data);
       }
     } catch (error) {
       console.error('Failed to complete quest:', error);

@@ -49,8 +49,12 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
   const [habitAction, setHabitAction] = useState<Record<number, string>>({});
   const [habits, setHabits] = useState<any[]>([]);
   const [trackingHabit, setTrackingHabit] = useState<number | null>(null);
-  const [generatingQuest, setGeneratingQuest] = useState(false);
   const [quests, setQuests] = useState<any[]>([]);
+  const [questTitle, setQuestTitle] = useState('');
+  const [questDesc, setQuestDesc] = useState('');
+  const [questDifficulty, setQuestDifficulty] = useState<'E' | 'D' | 'C' | 'B' | 'A' | 'S'>('C');
+  const [questXP, setQuestXP] = useState(100);
+  const [generatingQuest, setGeneratingQuest] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -115,6 +119,36 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
       setHabitAction(prev => ({ ...prev, [habitId]: '' }));
     } catch (e) { console.error(e); }
     finally { setTrackingHabit(null); }
+  };
+
+  const handleCreateQuest = async () => {
+    if (!questTitle.trim()) {
+      alert("Quest must have a directive.");
+      return;
+    }
+    try {
+      const response = await fetch('/api/quests/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: user.id,
+          text: questTitle,
+          description: questDesc,
+          difficulty: questDifficulty,
+          xp_reward: questXP
+        })
+      });
+      if (!response.ok) throw new Error('Failed to create quest');
+      const data = await apiClient.getQuests(user.id);
+      setQuests(data);
+      setQuestTitle('');
+      setQuestDesc('');
+      setQuestDifficulty('C');
+      setQuestXP(100);
+    } catch (error) {
+      console.error('Failed to create quest:', error);
+      alert("Failed to manifest directive. Try again.");
+    }
   };
 
   const handleGenerateQuests = async () => {
@@ -408,8 +442,7 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
 
           {tab === 'QUESTS' && (
               <div className="animate-fade-in space-y-6">
-                  <div className="flex justify-between items-center mb-4">
-                      <h2 className="text-2xl font-display font-black text-white uppercase tracking-widest">Active Quests</h2>
+                  <div className="mb-6 flex gap-4">
                       <button 
                         onClick={handleGenerateQuests} 
                         disabled={generatingQuest} 
@@ -418,77 +451,118 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                         {generatingQuest ? <div className="w-2 h-2 border-2 border-gold border-t-transparent animate-spin rounded-full"></div> : null}
                         {generatingQuest ? 'Manifesting...' : 'Seek New Directives'}
                       </button>
+                      <h2 className="text-2xl font-display font-black text-white uppercase tracking-widest">OR Forge Manually</h2>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {quests.length > 0 ? quests.map(t => {
-                          const expiresAt = t.expires_at ? new Date(t.expires_at).getTime() : 0;
-                          const timeLeft = Math.max(0, expiresAt - Date.now());
-                          const isExpired = timeLeft === 0 && expiresAt > 0;
-                          const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
+                  <div className="glass-card p-6 rounded-2xl border-white/5 space-y-3 mb-6">
+                      <input 
+                        value={questTitle}
+                        onChange={e => setQuestTitle(e.target.value)}
+                        placeholder="Quest objective..."
+                        className="w-full bg-slate-900 border border-white/10 p-3 text-white text-sm outline-none focus:border-gold transition-all uppercase tracking-wider font-bold"
+                      />
+                      <textarea
+                        value={questDesc}
+                        onChange={e => setQuestDesc(e.target.value)}
+                        placeholder="Description (optional)..."
+                        className="w-full bg-slate-900 border border-white/10 p-3 text-white text-sm outline-none focus:border-gold transition-all h-20"
+                      />
+                      <div className="grid grid-cols-3 gap-2">
+                        <select
+                          value={questDifficulty}
+                          onChange={e => setQuestDifficulty(e.target.value as any)}
+                          className="bg-slate-900 border border-white/10 p-2 text-white text-sm outline-none focus:border-gold transition-all uppercase font-bold"
+                        >
+                          {['E', 'D', 'C', 'B', 'A', 'S'].map(d => <option key={d} value={d}>{d} Tier</option>)}
+                        </select>
+                        <input
+                          type="number"
+                          value={questXP}
+                          onChange={e => setQuestXP(Math.max(10, parseInt(e.target.value) || 100))}
+                          placeholder="XP Reward"
+                          className="bg-slate-900 border border-white/10 p-2 text-white text-sm outline-none focus:border-gold transition-all"
+                        />
+                        <button
+                          onClick={handleCreateQuest}
+                          className="bg-gold text-black font-black uppercase text-xs tracking-widest hover:bg-gold/80 transition-colors"
+                        >
+                          Create
+                        </button>
+                      </div>
+                  </div>
 
-                          return (
-                              <div key={t.id} className={`glass-card p-6 rounded-2xl flex flex-col justify-between transition-all relative overflow-hidden group border-white/5 bg-slate-900/30 ${t.completed ? 'opacity-50 border-green-500/30 shadow-[inset_0_0_20px_rgba(34,197,94,0.05)]' : (isExpired ? 'opacity-40 border-red-500/30' : 'hover:border-gold/40 hover:bg-slate-900/50 hover:shadow-[0_10px_40px_rgba(255,149,0,0.1)]')}`}>
-                                  <div className="relative z-10">
-                                      <div className="flex items-center justify-between mb-4">
-                                          <div className={`px-3 py-1 rounded text-[9px] font-black uppercase tracking-widest ${t.difficulty === 'S' ? 'bg-purple-600 text-white' : (t.difficulty === 'A' ? 'bg-red-600 text-white' : 'bg-slate-800 text-slate-400')}`}>
-                                              {t.difficulty} Tier Directive
-                                          </div>
-                                          {!t.completed && expiresAt > 0 && !isExpired && (
-                                              <div className="flex items-center gap-1.5 bg-black/40 px-2 py-1 rounded-full border border-red-500/20">
-                                                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
-                                                  <p className="text-[8px] text-red-400 font-mono uppercase font-bold">{hoursLeft}h Left</p>
+                  <div>
+                      <h2 className="text-2xl font-display font-black text-white uppercase tracking-widest mb-4">Active Quests</h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {quests.length > 0 ? quests.map(t => {
+                              const expiresAt = t.expires_at ? new Date(t.expires_at).getTime() : 0;
+                              const timeLeft = Math.max(0, expiresAt - Date.now());
+                              const isExpired = timeLeft === 0 && expiresAt > 0;
+                              const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
+
+                              return (
+                                  <div key={t.id} className={`glass-card p-6 rounded-2xl flex flex-col justify-between transition-all relative overflow-hidden group border-white/5 bg-slate-900/30 ${t.completed ? 'opacity-50 border-green-500/30 shadow-[inset_0_0_20px_rgba(34,197,94,0.05)]' : (isExpired ? 'opacity-40 border-red-500/30' : 'hover:border-gold/40 hover:bg-slate-900/50 hover:shadow-[0_10px_40px_rgba(255,149,0,0.1)]')}`}>
+                                      <div className="relative z-10">
+                                          <div className="flex items-center justify-between mb-4">
+                                              <div className={`px-3 py-1 rounded text-[9px] font-black uppercase tracking-widest ${t.difficulty === 'S' ? 'bg-purple-600 text-white' : (t.difficulty === 'A' ? 'bg-red-600 text-white' : 'bg-slate-800 text-slate-400')}`}>
+                                                  {t.difficulty} Tier Directive
                                               </div>
+                                              {!t.completed && expiresAt > 0 && !isExpired && (
+                                                  <div className="flex items-center gap-1.5 bg-black/40 px-2 py-1 rounded-full border border-red-500/20">
+                                                      <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                                                      <p className="text-[8px] text-red-400 font-mono uppercase font-bold">{hoursLeft}h Left</p>
+                                                  </div>
+                                              )}
+                                          </div>
+                                          
+                                          <div className="mb-4">
+                                            <h3 className="text-sm font-bold text-white tracking-wide leading-snug mb-3 group-hover:text-gold transition-colors">{t.text}</h3>
+                                            <p className="text-[10px] text-slate-400 font-mono italic leading-relaxed">RULES: Complete the directive as stated. Truthful completion only.</p>
+                                          </div>
+                                          
+                                          <div className="flex items-center gap-4 mb-6">
+                                              <div className="bg-gold/10 border border-gold/20 px-3 py-1.5 rounded-lg flex items-center gap-2">
+                                                  <span className="text-[9px] text-gold/60 uppercase font-black tracking-tighter">Reward</span>
+                                                  <span className="text-xs text-gold font-black">+{t.xp_reward} XP</span>
+                                              </div>
+                                              {t.stat_reward && Object.keys(t.stat_reward).some(k => (t.stat_reward as any)[k] > 0) && (
+                                                  <div className="flex gap-1.5">
+                                                      {Object.entries(t.stat_reward).map(([stat, val]) => (val as number) > 0 ? (
+                                                          <div key={stat} className="w-5 h-5 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center" title={`${stat}: +${val}`}>
+                                                              <div className="w-1 h-1 bg-blue-400 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.5)]"></div>
+                                                          </div>
+                                                      ) : null)}
+                                                  </div>
+                                              )}
+                                          </div>
+                                      </div>
+
+                                      <div className="relative z-10 flex items-center justify-between border-t border-white/5 pt-5 mt-2">
+                                          {t.completed ? (
+                                              <div className="w-full text-center py-2 text-[10px] text-green-500 font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 bg-green-500/5 rounded-lg border border-green-500/10">
+                                                  <div className="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,1)]"></div>
+                                                  Manifested
+                                              </div>
+                                          ) : isExpired ? (
+                                              <div className="w-full text-center py-2 text-[10px] text-red-600 font-black uppercase tracking-[0.2em] bg-red-500/5 rounded-lg border border-red-500/10">Signal Lost</div>
+                                          ) : (
+                                              <button 
+                                                onClick={() => handleCompleteQuest(t)}
+                                                className="w-full py-3 bg-white text-black text-[11px] font-black uppercase tracking-[0.2em] hover:bg-gold hover:tracking-[0.3em] transition-all active:scale-[0.98] shadow-2xl rounded-lg"
+                                              >
+                                                Manifest Will
+                                              </button>
                                           )}
                                       </div>
                                       
-                                      <div className="mb-4">
-                                        <h3 className="text-sm font-bold text-white tracking-wide leading-snug mb-3 group-hover:text-gold transition-colors">{t.text}</h3>
-                                        <p className="text-[10px] text-slate-400 font-mono italic leading-relaxed">RULES: Complete the directive as stated. Truthful completion only.</p>
-                                      </div>
-                                      
-                                      <div className="flex items-center gap-4 mb-6">
-                                          <div className="bg-gold/10 border border-gold/20 px-3 py-1.5 rounded-lg flex items-center gap-2">
-                                              <span className="text-[9px] text-gold/60 uppercase font-black tracking-tighter">Reward</span>
-                                              <span className="text-xs text-gold font-black">+{t.xp_reward} XP</span>
-                                          </div>
-                                          {t.stat_reward && Object.keys(t.stat_reward).some(k => (t.stat_reward as any)[k] > 0) && (
-                                              <div className="flex gap-1.5">
-                                                  {Object.entries(t.stat_reward).map(([stat, val]) => (val as number) > 0 ? (
-                                                      <div key={stat} className="w-5 h-5 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center" title={`${stat}: +${val}`}>
-                                                          <div className="w-1 h-1 bg-blue-400 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.5)]"></div>
-                                                      </div>
-                                                  ) : null)}
-                                              </div>
-                                          )}
-                                      </div>
+                                      <div className="absolute top-0 right-0 -mr-12 -mt-12 w-32 h-32 bg-gold/5 rounded-full blur-3xl group-hover:bg-gold/10 transition-all duration-700"></div>
                                   </div>
-
-                                  <div className="relative z-10 flex items-center justify-between border-t border-white/5 pt-5 mt-2">
-                                      {t.completed ? (
-                                          <div className="w-full text-center py-2 text-[10px] text-green-500 font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 bg-green-500/5 rounded-lg border border-green-500/10">
-                                              <div className="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,1)]"></div>
-                                              Manifested
-                                          </div>
-                                      ) : isExpired ? (
-                                          <div className="w-full text-center py-2 text-[10px] text-red-600 font-black uppercase tracking-[0.2em] bg-red-500/5 rounded-lg border border-red-500/10">Signal Lost</div>
-                                      ) : (
-                                          <button 
-                                            onClick={() => handleCompleteQuest(t)}
-                                            className="w-full py-3 bg-white text-black text-[11px] font-black uppercase tracking-[0.2em] hover:bg-gold hover:tracking-[0.3em] transition-all active:scale-[0.98] shadow-2xl rounded-lg"
-                                          >
-                                            Manifest Will
-                                          </button>
-                                      )}
-                                  </div>
-                                  
-                                  <div className="absolute top-0 right-0 -mr-12 -mt-12 w-32 h-32 bg-gold/5 rounded-full blur-3xl group-hover:bg-gold/10 transition-all duration-700"></div>
-                              </div>
-                          );
-                      }) : (
-                        !generatingQuest && <div className="col-span-full py-20 text-center text-slate-600 text-[11px] font-black uppercase tracking-[0.4em] border-2 border-dashed border-slate-800/50 rounded-3xl bg-black/40 backdrop-blur-sm">
-                          The void is silent.<br/>Seek new directives to begin.
-                        </div>
-                      )}
+                              );
+                          }) : (
+                            <div className="col-span-full py-20 text-center text-slate-600 text-[11px] font-black uppercase tracking-[0.4em] border-2 border-dashed border-slate-800/50 rounded-3xl bg-black/40 backdrop-blur-sm">
+                              The void is silent.<br/>Forge new directives to begin.
+                            </div>
+                          )}
+                      </div>
                   </div>
               </div>
           )}

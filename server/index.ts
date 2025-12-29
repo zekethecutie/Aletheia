@@ -2,6 +2,8 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { query } from './db';
+import { hashPassword } from './auth';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -19,18 +21,32 @@ app.get('/api/health', (req: Request, res: Response) => {
 // Auth Routes
 app.post('/api/auth/register', async (req: Request, res: Response) => {
   try {
-    const { username, password } = req.body;
+    const { username, password, manifesto, stats, originStory } = req.body;
+    const cleanUsername = username.trim().toLowerCase();
+    
     const result = await query(
-      'SELECT id FROM profiles WHERE username = $1',
-      [username]
+      'SELECT id FROM profiles WHERE LOWER(username) = LOWER($1)',
+      [cleanUsername]
     );
     if (result.rows.length > 0) {
       return res.status(400).json({ error: 'Username already exists' });
     }
 
+    const id = crypto.randomUUID();
+    const passwordHash = await hashPassword(password);
+
     const newUserResult = await query(
-      'INSERT INTO profiles (username, stats, entropy, following) VALUES ($1, $2, $3, $4) RETURNING id, username',
-      [username, JSON.stringify({ level: 1, xp: 0, xpToNextLevel: 100, intelligence: 10, physical: 10, spiritual: 10, social: 10, wealth: 0, health: 100, maxHealth: 100, resonance: 0, maxResonance: 100, class: 'Seeker' }), 0, JSON.stringify([])]
+      'INSERT INTO profiles (id, username, password_hash, manifesto, origin_story, stats, entropy, following) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, username',
+      [
+        id, 
+        cleanUsername, 
+        passwordHash, 
+        manifesto, 
+        originStory, 
+        JSON.stringify(stats), 
+        0, 
+        JSON.stringify([])
+      ]
     );
 
     const user = newUserResult.rows[0];
@@ -66,17 +82,17 @@ app.get('/api/profile/:id', async (req: Request, res: Response) => {
     res.json({
       id: profile.id,
       username: profile.username,
-      isVerified: true,
+      isVerified: profile.is_verified,
       created_at: profile.created_at,
-      stats: profile.stats,
-      tasks: profile.tasks || [],
-      inventory: profile.inventory || [],
+      stats: typeof profile.stats === 'string' ? JSON.parse(profile.stats) : profile.stats,
+      tasks: typeof profile.tasks === 'string' ? JSON.parse(profile.tasks) : (profile.tasks || []),
+      inventory: typeof profile.inventory === 'string' ? JSON.parse(profile.inventory) : (profile.inventory || []),
       manifesto: profile.manifesto,
       origin_story: profile.origin_story,
       avatar_url: profile.avatar_url,
       cover_url: profile.cover_url,
       entropy: profile.entropy,
-      following: profile.following || []
+      following: typeof profile.following === 'string' ? JSON.parse(profile.following) : (profile.following || [])
     });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -88,11 +104,38 @@ app.post('/api/profile/:id/update', async (req: Request, res: Response) => {
     const { stats, tasks, inventory, avatarUrl, coverUrl, entropy, following } = req.body;
     await query(
       'UPDATE profiles SET stats = $1, tasks = $2, inventory = $3, avatar_url = $4, cover_url = $5, entropy = $6, following = $7 WHERE id = $8',
-      [JSON.stringify(stats), JSON.stringify(tasks), JSON.stringify(inventory), avatarUrl, coverUrl, entropy, JSON.stringify(following), req.params.id]
+      [
+        JSON.stringify(stats), 
+        JSON.stringify(tasks || []), 
+        JSON.stringify(inventory || []), 
+        avatarUrl, 
+        coverUrl, 
+        entropy || 0, 
+        JSON.stringify(following || []), 
+        req.params.id
+      ]
     );
 
-    const profile = await query('SELECT * FROM profiles WHERE id = $1', [req.params.id]);
-    res.json(profile.rows[0]);
+    const profileResult = await query('SELECT * FROM profiles WHERE id = $1', [req.params.id]);
+    const profile = profileResult.rows[0];
+    res.json({
+      ...profile,
+      stats: typeof profile.stats === 'string' ? JSON.parse(profile.stats) : profile.stats,
+      tasks: typeof profile.tasks === 'string' ? JSON.parse(profile.tasks) : (profile.tasks || []),
+      inventory: typeof profile.inventory === 'string' ? JSON.parse(profile.inventory) : (profile.inventory || []),
+      following: typeof profile.following === 'string' ? JSON.parse(profile.following) : (profile.following || [])
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/check-username', async (req: Request, res: Response) => {
+  try {
+    const { username } = req.query;
+    if (!username) return res.status(400).json({ error: 'Username required' });
+    const result = await query('SELECT id FROM profiles WHERE LOWER(username) = LOWER($1)', [String(username).trim()]);
+    res.json({ available: result.rows.length === 0 });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -255,13 +298,33 @@ app.post('/api/quests/:id/complete', async (req: Request, res: Response) => {
 
 app.post('/api/quests/create', async (req: Request, res: Response) => {
   try {
-    const { user_id, text, description, difficulty, xp_reward } = req.body;
-    if (!user_id || !text || !difficulty) {
+    const { user_id, text, stats } = req.body;
+    if (!user_id || !text) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
+
+    const system = `You are the Eye of Aletheia. Analyze this manual quest directive: "${text}". 
+    Evaluate its difficulty (E-S) and appropriate rewards for a ${stats.class} level ${stats.level}.
+    Return JSON ONLY: { "difficulty": "E-S", "xp_reward": number, "stat_reward": { "physical": number, "intelligence": number, "spiritual": number, "social": number, "wealth": number } }`;
+    
+    const aiResponse = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(system) + '?json=true');
+    const aiText = await aiResponse.text();
+    const jsonMatch = aiText.match(/\{[\s\S]*\}/);
+    
+    let difficulty = 'C';
+    let xp_reward = 100;
+    let stat_reward = {};
+
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      difficulty = parsed.difficulty || 'C';
+      xp_reward = parsed.xp_reward || 100;
+      stat_reward = parsed.stat_reward || {};
+    }
+
     await query(
-      'INSERT INTO quests (user_id, text, description, difficulty, xp_reward, stat_reward) VALUES ($1, $2, $3, $4, $5, $6)',
-      [user_id, text, description || '', difficulty, xp_reward || 100, JSON.stringify({})]
+      'INSERT INTO quests (user_id, text, difficulty, xp_reward, stat_reward) VALUES ($1, $2, $3, $4, $5)',
+      [user_id, text, difficulty, xp_reward, JSON.stringify(stat_reward)]
     );
     res.json({ success: true });
   } catch (error: any) {

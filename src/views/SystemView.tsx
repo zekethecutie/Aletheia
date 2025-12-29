@@ -391,7 +391,7 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                           </div>
                           <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest mb-4 opacity-70">Long-term Trajectory</p>
                           <div className="space-y-4">
-                          {((user as any).goals || []).length > 0 ? ((user as any).goals as string[]).map((g, i) => (
+                          {((user as any).goals || []).length > 0 ? ((user as any).goals as string[]).map((g: string, i: number) => (
                                   <div key={i} className="flex items-center gap-3 group">
                                       <div className="w-1 h-4 bg-indigo-500/50"></div>
                                       <div className="flex-1 flex items-center gap-2">

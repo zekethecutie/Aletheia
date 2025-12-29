@@ -162,8 +162,10 @@ app.get('/api/check-username', async (req: Request, res: Response) => {
     const { username } = req.query;
     if (!username) return res.status(400).json({ error: 'Username required' });
     const result = await query('SELECT id FROM profiles WHERE LOWER(username) = LOWER($1)', [String(username).trim()]);
+    console.log(`Checking availability for: ${username}, Available: ${result.rows.length === 0}`);
     res.json({ available: result.rows.length === 0 });
   } catch (error: any) {
+    console.error('Username check error:', error);
     res.status(500).json({ error: error.message });
   }
 });

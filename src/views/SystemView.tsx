@@ -39,7 +39,7 @@ const ArtifactCard: React.FC<{ artifact: Artifact }> = ({ artifact }) => {
 };
 
 export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void; onLogout: () => void }> = ({ user, onUpdateUser, onLogout }) => {
-  const [tab, setTab] = useState<'STATUS' | 'QUESTS' | 'GOALS' | 'INVENTORY' | 'HABITS'>('QUESTS');
+  const [tab, setTab] = useState<'STATUS' | 'QUESTS' | 'SACRED_PATH' | 'INVENTORY'>('QUESTS');
   const [featInput, setFeatInput] = useState('');
   const [calculating, setCalculating] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -57,7 +57,7 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
       if (tab === 'QUESTS') {
         const data = await apiClient.getQuests(user.id);
         setQuests(data);
-      } else if (tab === 'HABITS') {
+      } else if (tab === 'SACRED_PATH') {
         const data = await apiClient.getHabits(user.id);
         setHabits(data);
       }
@@ -125,6 +125,7 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
       setQuests(data);
     } catch (error) {
       console.error('Failed to generate quests:', error);
+      alert("The Spire failed to manifest new directives. Try again later.");
     } finally {
       setGeneratingQuest(false);
     }
@@ -270,61 +271,90 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
       </div>
 
       <div className="flex gap-1 px-4 mb-8">
-         {['QUESTS', 'HABITS', 'GOALS', 'ACHIEVEMENTS', 'STATS'].map(t => {
-             const tabValue = t === 'STATS' ? 'STATUS' : (t === 'QUESTS' ? 'QUESTS' : (t === 'GOALS' ? 'GOALS' : (t === 'HABITS' ? 'HABITS' : 'INVENTORY')));
+         {['QUESTS', 'SACRED_PATH', 'ACHIEVEMENTS', 'STATS'].map(t => {
+             const tabValue = t === 'STATS' ? 'STATUS' : (t === 'QUESTS' ? 'QUESTS' : (t === 'SACRED_PATH' ? 'SACRED_PATH' : 'INVENTORY'));
              return (
                <button key={t} onClick={() => setTab(tabValue as any)} className={`flex-1 py-2 px-1 rounded-lg text-[9px] font-display font-black uppercase tracking-[0.1em] transition-all border ${tab === tabValue ? 'bg-slate-800 text-white border-white/20' : 'bg-transparent text-slate-600 border-transparent hover:text-slate-400'}`}>
-                  {t}
+                  {t.replace('_', ' ')}
                </button>
              );
          })}
       </div>
 
       <div className="p-6 pt-6">
-          {tab === 'HABITS' && (
-              <div className="animate-fade-in space-y-6">
-                  <div className="flex justify-between items-center mb-4">
-                      <h2 className="text-2xl font-display font-black text-white uppercase tracking-widest">Sacred Habits</h2>
-                  </div>
-                  <div className="glass-card p-6 rounded-2xl border-white/5 bg-slate-900/20 mb-6">
-                      <div className="flex gap-2 mb-4">
-                          <input 
-                            value={habitInput}
-                            onChange={e => setHabitInput(e.target.value)}
-                            className="flex-1 bg-black/40 border border-white/10 p-3 text-white text-[10px] outline-none focus:border-gold transition-all uppercase tracking-widest"
-                            placeholder="Forge a new habit..."
-                          />
-                          <button onClick={handleAddHabit} className="px-4 bg-white text-black font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-colors">Forge</button>
+          {tab === 'SACRED_PATH' && (
+              <div className="animate-fade-in space-y-8">
+                  <section>
+                      <h2 className="text-xl font-display font-black text-white uppercase tracking-widest mb-6 flex items-center gap-3">
+                          <span className="w-2 h-2 bg-indigo-500 rounded-full"></span>
+                          Sacred Goals
+                      </h2>
+                      <div className="glass-card p-6 rounded-2xl border-indigo-500/20 bg-indigo-500/5 mb-6">
+                          <div className="flex gap-2 mb-4">
+                              <input 
+                                value={goalInput}
+                                onChange={e => setGoalInput(e.target.value)}
+                                className="flex-1 bg-black/40 border border-white/10 p-3 text-white text-[10px] outline-none focus:border-indigo-500 transition-all uppercase tracking-widest"
+                                placeholder="Define your trajectory..."
+                              />
+                              <button onClick={handleAddGoal} className="px-4 bg-indigo-500 text-white font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-colors">Add</button>
+                          </div>
+                          <div className="space-y-4">
+                              {(user.goals || []).length > 0 ? (user.goals as string[]).map((g: string, i: number) => (
+                                  <div key={i} className="flex items-center gap-3 group">
+                                      <div className="w-1 h-4 bg-indigo-500/50"></div>
+                                      <p className="text-sm text-slate-200 italic flex-1">{g}</p>
+                                  </div>
+                              )) : <p className="text-center text-slate-600 text-[9px] uppercase">No trajectory defined.</p>}
+                          </div>
                       </div>
-                      <div className="space-y-4">
-                          {habits.map(h => (
-                              <div key={h.id} className="glass-card p-4 rounded-xl border-white/5 space-y-3">
-                                  <div className="flex justify-between items-center">
-                                      <div>
-                                          <p className="text-sm font-bold text-white uppercase tracking-wide">{h.name}</p>
-                                          <p className="text-[9px] text-gold font-black uppercase tracking-widest">Streak: {h.streak} Cycles</p>
+                  </section>
+
+                  <section>
+                      <h2 className="text-xl font-display font-black text-white uppercase tracking-widest mb-6 flex items-center gap-3">
+                          <span className="w-2 h-2 bg-gold rounded-full"></span>
+                          Sacred Habits
+                      </h2>
+                      <div className="glass-card p-6 rounded-2xl border-white/5 bg-slate-900/20">
+                          <div className="flex gap-2 mb-4">
+                              <input 
+                                value={habitInput}
+                                onChange={e => setHabitInput(e.target.value)}
+                                className="flex-1 bg-black/40 border border-white/10 p-3 text-white text-[10px] outline-none focus:border-gold transition-all uppercase tracking-widest"
+                                placeholder="Forge a new habit..."
+                              />
+                              <button onClick={handleAddHabit} className="px-4 bg-white text-black font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-colors">Forge</button>
+                          </div>
+                          <div className="space-y-4">
+                              {habits.map(h => (
+                                  <div key={h.id} className="glass-card p-4 rounded-xl border-white/5 space-y-3">
+                                      <div className="flex justify-between items-center">
+                                          <div>
+                                              <p className="text-sm font-bold text-white uppercase tracking-wide">{h.name}</p>
+                                              <p className="text-[9px] text-gold font-black uppercase tracking-widest">Streak: {h.streak} Cycles</p>
+                                          </div>
+                                      </div>
+                                      <div className="flex gap-2">
+                                          <input 
+                                            value={habitAction[h.id] || ''}
+                                            onChange={e => setHabitAction(prev => ({ ...prev, [h.id]: e.target.value }))}
+                                            className="flex-1 bg-black border border-white/5 p-2 text-white text-[10px] outline-none focus:border-gold/30"
+                                            placeholder="What did you do today?"
+                                          />
+                                          <button 
+                                            onClick={() => handleTrackHabit(h.id)}
+                                            disabled={trackingHabit === h.id}
+                                            className="px-4 py-2 bg-slate-800 text-white text-[9px] font-black uppercase tracking-widest hover:bg-slate-700 disabled:opacity-50"
+                                          >
+                                            Log
+                                          </button>
                                       </div>
                                   </div>
-                                  <div className="flex gap-2">
-                                      <input 
-                                        value={habitAction[h.id] || ''}
-                                        onChange={e => setHabitAction(prev => ({ ...prev, [h.id]: e.target.value }))}
-                                        className="flex-1 bg-black border border-white/5 p-2 text-white text-[10px] outline-none focus:border-gold/30"
-                                        placeholder="What did you do today?"
-                                      />
-                                      <button 
-                                        onClick={() => handleTrackHabit(h.id)}
-                                        disabled={trackingHabit === h.id}
-                                        className="px-4 py-2 bg-slate-800 text-white text-[9px] font-black uppercase tracking-widest hover:bg-slate-700 disabled:opacity-50"
-                                      >
-                                        Log
-                                      </button>
-                                  </div>
-                              </div>
-                          ))}
-                          {habits.length === 0 && <p className="text-center text-slate-600 text-[9px] uppercase">No habits forged in the fire.</p>}
+                              ))}
+                              {habits.length === 0 && <p className="text-center text-slate-600 text-[9px] uppercase">No habits forged.</p>}
+                          </div>
                       </div>
-                  </div>
+                  </section>
               </div>
           )}
           {tab === 'STATUS' && (

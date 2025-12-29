@@ -70,17 +70,17 @@ export const HierarchyView: React.FC = () => {
 
   const getRankColor = (rank: number | undefined): string => {
     if (!rank) return 'text-slate-400';
-    if (rank === 1) return 'text-gold';
-    if (rank === 2) return 'text-slate-300';
-    if (rank === 3) return 'text-orange-400';
+    if (rank === 1) return 'text-red-500';
+    if (rank === 2) return 'text-green-500';
+    if (rank === 3) return 'text-blue-500';
     return 'text-slate-500';
   };
 
   const getRankBgColor = (rank: number | undefined): string => {
     if (!rank) return 'bg-slate-900';
-    if (rank === 1) return 'bg-amber-900/30 border-gold/30';
-    if (rank === 2) return 'bg-slate-800/30 border-slate-500/30';
-    if (rank === 3) return 'bg-orange-900/20 border-orange-700/30';
+    if (rank === 1) return 'bg-red-950/30 border-red-600/30';
+    if (rank === 2) return 'bg-green-950/30 border-green-600/30';
+    if (rank === 3) return 'bg-blue-950/30 border-blue-600/30';
     return 'bg-slate-900/20 border-slate-800/30';
   };
 
@@ -133,15 +133,16 @@ export const HierarchyView: React.FC = () => {
             {leaderboard.map((user) => (
               <div
                 key={user.id}
-                className={`glass-card transition-all p-6 rounded-2xl hover:border-gold/30 group ${getRankBgColor(user.rank)}`}
+                onClick={() => (window as any).onViewProfile?.(user.id)}
+                className={`glass-card transition-all p-6 rounded-2xl cursor-pointer hover:border-white/30 group ${getRankBgColor(user.rank)}`}
               >
                 <div className="flex items-center gap-4">
                   {/* Rank */}
                   <div className={`text-center min-w-[50px] ${getRankColor(user.rank)}`}>
                     <div className="text-xl font-display font-black"># {user.rank}</div>
-                    {user.rank === 1 && <span className="text-[8px] text-gold font-display font-black uppercase tracking-widest">APEX</span>}
-                    {user.rank === 2 && <span className="text-[8px] text-slate-300 font-display font-black uppercase tracking-widest">ASCENDED</span>}
-                    {user.rank === 3 && <span className="text-[8px] text-orange-400 font-display font-black uppercase tracking-widest">ELITE</span>}
+                    {user.rank === 1 && <span className="text-[8px] text-red-500 font-display font-black uppercase tracking-widest">APEX</span>}
+                    {user.rank === 2 && <span className="text-[8px] text-green-500 font-display font-black uppercase tracking-widest">ASCENDED</span>}
+                    {user.rank === 3 && <span className="text-[8px] text-blue-500 font-display font-black uppercase tracking-widest">ELITE</span>}
                   </div>
 
                   {/* Avatar */}

@@ -618,21 +618,71 @@ app.post('/api/achievements/calculate', async (req: Request, res: Response) => {
 app.post('/api/ai/mirror/evaluate', async (req: Request, res: Response) => {
   try {
     const { situation, choice } = req.body;
-    const rewardType = Math.random() < 0.6 ? 'ARTIFACT' : 'STAT_ONLY';
-    const statKeys = ['intelligence', 'physical', 'spiritual', 'social', 'wealth'];
-    const rewardPrompt = rewardType === 'ARTIFACT' 
-      ? '"reward": { "name": "string", "description": "string", "icon": "emoji", "rarity": "Common|Rare|Epic|Relic" }' 
-      : '"reward": null';
-    const prompt = `Evaluate this choice and determine stat changes (add or subtract 1-3 to actual stats, not made-up ones):
+    const prompt = `Analyze this choice in a mirror scenario.
     Situation: ${situation}
     Choice: ${choice}
-    Valid stats: ${statKeys.join(', ')}
-    Return JSON ONLY: { "outcome": "string", "statChange": { "intelligence": number, "physical": number, "spiritual": number, "social": number, "wealth": number }, "rewardType": "${rewardType}", ${rewardPrompt} }`;
+    
+    Evaluate the impact. 
+    1. STAT CHANGES: Determine stat gains or losses (range -5 to +10).
+    2. ARTIFACT: Describe a mystical artifact if one is earned.
+    
+    Return JSON: { 
+      "outcome": "Poetic explanation of the result", 
+      "statChange": { "physical": number, "intelligence": number, "spiritual": number, "social": number, "wealth": number },
+      "reward": { "name": "string", "description": "string", "rarity": "COMMON|RARE|LEGENDARY|MYTHIC", "icon": "emoji", "effect": "string" }
+    }`;
+    
     const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
     const text = await response.text();
     const jsonMatch = text.match(/\{.*\}/s);
-    const result = jsonMatch ? JSON.parse(jsonMatch[0]) : { outcome: "The mirror ripples with subtle change.", statChange: { intelligence: 0, physical: 0, spiritual: 1, social: 0, wealth: 0 }, rewardType: 'STAT_ONLY', reward: null };
-    res.json(result);
+    if (jsonMatch) {
+      let result = JSON.parse(jsonMatch[0]);
+      // Apply RNG for artifact (30% chance)
+      const rng = Math.random();
+      if (rng > 0.3) {
+        result.rewardType = 'STAT_ONLY';
+        result.reward = null;
+      } else {
+        result.rewardType = 'ARTIFACT';
+      }
+      res.json(result);
+    } else {
+      res.status(500).json({ error: 'Evaluation failed' });
+    }
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// User Search
+app.get('/api/search/users', async (req: Request, res: Response) => {
+  try {
+    const { q } = req.query;
+    const result = await query(
+      "SELECT id, username, avatar_url, stats FROM profiles WHERE username ILIKE $1 LIMIT 10",
+      [`%${q}%`]
+    );
+    res.json(result.rows);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// CRUD for Posts
+app.delete('/api/posts/:id', async (req: Request, res: Response) => {
+  try {
+    await query('DELETE FROM posts WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.patch('/api/posts/:id', async (req: Request, res: Response) => {
+  try {
+    const { content } = req.body;
+    await query('UPDATE posts SET content = $1, updated_at = NOW() WHERE id = $2', [content, req.params.id]);
+    res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

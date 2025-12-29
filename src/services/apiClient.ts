@@ -109,7 +109,7 @@ export const apiClient = {
 
   async analyzeIdentity(manifesto: string) {
     try {
-      const response = await fetch(`${API_URL}/ai/analyze-identity`, {
+      const response = await fetch(`${API_URL}/ai/identity`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ manifesto })

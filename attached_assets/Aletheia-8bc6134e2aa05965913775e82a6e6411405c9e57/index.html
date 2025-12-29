@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" content="#020617" />
+    <title>Aletheia</title>
+    <!-- We keep Tailwind CDN for simplicity in this setup, but React is now bundled locally -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              midnight: '#010409',
+              void: '#000000',
+              gold: '#FF9500', // Reference image uses a more vibrant orange/gold
+              'gold-dim': '#CC7A00',
+              'gold-light': '#FFB347',
+              mystic: '#0D1117',
+              crimson: '#FF3B30',
+              slate: {
+                950: '#010409',
+                900: '#0D1117',
+                800: '#161B22',
+                700: '#21262D',
+              }
+            },
+            fontFamily: {
+              serif: ['Montserrat', 'serif'],
+              sans: ['Montserrat', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace'],
+              display: ['Orbitron', 'sans-serif'],
+              futuristic: ['Orbitron', 'sans-serif'],
+            },
+            animation: {
+              'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'fade-in': 'fadeIn 1s ease-out forwards',
+              'fade-in-up': 'fadeInUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+              'blur-in': 'blurIn 2s ease-out forwards',
+              'slide-up': 'slideUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+              'float': 'float 6s ease-in-out infinite',
+              'scanline': 'scanline 8s linear infinite',
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: '0' },
+                '100%': { opacity: '1' },
+              },
+              fadeInUp: {
+                '0%': { opacity: '0', transform: 'translateY(30px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              },
+              blurIn: {
+                '0%': { opacity: '0', filter: 'blur(20px)', transform: 'scale(0.98)' },
+                '100%': { opacity: '1', filter: 'blur(0)', transform: 'scale(1)' },
+              },
+              slideUp: {
+                '0%': { transform: 'translateY(100%)' },
+                '100%': { transform: 'translateY(0)' },
+              },
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-10px)' },
+              },
+              scanline: {
+                '0%': { transform: 'translateY(-100%)' },
+                '100%': { transform: 'translateY(100%)' },
+              }
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@300;700&display=swap');
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 4px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #000;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #FF9500;
+        border-radius: 10px;
+      }
+      
+      body {
+        background-color: #000;
+        color: #E2E8F0;
+        font-family: 'Montserrat', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        overscroll-behavior-y: none;
+        overflow-x: hidden;
+      }
+
+      .glass-card {
+        background: rgba(18, 18, 18, 0.8);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+      }
+
+      .stats-bar {
+        height: 6px;
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.05);
+        overflow: hidden;
+        position: relative;
+      }
+
+      .stats-bar-fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .text-glow {
+        text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+      }
+
+      .scanline-overlay {
+        position: fixed;
+        inset: 0;
+        background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.1) 50%);
+        background-size: 100% 4px;
+        pointer-events: none;
+        z-index: 100;
+      }
+
+      .noise-overlay {
+        position: fixed;
+        inset: 0;
+        background: url('https://www.transparenttextures.com/patterns/black-linen.png');
+        opacity: 0.05;
+        pointer-events: none;
+        z-index: 101;
+      }
+    </style>
+
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/index.tsx"></script>
+  </body>
+</html>

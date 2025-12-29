@@ -1,0 +1,70 @@
+modules = ["nodejs-20", "web"]
+[agent]
+expertMode = true
+integrations = ["javascript_gemini_ai_integrations:2.0.0", "javascript_object_storage:2.0.0"]
+
+[nix]
+channel = "stable-25_05"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Frontend"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Backend"
+
+[[workflows.workflow]]
+name = "Frontend"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow]]
+name = "Backend"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run server"
+waitForPort = 3001
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[ports]]
+localPort = 3001
+externalPort = 3002
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[[ports]]
+localPort = 5001
+externalPort = 3000
+
+[deployment]
+deploymentTarget = "static"
+build = ["npm", "run", "build"]
+publicDir = "dist"
+
+[userenv]
+
+[userenv.shared]
+VITE_API_KEY = ""
+SUPABASE_DATABASE_URL = "postgresql://postgres.yjxqvwyudhvfkzkaixax:aletheiatheinevitable@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres"

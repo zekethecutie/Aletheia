@@ -58,12 +58,17 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
 
   useEffect(() => {
     const fetchData = async () => {
-      if (tab === 'QUESTS') {
-        const data = await apiClient.getQuests(user.id);
-        setQuests(data);
-      } else if (tab === 'SACRED_PATH') {
-        const data = await apiClient.getHabits(user.id);
-        setHabits(data);
+      if (!user?.id) return;
+      try {
+        if (tab === 'QUESTS') {
+          const data = await apiClient.getQuests(user.id);
+          setQuests(Array.isArray(data) ? data : []);
+        } else if (tab === 'SACRED_PATH') {
+          const data = await apiClient.getHabits(user.id);
+          setHabits(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        console.error("Error fetching data:", err);
       }
     };
     fetchData();
@@ -222,7 +227,7 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
   };
 
   const submitFeat = async () => {
-    if (!featInput.trim()) return;
+    if (!featInput.trim() || !user?.stats) return;
     setCalculating(true);
     try {
       const res = await apiClient.calculateFeat(featInput, user.id, user.stats);

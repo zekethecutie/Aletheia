@@ -65,24 +65,17 @@ export const generateMirrorScenario = async (stats: UserStats): Promise<MirrorSc
 
 export const generateArtifactImage = async (name: string, description: string): Promise<string | undefined> => {
   try {
-    const aiInstance = getAI();
-    const response = await aiInstance.models.generateContent({
-      model: IMAGE_MODEL,
-      contents: {
-        parts: [{ text: `Mystical pixel art RPG item, 32-bit style, sharp edges, vivid colors, solid black background, no transparency. Subject: ${name}. Context: ${description}. High contrast fantasy item.` }]
-      }
+    const response = await fetch('/api/ai/image/artifact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, description })
     });
-    if (response.candidates) {
-      for (const candidate of response.candidates) {
-        if (candidate.content && candidate.content.parts) {
-          for (const part of candidate.content.parts) {
-            if (part.inlineData) return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
-          }
-        }
-      }
-    }
-  } catch (e) { console.error(e); }
-  return undefined;
+    const data = await response.json();
+    return data.imageUrl;
+  } catch (e) {
+    console.error("Artifact image generation failed:", e);
+    return undefined;
+  }
 };
 
 export const getDailyWisdom = async (): Promise<{ text: string; author: string }> => {

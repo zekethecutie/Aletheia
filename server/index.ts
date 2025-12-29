@@ -301,6 +301,21 @@ app.post('/api/posts', async (req: Request, res: Response) => {
   }
 });
 
+// Artifact Image Generation
+app.post('/api/ai/image/artifact', async (req: Request, res: Response) => {
+  try {
+    const { name, description } = req.body;
+    const prompt = `Mystical pixel art RPG item, 32-bit style, sharp edges, vivid colors, solid black background, no transparency. Subject: ${name}. Context: ${description}. High contrast fantasy item.`;
+    
+    // Using Flux model via Pollinations for high quality mystical items
+    const imageUrl = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=512&height=512&seed=${Math.floor(Math.random() * 1000000)}&model=flux`;
+    
+    res.json({ imageUrl });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Quests
 app.get('/api/quests/:userId', async (req: Request, res: Response) => {
   try {

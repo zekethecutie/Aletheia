@@ -13,9 +13,9 @@ export const StatsRadar: React.FC<StatsRadarProps> = ({ stats }) => {
   const statPoints = [
     { name: 'STR', value: stats.physical, angle: 0 },
     { name: 'INT', value: stats.intelligence, angle: 72 },
-    { name: 'AGI', value: stats.spiritual, angle: 144 },
-    { name: 'LUK', value: stats.social, angle: 216 },
-    { name: 'WIS', value: stats.wealth, angle: 288 }
+    { name: 'SPI', value: stats.spiritual, angle: 144 },
+    { name: 'SOC', value: stats.social, angle: 216 },
+    { name: 'WEA', value: stats.wealth, angle: 288 }
   ];
 
   const getPoint = (angle: number, distance: number) => {
@@ -73,9 +73,10 @@ export const StatsRadar: React.FC<StatsRadarProps> = ({ stats }) => {
 
         <polygon
           points={polygonPoints}
-          fill="rgba(212, 175, 55, 0.15)"
-          stroke="#d4af37"
+          fill="rgba(59, 130, 246, 0.2)"
+          stroke="#3b82f6"
           strokeWidth="2.5"
+          className="drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]"
         />
 
         {statPoints.map((stat, i) => {
@@ -86,10 +87,9 @@ export const StatsRadar: React.FC<StatsRadarProps> = ({ stats }) => {
               key={`point-${i}`}
               cx={point.x}
               cy={point.y}
-              r="5"
-              fill="#d4af37"
-              stroke="rgba(212, 175, 55, 0.6)"
-              strokeWidth="2"
+              r="4"
+              fill="#3b82f6"
+              className="drop-shadow-[0_0_4px_rgba(59,130,246,0.8)]"
             />
           );
         })}
@@ -104,9 +104,8 @@ export const StatsRadar: React.FC<StatsRadarProps> = ({ stats }) => {
               y={point.y}
               textAnchor="middle"
               dominantBaseline="middle"
-              className="text-[10px] font-display font-black"
-              fill="#d4af37"
-              opacity="0.8"
+              className="text-[10px] font-display font-black tracking-tighter"
+              fill="#94a3b8"
             >
               {stat.name}
             </text>
@@ -120,7 +119,7 @@ export const StatsRadar: React.FC<StatsRadarProps> = ({ stats }) => {
             <p className="text-[9px] font-display font-black text-slate-500 uppercase tracking-widest mb-2">
               {stat.name}
             </p>
-            <p className="text-xl font-display font-black text-gold">{stat.value}</p>
+            <p className="text-xl font-display font-black text-blue-400">{stat.value}</p>
           </div>
         ))}
       </div>

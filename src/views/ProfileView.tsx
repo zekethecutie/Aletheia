@@ -176,11 +176,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ targetUserId, onBack, 
         }
     });
   }} />;
-  if (loading || !profileUser) return <div className="h-screen bg-void flex items-center justify-center"><div className="w-6 h-6 border-2 border-gold border-t-transparent animate-spin rounded-full"></div></div>;
+  if (loading || !profileUser || !profileUser.stats) return <div className="h-screen bg-void flex items-center justify-center"><div className="w-6 h-6 border-2 border-gold border-t-transparent animate-spin rounded-full"></div></div>;
 
   return (
     <div className="min-h-screen bg-void pb-20 font-sans text-slate-200">
-       <Header title={profileUser.username} subtitle={profileUser.stats.class} onBack={onBack} rightAction={isOwnProfile ? <button onClick={() => { if (confirm("Disconnect from the Collective?")) onLogout?.(); }} className="px-4 py-2 bg-red-600 text-white text-[9px] font-black uppercase tracking-widest rounded hover:bg-red-700 transition-colors">Disconnect</button> : null} />
+       <Header title={profileUser.username} subtitle={profileUser.stats?.class || 'Seeker'} onBack={onBack} rightAction={isOwnProfile ? <button onClick={() => { if (confirm("Disconnect from the Collective?")) onLogout?.(); }} className="px-4 py-2 bg-red-600 text-white text-[9px] font-black uppercase tracking-widest rounded hover:bg-red-700 transition-colors">Disconnect</button> : null} />
        <div className="p-6">
            <div className="relative mb-12">
                {profileUser.coverUrl ? (
@@ -195,7 +195,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ targetUserId, onBack, 
                    <div className="w-28 h-28 rounded-2xl bg-black border-4 border-slate-900 p-1.5 shadow-2xl overflow-hidden">
                        <img src={profileUser.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${profileUser.username}&backgroundColor=000000`} className="w-full h-full object-cover rounded-xl bg-slate-900" />
                    </div>
-                   <div className="mt-[-12px] bg-white text-black px-3 py-0.5 rounded-sm font-black text-[10px] uppercase shadow-lg z-10 border border-slate-200">LVL {profileUser.stats.level}</div>
+                   <div className="mt-[-12px] bg-white text-black px-3 py-0.5 rounded-sm font-black text-[10px] uppercase shadow-lg z-10 border border-slate-200">LVL {profileUser.stats?.level || 1}</div>
                </div>
            </div>
            <div className="text-center mb-8">

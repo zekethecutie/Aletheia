@@ -421,15 +421,17 @@ app.post('/api/notifications/:id/read', async (req: Request, res: Response) => {
 app.post('/api/ai/mirror/scenario', async (req: Request, res: Response) => {
   try {
     const { stats } = req.body;
-    const prompt = `Generate a moral dilemma for a ${stats.class} character. Return JSON ONLY: { "situation": "string", "choiceA": "string", "choiceB": "string", "testedStat": "string" }`;
+    const prompt = `Generate a moral dilemma for a ${stats?.class || 'Seeker'} character level ${stats?.level || 1}. Return JSON ONLY: { "situation": "string", "choiceA": "string", "choiceB": "string", "context": "string", "testedStat": "string" }`;
     const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
     const text = await response.text();
-    const jsonMatch = text.match(/\{.*\}/s);
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       res.json(JSON.parse(jsonMatch[0]));
+    } else {
+      res.json({ situation: "A fork in the road.", choiceA: "Left path", choiceB: "Right path", context: "The void awaits.", testedStat: "spiritual" });
     }
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    res.json({ situation: "A fork in the road.", choiceA: "Left path", choiceB: "Right path", context: "The void awaits.", testedStat: "spiritual" });
   }
 });
 
@@ -453,6 +455,23 @@ app.post('/api/ai/analyze-identity', async (req: Request, res: Response) => {
     }
   } catch (error: any) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Daily Wisdom endpoint
+app.get('/api/ai/wisdom', async (req: Request, res: Response) => {
+  try {
+    const prompt = `Generate a profound short philosophical quote about personal growth. Return ONLY JSON: { "text": "quote text", "author": "author name" }`;
+    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
+    const text = await response.text();
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      res.json(JSON.parse(jsonMatch[0]));
+    } else {
+      res.json({ text: "Stare into the void.", author: "The Council" });
+    }
+  } catch (error: any) {
+    res.json({ text: "Stare into the void.", author: "The Council" });
   }
 });
 

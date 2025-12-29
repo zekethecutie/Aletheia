@@ -40,6 +40,9 @@ const ArtifactCard: React.FC<{ artifact: Artifact }> = ({ artifact }) => {
 };
 
 export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void; onLogout: () => void }> = ({ user, onUpdateUser, onLogout }) => {
+  if (!user || !user.stats) {
+    return <div className="flex items-center justify-center h-screen text-slate-400">Syncing stats...</div>;
+  }
   const [tab, setTab] = useState<'STATUS' | 'QUESTS' | 'SACRED_PATH' | 'INVENTORY'>('QUESTS');
   const [featInput, setFeatInput] = useState('');
   const [calculating, setCalculating] = useState(false);

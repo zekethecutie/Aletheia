@@ -605,7 +605,9 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                   <div className="flex justify-between items-center mb-6">
                       <h2 className="text-xl font-display font-black text-white uppercase tracking-widest">Artifact Repository</h2>
                       <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest">
-                          Storage: {(user.inventory || []).length} / 24
+                            <div className="text-[10px] font-mono text-gold/60 uppercase tracking-widest">
+                                Artifacts: {(user.inventory || []).length} / ∞
+                            </div>
                       </div>
                   </div>
                   <div className="grid grid-cols-4 md:grid-cols-6 gap-2">

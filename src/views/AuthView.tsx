@@ -98,27 +98,27 @@ const AcceptanceCard: React.FC<{ user: User, onEnter: () => void }> = ({ user, o
                     <div className="grid grid-cols-5 gap-3">
                          <div className="text-center">
                             <IconUser className="w-5 h-5 mx-auto mb-2 text-blue-400" />
-                            <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Intelligence</p>
+                            <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">INT</p>
                             <span className="text-white font-black text-lg">{user.stats.intelligence}</span>
                          </div>
                          <div className="text-center">
                             <IconDumbbell className="w-5 h-5 mx-auto mb-2 text-red-400" />
-                            <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Physical</p>
+                            <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">PHY</p>
                             <span className="text-white font-black text-lg">{user.stats.physical}</span>
                          </div>
                          <div className="text-center">
                             <IconSpirit className="w-5 h-5 mx-auto mb-2 text-purple-400" />
-                            <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Spiritual</p>
+                            <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">SPI</p>
                             <span className="text-white font-black text-lg">{user.stats.spiritual}</span>
                          </div>
                          <div className="text-center">
                             <IconLock className="w-5 h-5 mx-auto mb-2 text-amber-400" />
-                            <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Social</p>
+                            <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">SOC</p>
                             <span className="text-white font-black text-lg">{user.stats.social}</span>
                          </div>
                          <div className="text-center">
                             <IconCoin className="w-5 h-5 mx-auto mb-2 text-yellow-400" />
-                            <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Wealth</p>
+                            <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">WLT</p>
                             <span className="text-white font-black text-lg">{user.stats.wealth}</span>
                          </div>
                     </div>

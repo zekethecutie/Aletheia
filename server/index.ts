@@ -452,6 +452,29 @@ app.post('/api/ai/mirror/scenario', async (req: Request, res: Response) => {
   }
 });
 
+// AI Proxy - Analyze Identity
+app.post('/api/ai/analyze-identity', async (req: Request, res: Response) => {
+  try {
+    const { manifesto } = req.body;
+    const system = `You are the Eye of Aletheia. Analyze this initiate's manifesto: "${manifesto}".
+    Determine their starting stats based on their intent.
+    Return JSON ONLY: { "initialStats": { "intelligence": number, "physical": number, "spiritual": number, "social": number, "wealth": number }, "reason": "A one-sentence mystical verdict" }
+    Stats should sum to 15, with minimum 1 per category.`;
+    
+    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(system) + '?json=true');
+    const text = await response.text();
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    
+    if (jsonMatch) {
+      res.json(JSON.parse(jsonMatch[0]));
+    } else {
+      res.status(500).json({ error: 'Analysis failed' });
+    }
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.listen(Number(PORT), '0.0.0.0', () => {
   console.log(`Server running on http://0.0.0.0:${PORT}`);
 });

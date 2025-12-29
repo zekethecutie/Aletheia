@@ -10,6 +10,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+import { initializeDatabase } from './db';
+initializeDatabase().catch(err => console.error('Database initialization failed:', err));
+
 app.use(cors());
 app.use(express.json());
 

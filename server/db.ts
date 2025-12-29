@@ -2,7 +2,7 @@ import { Pool, PoolClient } from 'pg';
 import crypto from 'crypto';
 
 const pool = new Pool({
-  connectionString: 'postgresql://postgres.yjxqvwyudhvfkzkaixax:aletheiatheinevitable@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres',
+  connectionString: process.env.DATABASE_URL || 'postgresql://postgres.yjxqvwyudhvfkzkaixax:aletheiatheinevitable@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres',
   max: 10,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,

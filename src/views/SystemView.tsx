@@ -439,7 +439,11 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                                           )}
                                       </div>
                                       
-                                      <h3 className="text-lg font-bold text-white tracking-wide leading-snug mb-4 group-hover:text-gold transition-colors">{t.text}</h3>
+                                      <h3 className="text-lg font-bold text-white tracking-wide leading-snug mb-2 group-hover:text-gold transition-colors">{t.text}</h3>
+                                      
+                                      <div className="mb-4">
+                                        <p className="text-[10px] text-slate-400 font-mono italic">RULES: Complete the directive as stated. Truthful completion only.</p>
+                                      </div>
                                       
                                       <div className="flex items-center gap-4 mb-6">
                                           <div className="bg-gold/10 border border-gold/20 px-3 py-1.5 rounded-lg flex items-center gap-2">

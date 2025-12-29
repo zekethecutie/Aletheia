@@ -15,9 +15,10 @@ interface ProfileViewProps {
   onBack: () => void;
   currentUser: User;
   onUpdateUser: (u: User) => void;
+  onLogout?: () => void;
 }
 
-export const ProfileView: React.FC<ProfileViewProps> = ({ targetUserId, onBack, currentUser, onUpdateUser }) => {
+export const ProfileView: React.FC<ProfileViewProps> = ({ targetUserId, onBack, currentUser, onUpdateUser, onLogout }) => {
   const [profileUser, setProfileUser] = useState<User | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
@@ -179,7 +180,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ targetUserId, onBack, 
 
   return (
     <div className="min-h-screen bg-void pb-20 font-sans text-slate-200">
-       <Header title={profileUser.username} subtitle={profileUser.stats.class} onBack={onBack} />
+       <Header title={profileUser.username} subtitle={profileUser.stats.class} onBack={onBack} rightAction={isOwnProfile ? <button onClick={() => { if (confirm("Disconnect from the Collective?")) onLogout?.(); }} className="px-4 py-2 bg-red-600 text-white text-[9px] font-black uppercase tracking-widest rounded hover:bg-red-700 transition-colors">Disconnect</button> : null} />
        <div className="p-6">
            <div className="relative mb-12">
                {profileUser.coverUrl ? (
@@ -246,20 +247,23 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ targetUserId, onBack, 
            ) : null}
 
            {activeTab === 'POSTS' ? (
-             <div className="grid grid-cols-3 gap-1">
+             <div className="space-y-4">
                  {posts.map(post => (
-                     <div key={post.id} onClick={() => setSelectedPost(post)} className="aspect-square bg-slate-900 relative group cursor-pointer overflow-hidden border border-slate-950">
-                         <div className="absolute inset-0 p-2 flex items-center justify-center"><p className="text-[6px] text-slate-500 line-clamp-6 text-center leading-relaxed">{post.content}</p></div>
-                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                             <div className="flex flex-col items-center gap-2">
-                                 <button onClick={(e) => handleToggleLike(post, e)} className={`flex items-center gap-1 transition-all ${post.likedBy.includes(currentUser.id) ? 'text-gold' : 'text-white'}`}>
-                                     <IconResonance className={`w-4 h-4 ${post.likedBy.includes(currentUser.id) ? 'drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]' : ''}`} /><span className="text-xs font-bold">{post.resonance}</span>
-                                 </button>
-                             </div>
+                     <div key={post.id} onClick={() => setSelectedPost(post)} className="glass-card p-6 rounded-2xl cursor-pointer hover:border-blue-500/40 transition-all group relative overflow-hidden border-white/5 bg-slate-900/30">
+                         <div className="flex gap-4 mb-4">
+                           <img src={post.authorAvatar || `https://api.dicebear.com/7.x/initials/svg?seed=${post.authorName}&backgroundColor=000000`} className="w-10 h-10 rounded-lg border border-white/10 object-cover" />
+                           <div className="flex-1">
+                             <p className="text-white font-bold text-sm">{post.authorName}</p>
+                             <p className="text-slate-400 text-xs">{new Date(post.timestamp).toLocaleDateString()}</p>
+                           </div>
+                           <button onClick={(e) => handleToggleLike(post, e)} className={`flex items-center gap-1 transition-all ${post.likedBy.includes(currentUser.id) ? 'text-gold' : 'text-slate-400 hover:text-white'}`}>
+                             <IconResonance className={`w-5 h-5 ${post.likedBy.includes(currentUser.id) ? 'drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]' : ''}`} /><span className="text-xs font-bold">{post.resonance}</span>
+                           </button>
                          </div>
+                         <p className="text-slate-200 text-sm leading-relaxed mb-4">{post.content}</p>
                      </div>
                  ))}
-                 {posts.length === 0 && <div className="col-span-3 py-10 text-center text-slate-600 text-[10px] uppercase">No signals transmitted.</div>}
+                 {posts.length === 0 && <div className="py-10 text-center text-slate-600 text-[10px] uppercase">No signals transmitted.</div>}
              </div>
            ) : (
              <div className="animate-fade-in">

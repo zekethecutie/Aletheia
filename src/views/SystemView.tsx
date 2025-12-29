@@ -58,17 +58,12 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!user?.id) return;
-      try {
-        if (tab === 'QUESTS') {
-          const data = await apiClient.getQuests(user.id);
-          setQuests(Array.isArray(data) ? data : []);
-        } else if (tab === 'SACRED_PATH') {
-          const data = await apiClient.getHabits(user.id);
-          setHabits(Array.isArray(data) ? data : []);
-        }
-      } catch (err) {
-        console.error("Error fetching data:", err);
+      if (tab === 'QUESTS') {
+        const data = await apiClient.getQuests(user.id);
+        setQuests(data);
+      } else if (tab === 'SACRED_PATH') {
+        const data = await apiClient.getHabits(user.id);
+        setHabits(data);
       }
     };
     fetchData();
@@ -227,7 +222,7 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
   };
 
   const submitFeat = async () => {
-    if (!featInput.trim() || !user?.stats) return;
+    if (!featInput.trim()) return;
     setCalculating(true);
     try {
       const res = await apiClient.calculateFeat(featInput, user.id, user.stats);
@@ -605,9 +600,7 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                   <div className="flex justify-between items-center mb-6">
                       <h2 className="text-xl font-display font-black text-white uppercase tracking-widest">Artifact Repository</h2>
                       <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest">
-                            <div className="text-[10px] font-mono text-gold/60 uppercase tracking-widest">
-                                Artifacts: {(user.inventory || []).length} / ∞
-                            </div>
+                          Storage: {(user.inventory || []).length} / 24
                       </div>
                   </div>
                   <div className="grid grid-cols-4 md:grid-cols-6 gap-2">

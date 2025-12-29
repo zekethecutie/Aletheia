@@ -157,10 +157,11 @@ export const CreateIdentityView: React.FC<{ onComplete: (u: User) => void; onBac
 
       setAvailability('CHECKING');
       try {
-        const response = await fetch(`/api/check-username?username=${clean}`);
+        const response = await fetch(`/api/check-username?username=${encodeURIComponent(clean)}`);
         const data = await response.json();
         setAvailability(data.available ? 'AVAILABLE' : 'TAKEN');
       } catch (e) {
+        console.error("Availability check failed:", e);
         setAvailability('AVAILABLE');
       }
     };

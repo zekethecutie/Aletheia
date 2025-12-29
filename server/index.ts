@@ -5,6 +5,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createUser, getUserByUsername, getUserById, verifyPassword } from './auth';
 import { query, initializeDatabase } from './db';
 
+import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
+
 dotenv.config();
 
 const app: Express = express();
@@ -15,6 +17,9 @@ app.use(express.json());
 
 // Initialize database on startup
 initializeDatabase().catch(console.error);
+
+// Register Object Storage routes
+registerObjectStorageRoutes(app);
 
 // Replit Gemini AI Integration
 const geminiApiKey = process.env.GEMINI_API_KEY || process.env.API_KEY || '';
@@ -191,26 +196,27 @@ app.post('/api/ai/mysterious-name', async (req: Request, res: Response) => {
 app.post('/api/ai/quest/generate', async (req: Request, res: Response) => {
   try {
     const { userId, stats, goals } = req.body;
+    
+    const userQuests = await query('SELECT * FROM quests WHERE user_id = $1 AND completed = false', [userId]);
+    if (userQuests.rows.length >= 5) {
+      return res.json({ success: true, message: "Your spirit is already laden with trials. Complete them first." });
+    }
+
     const system = `You are the Eye of Aletheia, a supreme self-development architecture. 
-    Construct 3-5 real-world sacred trials for a ${stats.class} level ${stats.level}.
+    Construct 3 real-world sacred trials for a ${stats.class} level ${stats.level}.
     GOALS: ${JSON.stringify(goals || [])}
     
     CRITICAL PROTOCOLS:
-    1. ACTIONS: ONLY real-world self-improvement actions (e.g., "Complete a 30-min deep work session", "Run 3km", "Meditate for 15 mins"). No fantasy roleplay.
-    2. UTILITY: Each quest must directly contribute to the user's evolution path or lifestyle betterment.
-    3. DIFFICULTY: E (Easy), D, C, B, A, S (Supreme). Scale with level.
-    4. REWARDS: XP and stat boosts must reflect the effort.
-    5. VARIETY: Ensure a mix of physical, intellectual, and spiritual tasks.
-    
-    Return JSON ONLY: { "quests": [{ "text": "string", "difficulty": "E-S", "xp_reward": number, "stat_reward": { "physical": number, "intelligence": number, "spiritual": number, "social": number, "wealth": number }, "duration_hours": number }] }`;
+    1. ACTIONS: ONLY real-world self-improvement actions (e.g., "Complete a 30-min deep work session", "Run 3km", "Meditate for 15 mins").
+    2. UTILITY: Each quest must directly contribute to the user's evolution.
+    3. DIFFICULTY: E (Easy) to S (Supreme).
+    4. Return JSON ONLY: { "quests": [{ "text": "string", "difficulty": "E-S", "xp_reward": number, "stat_reward": { "physical": number, "intelligence": number, "spiritual": number, "social": number, "wealth": number }, "duration_hours": number }] }`;
     
     const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(system) + '?json=true');
     const text = await response.text();
     const jsonMatch = text.match(/\{.*\}/s);
     if (jsonMatch) {
       const { quests } = JSON.parse(jsonMatch[0]);
-      // Clear old uncompleted quests to keep it clean
-      await query('DELETE FROM quests WHERE user_id = $1 AND completed = false', [userId]);
       
       for (const q of quests) {
         const expiresAt = new Date();
@@ -505,7 +511,20 @@ app.post('/api/reports', async (req: Request, res: Response) => {
   }
 });
 
-// Personalized Consultants
+// AI Habit Tracking
+app.post('/api/habits/track', async (req: Request, res: Response) => {
+  try {
+    const { userId, habit, action } = req.body;
+    const prompt = `You are the Sentinel of Habits. User performed: "${action}" for habit: "${habit}". 
+    Evaluate if this action genuinely fulfills the habit's intent.
+    Return JSON ONLY: { "success": boolean, "xp": number, "feedback": "string" }`;
+    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
+    const data = await response.json();
+    res.json(data);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
 const personalities: Record<string, string> = {
   'Mystic': 'You are the Moon-Eyed Mystic, focusing on emotional intelligence, intuition, and the depth of the subconscious. You speak in fluid, dream-like prose.',
   'Warrior': 'You are the Iron-Willed Vanguard. You value discipline, physical manifestation, and the courage to act. You speak with sharp, rhythmic intensity.',

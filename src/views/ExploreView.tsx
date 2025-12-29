@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Header } from '../components/Header';
 import { IconSearch, IconUser, IconScroll } from '../components/Icons';
 import { apiClient } from '../services/apiClient';
-import { SearchResult } from '../types';
+import { SearchResult, ViewState } from '../types';
 
 export const ExploreView: React.FC = () => {
   const [tab, setTab] = useState<'SEARCH' | 'HIERARCHY'>('SEARCH');
@@ -15,9 +15,22 @@ export const ExploreView: React.FC = () => {
   const [posts, setPosts] = useState<any[]>([]);
 
   const handleSearch = async () => {
-    if (!query.trim()) return;
+    if (query.trim().length < 3) return;
     setSearching(true);
+    setResults([]);
     try {
+      // Fetch users
+      const usersRes = await fetch(`/api/search/users?q=${encodeURIComponent(query)}`);
+      const usersData = await usersRes.json();
+      const userResults = usersData.map((u: any) => ({
+        type: 'USER',
+        title: u.username,
+        subtitle: u.stats?.class || 'Seeker',
+        id: u.id,
+        avatar: u.avatar_url
+      }));
+
+      // Fetch posts (content search)
       const allPosts = await apiClient.getPosts();
       const postResults = allPosts.filter((p: any) => 
         p.content.toLowerCase().includes(query.toLowerCase()) || 
@@ -27,19 +40,8 @@ export const ExploreView: React.FC = () => {
         title: p.username || 'The Council',
         subtitle: p.author_class || 'System',
         content: p.content,
-        id: p.author_id.toString(), // author_id for profile viewing
+        id: p.author_id.toString(),
         avatar: p.avatar_url
-      }));
-
-      // Also search for users
-      const usersRes = await fetch(`/api/search/users?q=${encodeURIComponent(query)}`);
-      const usersData = await usersRes.json();
-      const userResults = usersData.map((u: any) => ({
-        type: 'USER',
-        title: u.username,
-        subtitle: u.stats?.class || 'Seeker',
-        id: u.id,
-        avatar: u.avatar_url
       }));
 
       setResults([...userResults, ...postResults]);
@@ -88,13 +90,13 @@ export const ExploreView: React.FC = () => {
              <button onClick={handleSearch} disabled={searching} className="bg-white text-black font-black uppercase text-[10px] px-6 transition-transform active:scale-95">Seek</button>
           </div>
           <div className="p-6 space-y-4">
-             {results.map((res, idx) => (
-                 <div key={idx} onClick={() => res.type === 'USER' && (window as any).setViewProfileId?.(res.id)} className="bg-slate-950 border border-slate-900 p-6 hover:border-gold/30 transition-all cursor-pointer rounded-sm group animate-fade-in-up">
+             {results.map((res: SearchResult, idx: number) => (
+                 <div key={`${res.type}-${res.id}-${idx}`} onClick={() => res.type === 'USER' && (window as any).onViewProfile?.(res.id)} className="bg-slate-950 border border-slate-900 p-6 hover:border-gold/30 transition-all cursor-pointer rounded-sm group animate-fade-in-up">
                      <div className="flex items-start gap-4">
                          <div className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 overflow-hidden">
                              {res.avatar ? <img src={res.avatar} className="w-full h-full object-cover" /> : res.type === 'USER' ? <IconUser className="w-5 h-5" /> : <IconScroll className="w-5 h-5" />}
                          </div>
-                         <div className="flex-1" onClick={() => (window as any).onViewProfile?.(res.id)}>
+                         <div className="flex-1">
                              <h3 className="text-white font-black text-sm uppercase group-hover:text-gold transition-colors">{res.title}</h3>
                              <p className="text-gold text-[10px] uppercase font-bold tracking-widest mt-1">{res.subtitle}</p>
                              {res.content && <p className="text-slate-400 text-xs font-serif mt-3 line-clamp-2 italic">"{res.content}"</p>}

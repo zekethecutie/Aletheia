@@ -5,10 +5,11 @@ import { apiClient } from '../../services/apiClient';
 interface ReportModalProps {
   targetUserId?: string;
   targetPostId?: number;
+  reporterId: string;
   onClose: () => void;
 }
 
-export const ReportModal: React.FC<ReportModalProps> = ({ targetUserId, targetPostId, onClose }) => {
+export const ReportModal: React.FC<ReportModalProps> = ({ targetUserId, targetPostId, reporterId, onClose }) => {
   const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -16,11 +17,12 @@ export const ReportModal: React.FC<ReportModalProps> = ({ targetUserId, targetPo
     if (!reason.trim()) return;
     setLoading(true);
     try {
-      await apiClient.report({
-        targetUserId,
-        targetPostId,
+      await apiClient.reportPost(
+        reporterId,
+        targetUserId || "",
+        targetPostId || 0,
         reason
-      });
+      );
       alert('Report transmitted to the High Arbiter. The void will judge.');
       onClose();
     } catch (e) {

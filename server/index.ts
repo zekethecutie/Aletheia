@@ -39,7 +39,7 @@ app.post('/api/auth/register', async (req: Request, res: Response) => {
     const passwordHash = await hashPassword(password);
 
     const newUserResult = await query(
-      'INSERT INTO profiles (id, username, password_hash, manifesto, origin_story, stats, entropy, following) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, username',
+      'INSERT INTO profiles (id, username, password_hash, manifesto, origin_story, stats, entropy, following, goals) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, username',
       [
         id, 
         cleanUsername, 
@@ -48,7 +48,8 @@ app.post('/api/auth/register', async (req: Request, res: Response) => {
         originStory, 
         JSON.stringify(stats), 
         0, 
-        JSON.stringify([])
+        '{}', 
+        '[]'
       ]
     );
 

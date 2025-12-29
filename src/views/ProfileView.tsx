@@ -178,11 +178,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ targetUserId, onBack, 
   }} />;
   if (loading || !profileUser) return <div className="h-screen bg-void flex items-center justify-center"><div className="w-6 h-6 border-2 border-gold border-t-transparent animate-spin rounded-full"></div></div>;
 
-  const stats = profileUser.stats || { level: 1, class: 'Seeker', health: 100, maxHealth: 100, resonance: 50, maxResonance: 100, xp: 0, xpToNextLevel: 100 };
-
   return (
     <div className="min-h-screen bg-void pb-20 font-sans text-slate-200">
-       <Header title={profileUser.username} subtitle={stats.class || 'Seeker'} onBack={onBack} rightAction={isOwnProfile ? <button onClick={() => { if (confirm("Disconnect from the Collective?")) onLogout?.(); }} className="px-4 py-2 bg-red-600 text-white text-[9px] font-black uppercase tracking-widest rounded hover:bg-red-700 transition-colors">Disconnect</button> : null} />
+       <Header title={profileUser.username} subtitle={profileUser.stats.class} onBack={onBack} rightAction={isOwnProfile ? <button onClick={() => { if (confirm("Disconnect from the Collective?")) onLogout?.(); }} className="px-4 py-2 bg-red-600 text-white text-[9px] font-black uppercase tracking-widest rounded hover:bg-red-700 transition-colors">Disconnect</button> : null} />
        <div className="p-6">
            <div className="relative mb-12">
                {profileUser.coverUrl ? (
@@ -197,36 +195,36 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ targetUserId, onBack, 
                    <div className="w-28 h-28 rounded-2xl bg-black border-4 border-slate-900 p-1.5 shadow-2xl overflow-hidden">
                        <img src={profileUser.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${profileUser.username}&backgroundColor=000000`} className="w-full h-full object-cover rounded-xl bg-slate-900" />
                    </div>
-                   <div className="mt-[-12px] bg-white text-black px-3 py-0.5 rounded-sm font-black text-[10px] uppercase shadow-lg z-10 border border-slate-200">LVL {stats.level || 1}</div>
+                   <div className="mt-[-12px] bg-white text-black px-3 py-0.5 rounded-sm font-black text-[10px] uppercase shadow-lg z-10 border border-slate-200">LVL {profileUser.stats.level}</div>
                </div>
            </div>
            <div className="text-center mb-8">
                <h1 className="text-3xl font-black text-white uppercase tracking-tighter">{profileUser.username}</h1>
-               <p className="text-blue-400 text-[10px] font-black uppercase tracking-[0.4em] mt-1">{stats.class || "SCHOLAR"}</p>
+               <p className="text-blue-400 text-[10px] font-black uppercase tracking-[0.4em] mt-1">{profileUser.stats.class || "SCHOLAR"}</p>
            </div>
            <div className="space-y-6 max-w-sm mx-auto mb-10">
                 <div>
                     <div className="flex justify-between text-[9px] uppercase font-black tracking-widest mb-1">
                         <span className="text-slate-400">Health Point</span>
-                        <span className="text-slate-200">{stats.health || 100} / {stats.maxHealth || 100}</span>
+                        <span className="text-slate-200">{profileUser.stats.health} / {profileUser.stats.maxHealth}</span>
                     </div>
                     <div className="h-1 bg-slate-900 rounded-full overflow-hidden">
-                        <div className="h-full bg-red-500 rounded-full transition-all duration-700" style={{ width: `${((stats.health || 100) / (stats.maxHealth || 100)) * 100}%` }}></div>
+                        <div className="h-full bg-red-500 rounded-full transition-all duration-700" style={{ width: `${(profileUser.stats.health / profileUser.stats.maxHealth) * 100}%` }}></div>
                     </div>
                 </div>
                 <div>
                     <div className="flex justify-between text-[9px] uppercase font-black tracking-widest mb-1">
                         <span className="text-slate-400">Resonance</span>
-                        <span className="text-slate-200">{stats.resonance || 50} / {stats.maxResonance || 100}</span>
+                        <span className="text-slate-200">{profileUser.stats.resonance} / {profileUser.stats.maxResonance}</span>
                     </div>
                     <div className="h-1 bg-slate-900 rounded-full overflow-hidden">
-                        <div className="h-full bg-blue-500 rounded-full transition-all duration-700" style={{ width: `${((stats.resonance || 50) / (stats.maxResonance || 100)) * 100}%` }}></div>
+                        <div className="h-full bg-blue-500 rounded-full transition-all duration-700" style={{ width: `${(profileUser.stats.resonance / profileUser.stats.maxResonance) * 100}%` }}></div>
                     </div>
                 </div>
                 <div>
                     <div className="flex justify-between text-[9px] uppercase font-black tracking-widest mb-1">
                         <span className="text-slate-400">Experience</span>
-                        <span className="text-slate-200">{stats.xp || 0} / {stats.xpToNextLevel || 100}</span>
+                        <span className="text-slate-200">{profileUser.stats.xp} / {profileUser.stats.xpToNextLevel}</span>
                     </div>
                     <div className="h-1 bg-slate-900 rounded-full overflow-hidden">
                         <div className="h-full bg-blue-400 rounded-full transition-all duration-700" style={{ width: `${(profileUser.stats.xp / profileUser.stats.xpToNextLevel) * 100}%` }}></div>

@@ -343,14 +343,33 @@ app.post('/api/quests/:id/complete', async (req: Request, res: Response) => {
 
 app.post('/api/quests/create', async (req: Request, res: Response) => {
   try {
-    const { user_id, text } = req.body;
+    const { user_id, text, stats } = req.body;
     if (!user_id || !text) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    const system = `You are the Eye of Aletheia. Analyze this manual quest directive: "${text}". 
+    Evaluate its difficulty (E-S) and appropriate rewards for a ${stats.class} level ${stats.level}.
+    Return JSON ONLY: { "difficulty": "E-S", "xp_reward": number, "stat_reward": { "physical": number, "intelligence": number, "spiritual": number, "social": number, "wealth": number } }`;
+    
+    const aiResponse = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(system) + '?json=true');
+    const aiText = await aiResponse.text();
+    const jsonMatch = aiText.match(/\{[\s\S]*\}/);
+    
+    let difficulty = 'C';
+    let xp_reward = 100;
+    let stat_reward = {};
+
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      difficulty = parsed.difficulty || 'C';
+      xp_reward = parsed.xp_reward || 100;
+      stat_reward = parsed.stat_reward || {};
+    }
+
     await query(
       'INSERT INTO quests (user_id, text, difficulty, xp_reward, stat_reward) VALUES ($1, $2, $3, $4, $5)',
-      [user_id, text, 'C', 100, JSON.stringify({})]
+      [user_id, text, difficulty, xp_reward, JSON.stringify(stat_reward)]
     );
     res.json({ success: true });
   } catch (error: any) {
@@ -421,17 +440,15 @@ app.post('/api/notifications/:id/read', async (req: Request, res: Response) => {
 app.post('/api/ai/mirror/scenario', async (req: Request, res: Response) => {
   try {
     const { stats } = req.body;
-    const prompt = `Generate a moral dilemma for a ${stats?.class || 'Seeker'} character level ${stats?.level || 1}. Return JSON ONLY: { "situation": "string", "choiceA": "string", "choiceB": "string", "context": "string", "testedStat": "string" }`;
+    const prompt = `Generate a moral dilemma for a ${stats.class} character. Return JSON ONLY: { "situation": "string", "choiceA": "string", "choiceB": "string", "testedStat": "string" }`;
     const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
     const text = await response.text();
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const jsonMatch = text.match(/\{.*\}/s);
     if (jsonMatch) {
       res.json(JSON.parse(jsonMatch[0]));
-    } else {
-      res.json({ situation: "A fork in the road.", choiceA: "Left path", choiceB: "Right path", context: "The void awaits.", testedStat: "spiritual" });
     }
   } catch (error: any) {
-    res.json({ situation: "A fork in the road.", choiceA: "Left path", choiceB: "Right path", context: "The void awaits.", testedStat: "spiritual" });
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -453,98 +470,6 @@ app.post('/api/ai/analyze-identity', async (req: Request, res: Response) => {
     } else {
       res.status(500).json({ error: 'Analysis failed' });
     }
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Daily Wisdom endpoint
-app.get('/api/ai/wisdom', async (req: Request, res: Response) => {
-  try {
-    const prompt = `Generate a profound short philosophical quote about personal growth. Return ONLY JSON: { "text": "quote text", "author": "author name" }`;
-    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
-    const text = await response.text();
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      res.json(JSON.parse(jsonMatch[0]));
-    } else {
-      res.json({ text: "Stare into the void.", author: "The Council" });
-    }
-  } catch (error: any) {
-    res.json({ text: "Stare into the void.", author: "The Council" });
-  }
-});
-
-// Leaderboard endpoint
-app.get('/api/leaderboard', async (req: Request, res: Response) => {
-  try {
-    const result = await query(`
-      SELECT id, username, stats, avatar_url FROM profiles 
-      WHERE stats IS NOT NULL 
-      ORDER BY (stats->>'level')::INT DESC, (stats->>'xp')::INT DESC
-      LIMIT 50
-    `);
-    res.json(result.rows.map((row: any) => ({
-      ...row,
-      stats: typeof row.stats === 'string' ? JSON.parse(row.stats) : row.stats
-    })));
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// AI Advisor endpoint
-app.post('/api/ai/advisor', async (req: Request, res: Response) => {
-  try {
-    const { type, message } = req.body;
-    const prompt = `You are a ${type} advisor in an RPG. Keep responses short and mystical. Message: "${message}"`;
-    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt));
-    const text = await response.text();
-    res.json({ text: text.trim().substring(0, 300) });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Mirror choice evaluation endpoint
-app.post('/api/ai/mirror/evaluate', async (req: Request, res: Response) => {
-  try {
-    const { situation, choice } = req.body;
-    const prompt = `Evaluate this choice in a moral dilemma. Situation: "${situation}". Choice: "${choice}". Respond with outcome and xp gained. JSON format: { "outcome": "string", "statChange": { "xp": number } }`;
-    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?json=true');
-    const text = await response.text();
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      res.json(JSON.parse(jsonMatch[0]));
-    } else {
-      res.json({ outcome: "Fate ripples.", statChange: { xp: 10 } });
-    }
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Follow user endpoint
-app.post('/api/profile/:id/follow', async (req: Request, res: Response) => {
-  try {
-    const { followerId } = req.body;
-    const targetId = req.params.id;
-    
-    const userResult = await query('SELECT following FROM profiles WHERE id = $1', [followerId]);
-    if (userResult.rows.length === 0) return res.status(404).json({ error: 'User not found' });
-    
-    let following = userResult.rows[0].following || [];
-    if (typeof following === 'string') following = JSON.parse(following);
-    
-    const isFollowing = following.includes(targetId);
-    if (isFollowing) {
-      following = following.filter((id: string) => id !== targetId);
-    } else {
-      following.push(targetId);
-    }
-    
-    await query('UPDATE profiles SET following = $1 WHERE id = $2', [JSON.stringify(following), followerId]);
-    res.json({ success: true, isFollowing: !isFollowing });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

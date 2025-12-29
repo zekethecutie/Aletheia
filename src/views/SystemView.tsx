@@ -4,7 +4,6 @@ import { User, Artifact } from '../types';
 import { apiClient } from '../services/apiClient';
 import { IconSettings, IconLock, IconMirror } from '../components/Icons';
 import { SettingsModal } from '../components/modals/SettingsModal';
-import { getRank } from '../utils/helpers';
 
 const ArtifactCard: React.FC<{ artifact: Artifact }> = ({ artifact }) => {
     const rarityColors: Record<string, string> = {
@@ -47,7 +46,6 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
   const [goalInput, setGoalInput] = useState('');
   const [generatingQuest, setGeneratingQuest] = useState(false);
   const [quests, setQuests] = useState<any[]>([]);
-  const [timer, setTimer] = useState(Date.now());
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
 
   useEffect(() => {
@@ -66,11 +64,6 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
     };
     fetchSuggestions();
   }, [tab, user.goals]);
-
-  useEffect(() => {
-    const interval = setInterval(() => setTimer(Date.now()), 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   const handleAddGoal = async () => {
     if (!goalInput.trim()) return;
@@ -173,8 +166,6 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
       setCalculating(false);
     }
   };
-
-  const xpPercent = (user.stats.xp / user.stats.xpToNextLevel) * 100;
 
   return (
     <div className="min-h-screen bg-void pb-24 font-sans text-slate-200">
@@ -320,8 +311,6 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                           const timeLeft = Math.max(0, expiresAt - Date.now());
                           const isExpired = timeLeft === 0 && expiresAt > 0;
                           const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
-                          const minsLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-                          const secsLeft = Math.floor((timeLeft % (1000 * 60)) / 1000);
 
                           return (
                               <div key={t.id} className={`glass-card p-6 rounded-xl flex items-center justify-between transition-all relative overflow-hidden group ${t.completed ? 'opacity-40 border-green-500/30' : (isExpired ? 'opacity-40 border-red-500/30' : 'hover:border-gold/50')}`}>
@@ -332,9 +321,6 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                                       <div>
                                          <div className="flex items-center gap-3 mb-1 flex-wrap">
                                              <p className="text-[10px] font-display font-black text-gold uppercase tracking-[0.2em]">{t.difficulty} Tier</p>
-                                             {t.stat_reward && Object.keys(JSON.parse(t.stat_reward || '{}')).length > 0 && (
-                                                <span className="text-[7px] text-purple-400 font-mono">+Stats</span>
-                                             )}
                                              {!t.completed && expiresAt > 0 && !isExpired && (
                                                  <p className="text-[8px] text-red-400 font-mono uppercase animate-pulse">expires {hoursLeft}h</p>
                                              )}
@@ -359,9 +345,6 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                                       )}
                                       <div className="text-right">
                                           <p className="text-[10px] font-mono text-slate-400 uppercase">+{t.xp_reward} EXP</p>
-                                          <div className="w-16 h-[2px] bg-white/10 mt-1">
-                                              <div className={`h-full ${t.completed ? 'bg-green-500' : 'bg-white/40'}`} style={{ width: t.completed ? '100%' : '30%' }}></div>
-                                          </div>
                                       </div>
                                   </div>
                               </div>
@@ -393,12 +376,6 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                           <div className="space-y-4">
                           {(user.goals || []).length > 0 ? (user.goals as string[]).map((g: string, i: number) => (
                                   <div key={i} className="flex items-center gap-3 group">
-                                      <div className="w-1.5 h-1.5 bg-indigo-500/50 rounded-full"></div>
-                                      <p className="text-[10px] text-slate-300 font-medium tracking-wide">{g}</p>
-                                  </div>
-                              )) : (
-                                  <p className="text-[10px] text-slate-600 uppercase">No trajectory defined.</p>
-                              )}
                                       <div className="w-1 h-4 bg-indigo-500/50"></div>
                                       <div className="flex-1 flex items-center gap-2">
                                         <input 
@@ -416,7 +393,7 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                                         />
                                       </div>
                                       <button onClick={async () => {
-                                        const newGoals = ((user as any).goals || []).filter((_: string, idx: number) => idx !== i);
+                                        const newGoals = (user.goals || []).filter((_: string, idx: number) => idx !== i);
                                         await apiClient.updateProfile(user.id, { goals: newGoals });
                                         onUpdateUser({ ...user, goals: newGoals });
                                       }} className="opacity-0 group-hover:opacity-100 text-red-500 text-[9px] uppercase font-bold hover:text-red-400">Remove</button>
@@ -426,9 +403,6 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                               )}
                           </div>
                       </div>
-                      <p className="text-[9px] text-slate-500 uppercase tracking-widest text-center px-4">
-                        Goals help the AI tailor your quests to your desired evolution path.
-                      </p>
                   </div>
               </div>
           )}

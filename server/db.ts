@@ -46,6 +46,7 @@ export const initializeDatabase = async () => {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+      
       CREATE TABLE IF NOT EXISTS habits (
         id SERIAL PRIMARY KEY,
         user_id TEXT REFERENCES profiles(id) ON DELETE CASCADE,
@@ -54,6 +55,7 @@ export const initializeDatabase = async () => {
         last_logged TIMESTAMP WITH TIME ZONE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+      
       CREATE TABLE IF NOT EXISTS posts (
         id SERIAL PRIMARY KEY,
         author_id TEXT REFERENCES profiles(id) ON DELETE CASCADE,
@@ -63,6 +65,7 @@ export const initializeDatabase = async () => {
         is_system_post BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+      
       CREATE TABLE IF NOT EXISTS comments (
         id SERIAL PRIMARY KEY,
         post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
@@ -71,6 +74,7 @@ export const initializeDatabase = async () => {
         parent_id INTEGER REFERENCES comments(id) ON DELETE CASCADE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+      
       CREATE TABLE IF NOT EXISTS notifications (
         id SERIAL PRIMARY KEY,
         user_id TEXT REFERENCES profiles(id) ON DELETE CASCADE,
@@ -81,6 +85,7 @@ export const initializeDatabase = async () => {
         is_read BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+      
       CREATE TABLE IF NOT EXISTS reports (
         id SERIAL PRIMARY KEY,
         reporter_id TEXT REFERENCES profiles(id) ON DELETE CASCADE,
@@ -91,6 +96,7 @@ export const initializeDatabase = async () => {
         action_taken VARCHAR(50), -- 'NONE', 'WARN', 'BAN', 'DELETE'
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+      
       CREATE TABLE IF NOT EXISTS quests (
         id SERIAL PRIMARY KEY,
         user_id TEXT REFERENCES profiles(id) ON DELETE CASCADE,
@@ -102,6 +108,7 @@ export const initializeDatabase = async () => {
         expires_at TIMESTAMP WITH TIME ZONE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+      
       CREATE TABLE IF NOT EXISTS achievements (
         id SERIAL PRIMARY KEY,
         user_id TEXT REFERENCES profiles(id) ON DELETE CASCADE,
@@ -110,6 +117,7 @@ export const initializeDatabase = async () => {
         icon TEXT,
         unlocked_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+      
       CREATE INDEX IF NOT EXISTS idx_profiles_username ON profiles(username);
       CREATE INDEX IF NOT EXISTS idx_profiles_id ON profiles(id);
       CREATE INDEX IF NOT EXISTS idx_posts_author_id ON posts(author_id);

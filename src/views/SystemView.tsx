@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { User, Artifact } from '../types';
 import { apiClient } from '../services/apiClient';
 import { IconSettings, IconLock, IconMirror } from '../components/Icons';
@@ -50,7 +50,6 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
   const [trackingHabit, setTrackingHabit] = useState<number | null>(null);
   const [generatingQuest, setGeneratingQuest] = useState(false);
   const [quests, setQuests] = useState<any[]>([]);
-  const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -118,6 +117,7 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
   };
 
   const handleGenerateQuests = async () => {
+    if (generatingQuest) return;
     setGeneratingQuest(true);
     try {
       await apiClient.generateQuests(user.id, user.stats, user.goals);
@@ -357,6 +357,7 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                   </section>
               </div>
           )}
+
           {tab === 'STATUS' && (
               <div className="animate-fade-in space-y-4">
                   <div className="grid grid-cols-2 gap-3">
@@ -407,137 +408,106 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
               <div className="animate-fade-in space-y-6">
                   <div className="flex justify-between items-center mb-4">
                       <h2 className="text-2xl font-display font-black text-white uppercase tracking-widest">Active Quests</h2>
-                      <button onClick={handleGenerateQuests} disabled={generatingQuest} className="text-[10px] bg-gold/10 text-gold border border-gold/20 px-3 py-1 rounded-full uppercase font-black hover:bg-gold/20 transition-all disabled:opacity-50">
-                        {generatingQuest ? 'Scanning...' : 'Seek New Directives'}
+                      <button 
+                        onClick={handleGenerateQuests} 
+                        disabled={generatingQuest} 
+                        className="text-[10px] bg-gold/10 text-gold border border-gold/20 px-4 py-2 rounded-full uppercase font-black hover:bg-gold/20 transition-all disabled:opacity-50 flex items-center gap-2"
+                      >
+                        {generatingQuest ? <div className="w-2 h-2 border-2 border-gold border-t-transparent animate-spin rounded-full"></div> : null}
+                        {generatingQuest ? 'Manifesting...' : 'Seek New Directives'}
                       </button>
                   </div>
-                  <div className="space-y-4">
-                          {quests.map(t => {
-                              const expiresAt = t.expires_at ? new Date(t.expires_at).getTime() : 0;
-                              const timeLeft = Math.max(0, expiresAt - Date.now());
-                              const isExpired = timeLeft === 0 && expiresAt > 0;
-                              const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {quests.length > 0 ? quests.map(t => {
+                          const expiresAt = t.expires_at ? new Date(t.expires_at).getTime() : 0;
+                          const timeLeft = Math.max(0, expiresAt - Date.now());
+                          const isExpired = timeLeft === 0 && expiresAt > 0;
+                          const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
 
-                              return (
-                                  <div key={t.id} className={`glass-card p-6 rounded-xl flex items-center justify-between transition-all relative overflow-hidden group ${t.completed ? 'opacity-40 border-green-500/30' : (isExpired ? 'opacity-40 border-red-500/30' : 'hover:border-gold/50')}`}>
-                                      <div className="flex items-center gap-6">
-                                          <div className={`w-10 h-10 glass-card rounded-lg flex items-center justify-center border-white/10 ${t.completed ? 'bg-green-500/10 border-green-500/30' : 'group-hover:border-gold/30'}`}>
-                                              {t.completed ? <div className="w-3 h-3 bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div> : (isExpired ? <div className="w-3 h-3 bg-red-500 rounded-full"></div> : <div className="w-5 h-5 border-2 border-slate-500 rounded-full flex items-center justify-center group-hover:border-gold/50 transition-colors"><div className="w-2 h-2 border border-slate-500 rounded-full group-hover:border-gold/50"></div></div>)}
+                          return (
+                              <div key={t.id} className={`glass-card p-6 rounded-2xl flex flex-col justify-between transition-all relative overflow-hidden group border-white/5 bg-slate-900/30 ${t.completed ? 'opacity-50 border-green-500/30 shadow-[inset_0_0_20px_rgba(34,197,94,0.05)]' : (isExpired ? 'opacity-40 border-red-500/30' : 'hover:border-gold/40 hover:bg-slate-900/50 hover:shadow-[0_10px_40px_rgba(255,149,0,0.1)]')}`}>
+                                  <div className="relative z-10">
+                                      <div className="flex items-center justify-between mb-4">
+                                          <div className={`px-3 py-1 rounded text-[9px] font-black uppercase tracking-widest ${t.difficulty === 'S' ? 'bg-purple-600 text-white' : (t.difficulty === 'A' ? 'bg-red-600 text-white' : 'bg-slate-800 text-slate-400')}`}>
+                                              {t.difficulty} Tier Directive
                                           </div>
-                                          <div>
-                                             <div className="flex items-center gap-3 mb-1 flex-wrap">
-                                                 <p className="text-[10px] font-display font-black text-gold uppercase tracking-[0.2em]">{t.difficulty} Tier</p>
-                                                 {!t.completed && expiresAt > 0 && !isExpired && (
-                                                     <p className="text-[8px] text-red-400 font-mono uppercase animate-pulse">expires {hoursLeft}h</p>
-                                                 )}
-                                                 {isExpired && !t.completed && (
-                                                     <p className="text-[8px] text-red-600 font-mono uppercase font-bold">EXPIRED</p>
-                                                 )}
-                                             </div>
-                                             <p className="text-sm font-bold text-white tracking-wide leading-tight">{t.text}</p>
-                                          </div>
-                                      </div>
-                                      <div className="flex items-center gap-4">
-                                          {!t.completed && !isExpired && (
-                                              <button 
-                                                onClick={() => handleCompleteQuest(t)}
-                                                className="p-3 bg-white text-black hover:bg-gold transition-colors rounded-full shadow-[0_0_15px_rgba(255,255,255,0.1)] flex items-center justify-center"
-                                                title="Complete Quest"
-                                              >
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                                                </svg>
-                                              </button>
+                                          {!t.completed && expiresAt > 0 && !isExpired && (
+                                              <div className="flex items-center gap-1.5 bg-black/40 px-2 py-1 rounded-full border border-red-500/20">
+                                                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                                                  <p className="text-[8px] text-red-400 font-mono uppercase font-bold">{hoursLeft}h Left</p>
+                                              </div>
                                           )}
-                                          <div className="text-right">
-                                              <p className="text-[10px] font-mono text-slate-400 uppercase">+{t.xp_reward} EXP</p>
+                                      </div>
+                                      
+                                      <h3 className="text-lg font-bold text-white tracking-wide leading-snug mb-4 group-hover:text-gold transition-colors">{t.text}</h3>
+                                      
+                                      <div className="flex items-center gap-4 mb-6">
+                                          <div className="bg-gold/10 border border-gold/20 px-3 py-1.5 rounded-lg flex items-center gap-2">
+                                              <span className="text-[9px] text-gold/60 uppercase font-black tracking-tighter">Reward</span>
+                                              <span className="text-xs text-gold font-black">+{t.xp_reward} XP</span>
                                           </div>
+                                          {t.stat_reward && Object.keys(t.stat_reward).some(k => (t.stat_reward as any)[k] > 0) && (
+                                              <div className="flex gap-1.5">
+                                                  {Object.entries(t.stat_reward).map(([stat, val]) => (val as number) > 0 ? (
+                                                      <div key={stat} className="w-5 h-5 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center" title={`${stat}: +${val}`}>
+                                                          <div className="w-1 h-1 bg-blue-400 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.5)]"></div>
+                                                      </div>
+                                                  ) : null)}
+                                              </div>
+                                          )}
                                       </div>
                                   </div>
-                              );
-                          })}
-                      {quests.length === 0 && !generatingQuest && <div className="py-12 text-center text-slate-600 text-[10px] uppercase border border-dashed border-slate-800 rounded-xl">No active directives. Seek the void for purpose.</div>}
-                  </div>
-              </div>
-          )}
 
-          {tab === 'GOALS' && (
-              <div className="animate-fade-in space-y-6">
-                  <div>
-                      <h3 className="text-xs font-black text-white uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
-                          <span className="w-2 h-2 bg-indigo-500 rounded-full"></span>
-                          Sacred Goals
-                      </h3>
-                      <div className="glass-card p-6 rounded-2xl border-indigo-500/20 bg-indigo-500/5 mb-6">
-                          <div className="flex gap-2 mb-4">
-                              <input 
-                                value={goalInput}
-                                onChange={e => setGoalInput(e.target.value)}
-                                className="flex-1 bg-black/40 border border-white/10 p-3 text-white text-[10px] outline-none focus:border-indigo-500 transition-all uppercase tracking-widest"
-                                placeholder="Define your trajectory..."
-                              />
-                              <button onClick={handleAddGoal} className="px-4 bg-indigo-500 text-white font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-colors">Add</button>
-                          </div>
-                          <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest mb-4 opacity-70">Long-term Trajectory</p>
-                          <div className="space-y-4">
-                          {(user.goals || []).length > 0 ? (user.goals as string[]).map((g: string, i: number) => (
-                                  <div key={i} className="flex items-center gap-3 group">
-                                      <div className="w-1 h-4 bg-indigo-500/50"></div>
-                                      <div className="flex-1 flex items-center gap-2">
-                                        <input 
-                                          className="text-sm text-slate-200 italic bg-transparent border-none outline-none flex-1 focus:ring-0"
-                                          defaultValue={g}
-                                          onBlur={async (e) => {
-                                            const newVal = e.target.value.trim();
-                                            if (newVal && newVal !== g) {
-                                              const newGoals = [...(user.goals || [])];
-                                              newGoals[i] = newVal;
-                                              await apiClient.updateProfile(user.id, { goals: newGoals });
-                                              onUpdateUser({ ...user, goals: newGoals });
-                                            }
-                                          }}
-                                        />
-                                      </div>
-                                      <button onClick={async () => {
-                                        const newGoals = (user.goals || []).filter((_: string, idx: number) => idx !== i);
-                                        await apiClient.updateProfile(user.id, { goals: newGoals });
-                                        onUpdateUser({ ...user, goals: newGoals });
-                                      }} className="opacity-0 group-hover:opacity-100 text-red-500 text-[9px] uppercase font-bold hover:text-red-400">Remove</button>
+                                  <div className="relative z-10 flex items-center justify-between border-t border-white/5 pt-5 mt-2">
+                                      {t.completed ? (
+                                          <div className="w-full text-center py-2 text-[10px] text-green-500 font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 bg-green-500/5 rounded-lg border border-green-500/10">
+                                              <div className="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,1)]"></div>
+                                              Manifested
+                                          </div>
+                                      ) : isExpired ? (
+                                          <div className="w-full text-center py-2 text-[10px] text-red-600 font-black uppercase tracking-[0.2em] bg-red-500/5 rounded-lg border border-red-500/10">Signal Lost</div>
+                                      ) : (
+                                          <button 
+                                            onClick={() => handleCompleteQuest(t)}
+                                            className="w-full py-3 bg-white text-black text-[11px] font-black uppercase tracking-[0.2em] hover:bg-gold hover:tracking-[0.3em] transition-all active:scale-[0.98] shadow-2xl rounded-lg"
+                                          >
+                                            Manifest Will
+                                          </button>
+                                      )}
                                   </div>
-                              )) : (
-                                  <p className="text-slate-500 text-[10px] uppercase italic">No goals defined in soul-architecture.</p>
-                              )}
-                          </div>
-                      </div>
+                                  
+                                  <div className="absolute top-0 right-0 -mr-12 -mt-12 w-32 h-32 bg-gold/5 rounded-full blur-3xl group-hover:bg-gold/10 transition-all duration-700"></div>
+                              </div>
+                          );
+                      }) : (
+                        !generatingQuest && <div className="col-span-full py-20 text-center text-slate-600 text-[11px] font-black uppercase tracking-[0.4em] border-2 border-dashed border-slate-800/50 rounded-3xl bg-black/40 backdrop-blur-sm">
+                          The void is silent.<br/>Seek new directives to begin.
+                        </div>
+                      )}
                   </div>
               </div>
           )}
 
           {tab === 'INVENTORY' && (
-              <div className="animate-fade-in space-y-6">
-                  <div>
-                    <h3 className="text-xs font-bold text-slate-500 uppercase mb-4 tracking-widest flex items-center gap-2"><IconLock className="w-3 h-3" /> Mental Artifacts</h3>
-                    <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                        {user.inventory && user.inventory.length > 0 ? (
-                            user.inventory.map((item, i) => <ArtifactCard key={item.id || i} artifact={item} />)
-                        ) : (
-                            <div className="col-span-3 flex flex-col items-center justify-center py-12 border border-dashed border-slate-800 text-slate-600 text-[10px] uppercase rounded-lg">
-                                <IconMirror className="w-6 h-6 mb-2 text-slate-700" /><span className="mt-1">The void is empty. Enter Mirror to manifest self.</span>
-                            </div>
-                        )}
-                    </div>
+              <div className="animate-fade-in">
+                  <div className="flex justify-between items-center mb-6">
+                      <h2 className="text-xl font-display font-black text-white uppercase tracking-widest">Artifact Repository</h2>
+                      <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest">
+                          Storage: {(user.inventory || []).length} / 24
+                      </div>
+                  </div>
+                  <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
+                      {(user.inventory || []).map((art, i) => (
+                          <ArtifactCard key={i} artifact={art} />
+                      ))}
+                      {Array.from({ length: Math.max(0, 24 - (user.inventory || []).length) }).map((_, i) => (
+                          <div key={`empty-${i}`} className="aspect-square bg-slate-950/50 border border-slate-900/50 rounded-sm flex items-center justify-center">
+                              <IconLock className="w-3 h-3 text-slate-800 opacity-20" />
+                          </div>
+                      ))}
                   </div>
               </div>
           )}
-      </div>
-      
-      <div className="px-6 mb-8">
-        <button 
-          onClick={onLogout}
-          className="w-full py-4 border border-red-900/30 text-red-500/70 text-[10px] font-black uppercase tracking-[0.4em] hover:bg-red-950/20 hover:text-red-400 transition-all rounded-xl"
-        >
-          Disconnect Signal
-        </button>
       </div>
 
       {showSettings && <SettingsModal user={user} onClose={() => setShowSettings(false)} onUpdate={onUpdateUser} />}

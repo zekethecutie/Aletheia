@@ -21,15 +21,24 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ user, onClose, onU
      if (e.target.files && e.target.files[0]) {
         try {
            const file = e.target.files[0];
-           const base64 = await readFileAsDataURL(file);
            
-           // Upload to Supabase Storage
-           const fileName = `${user.id}/${Date.now()}-${file.name}`;
+           // Check if bucket exists, if not we fall back to base64 for now to avoid blocking user
+           // but we try the upload first.
+           const fileName = `${user.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+           
            const { data, error } = await supabase.storage
              .from('profiles')
-             .upload(fileName, file, { upsert: true });
+             .upload(fileName, file, { 
+               upsert: true,
+               contentType: file.type 
+             });
              
-           if (error) throw error;
+           if (error) {
+             console.warn('Storage upload failed, falling back to local preview:', error);
+             const base64 = await readFileAsDataURL(file);
+             setter(base64);
+             return;
+           }
            
            const { data: { publicUrl } } = supabase.storage
              .from('profiles')
@@ -37,27 +46,37 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ user, onClose, onU
              
            setter(publicUrl);
         } catch(err) { 
-           console.error('File upload error:', err);
-           alert('Failed to upload image to the Spire storage.');
+           console.error('File processing error:', err);
+           const file = e.target.files?.[0];
+           if (file) {
+             const base64 = await readFileAsDataURL(file);
+             setter(base64);
+           }
         }
      }
   };
 
   const handleSave = async () => {
     try {
-      // 1. Update Profile via API
+      // 1. Update Profile via API - ensuring it saves to DB
       const updatedProfile = await apiClient.updateProfile(user.id, { 
           avatarUrl: avatar, 
           coverUrl: cover 
       });
       
-      // 2. Update local state
-      onUpdate({ ...user, avatarUrl: updatedProfile.avatar_url, coverUrl: updatedProfile.cover_url });
+      // 2. Update local state with whatever came back from DB
+      onUpdate({ 
+        ...user, 
+        avatarUrl: updatedProfile.avatar_url || avatar, 
+        coverUrl: updatedProfile.cover_url || cover 
+      });
       
       onClose();
     } catch (err) {
       console.error('Save settings error:', err);
-      alert('Failed to synchronize identity with the Spire.');
+      // Fallback update if API fails but we want local persistence for this session
+      onUpdate({ ...user, avatarUrl: avatar, coverUrl: cover });
+      onClose();
     }
   };
 

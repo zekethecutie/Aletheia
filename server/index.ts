@@ -214,11 +214,11 @@ app.post('/api/ai/quest/generate', async (req: Request, res: Response) => {
     
     const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(system) + '?json=true');
     const text = await response.text();
-    const jsonMatch = text.match(/\{.*\}/s);
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      const { quests } = JSON.parse(jsonMatch[0]);
+      const { quests: generatedQuests } = JSON.parse(jsonMatch[0]);
       
-      for (const q of quests) {
+      for (const q of generatedQuests) {
         const expiresAt = new Date();
         expiresAt.setHours(expiresAt.getHours() + (q.duration_hours || 24));
         await query(

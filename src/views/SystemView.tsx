@@ -4,6 +4,7 @@ import { User, Artifact } from '../types';
 import { apiClient } from '../services/apiClient';
 import { IconSettings, IconLock, IconMirror } from '../components/Icons';
 import { SettingsModal } from '../components/modals/SettingsModal';
+import { StatsRadar } from '../components/StatsRadar';
 
 const ArtifactCard: React.FC<{ artifact: Artifact }> = ({ artifact }) => {
     const rarityColors: Record<string, string> = {
@@ -359,7 +360,8 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
           )}
 
           {tab === 'STATUS' && (
-              <div className="animate-fade-in space-y-4">
+              <div className="animate-fade-in space-y-6">
+                  <StatsRadar stats={user.stats} />
                   <div className="grid grid-cols-2 gap-3">
                       {[
                         { label: 'Intelligence', val: user.stats.intelligence, color: 'bg-blue-400' },
@@ -439,10 +441,9 @@ export const SystemView: React.FC<{ user: User; onUpdateUser: (u: User) => void;
                                           )}
                                       </div>
                                       
-                                      <h3 className="text-lg font-bold text-white tracking-wide leading-snug mb-2 group-hover:text-gold transition-colors">{t.text}</h3>
-                                      
                                       <div className="mb-4">
-                                        <p className="text-[10px] text-slate-400 font-mono italic">RULES: Complete the directive as stated. Truthful completion only.</p>
+                                        <h3 className="text-sm font-bold text-white tracking-wide leading-snug mb-3 group-hover:text-gold transition-colors">{t.text}</h3>
+                                        <p className="text-[10px] text-slate-400 font-mono italic leading-relaxed">RULES: Complete the directive as stated. Truthful completion only.</p>
                                       </div>
                                       
                                       <div className="flex items-center gap-4 mb-6">
